@@ -19,6 +19,7 @@ import AuditReportDetail from '@/components/audit/audit-report';
 import TeamMembers from '@/components/audit/team-members';
 import EquipmentDetail from '@/components/audit/equipment-detail';
 import NotificationCenter from '@/components/audit/notification-center';
+import AuditorMyAudits from '@/components/audit/auditor-my-audits';
 
 const emptySubscribe = () => () => {};
 function useMounted() {
@@ -167,7 +168,7 @@ export default function Home() {
       case 'calendar':
         return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
       case 'audits':
-        return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
+        return <AuditorMyAudits user={user} onStartAudit={handleStartAudit} />;
       case 'history':
         return <AuditHistory userId={user.id} isAdmin={false} onViewReport={handleViewReport} />;
       default:

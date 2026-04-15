@@ -6,7 +6,7 @@ import {
   Plus, Search, Pencil, Trash2, CalendarDays, Filter, X,
   ArrowUpDown, CheckCircle2, Clock, AlertTriangle, XCircle,
   PlayCircle, LayoutGrid, List, MoreHorizontal, Users,
-  ClipboardList, CalendarClock,
+  ClipboardList, CalendarClock, Sparkles, Layers, Wand2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -29,6 +29,7 @@ import {
   AlertDialogFooter, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import AutoAssignDialog from './auto-assign-dialog';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -79,41 +80,56 @@ const emptyForm: AssignmentFormData = {
   notes: '',
 };
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType; dotColor: string }> = {
+const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType; dotColor: string; borderColor: string; gradientBg: string; countColor: string }> = {
   SCHEDULED: {
     label: 'Запланирован',
-    color: 'bg-blue-100 text-blue-700 border-blue-200',
+    color: 'bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800',
     icon: CalendarClock,
-    dotColor: 'bg-blue-500',
+    dotColor: 'bg-sky-500',
+    borderColor: 'border-l-sky-400',
+    gradientBg: 'bg-gradient-to-r from-sky-50 to-cyan-50 dark:from-sky-950/20 dark:to-cyan-950/20',
+    countColor: 'text-sky-600 dark:text-sky-400',
   },
   IN_PROGRESS: {
     label: 'В процессе',
-    color: 'bg-amber-100 text-amber-700 border-amber-200',
+    color: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-800',
     icon: PlayCircle,
     dotColor: 'bg-amber-500',
+    borderColor: 'border-l-amber-400',
+    gradientBg: 'bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20',
+    countColor: 'text-amber-600 dark:text-amber-400',
   },
   COMPLETED: {
     label: 'Завершён',
-    color: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    color: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800',
     icon: CheckCircle2,
     dotColor: 'bg-emerald-500',
+    borderColor: 'border-l-emerald-400',
+    gradientBg: 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20',
+    countColor: 'text-emerald-600 dark:text-emerald-400',
   },
   OVERDUE: {
     label: 'Просрочен',
-    color: 'bg-red-100 text-red-700 border-red-200',
+    color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-800',
     icon: AlertTriangle,
     dotColor: 'bg-red-500',
+    borderColor: 'border-l-red-400',
+    gradientBg: 'bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20',
+    countColor: 'text-red-600 dark:text-red-400',
   },
   CANCELLED: {
     label: 'Отменён',
-    color: 'bg-slate-100 text-slate-500 border-slate-200',
+    color: 'bg-slate-100 text-slate-500 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700',
     icon: XCircle,
     dotColor: 'bg-slate-400',
+    borderColor: 'border-l-slate-300 dark:border-l-slate-600',
+    gradientBg: 'bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900/20 dark:to-gray-900/20',
+    countColor: 'text-slate-500 dark:text-slate-400',
   },
 };
 
 const statusOptions = [
-  { value: 'SCHEDULED', label: 'Запланирован', dot: 'bg-blue-500' },
+  { value: 'SCHEDULED', label: 'Запланирован', dot: 'bg-sky-500' },
   { value: 'IN_PROGRESS', label: 'В процессе', dot: 'bg-amber-500' },
   { value: 'COMPLETED', label: 'Завершён', dot: 'bg-emerald-500' },
   { value: 'OVERDUE', label: 'Просрочен', dot: 'bg-red-500' },
@@ -186,6 +202,9 @@ export default function AuditScheduler() {
   const [filterDateTo, setFilterDateTo] = useState<string>('');
   const [sortField, setSortField] = useState<'scheduledDate' | 'status' | 'template' | 'auditor'>('scheduledDate');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  // Auto-assign dialog state
+  const [autoAssignOpen, setAutoAssignOpen] = useState(false);
 
   // Dialog state
   const [formOpen, setFormOpen] = useState(false);
@@ -429,58 +448,86 @@ export default function AuditScheduler() {
 
   // ─── Render ──────────────────────────────────────────────────────────────
 
+  const totalAssignments = assignments.length;
+
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Расписание аудитов</h1>
-          <p className="text-muted-foreground mt-1">
-            Управление назначениями и расписанием проверок
-          </p>
-        </div>
-        <Button onClick={openCreate} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
-          <Plus className="w-4 h-4" />
-          Назначить аудит
-        </Button>
-      </div>
+      {/* ─── Gradient Header Section ──────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-700 p-6 sm:p-8 text-white"
+      >
+        {/* Decorative blurred circles */}
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-emerald-400/20 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-teal-400/20 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute top-1/2 left-1/3 w-32 h-32 bg-emerald-300/10 rounded-full blur-[60px] pointer-events-none" />
 
-      {/* Status Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-        {statusOptions.map((s, i) => {
-          const cfg = statusConfig[s.value];
-          const Icon = cfg.icon;
-          const count = statusCounts[s.value as keyof typeof statusCounts];
-          return (
-            <motion.div
-              key={s.value}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.05, duration: 0.35 }}
-              whileHover={{ scale: 1.02, y: -1 }}
-            >
-              <Card
-                className={`cursor-pointer transition-all duration-200 ${
-                  filterStatus === s.value
-                    ? 'ring-2 ring-primary shadow-md'
-                    : 'hover:shadow-md'
-                }`}
-                onClick={() => setFilterStatus(filterStatus === s.value ? 'all' : s.value)}
-              >
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${cfg.color}`}>
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">{count}</div>
-                    <div className="text-xs text-muted-foreground">{s.label}</div>
-                  </div>
-                </CardContent>
-              </Card>
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                <CalendarDays className="w-5 h-5" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Расписание аудитов</h1>
+            </div>
+            <p className="text-emerald-100/80 text-sm sm:text-base">
+              Управление назначениями и расписанием проверок
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Button onClick={() => setAutoAssignOpen(true)} className="gap-2 bg-white/15 backdrop-blur-sm text-white hover:bg-white/25 border border-white/20 shadow-lg font-semibold">
+                <Wand2 className="w-4 h-4" />
+                Автоназначение
+              </Button>
             </motion.div>
-          );
-        })}
-      </div>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Button onClick={openCreate} className="gap-2 bg-white text-emerald-700 hover:bg-emerald-50 shadow-lg border-0 font-semibold">
+                <Plus className="w-4 h-4" />
+                Назначить аудит
+              </Button>
+            </motion.div>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* ─── Stats Summary Bar ────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+        className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none"
+      >
+        <div className="flex items-center gap-2 bg-muted/60 dark:bg-muted/30 rounded-xl px-4 py-2.5 border flex-shrink-0">
+          <Layers className="w-4 h-4 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Всего</span>
+          <span className="text-sm font-bold">{totalAssignments}</span>
+        </div>
+        {[
+          { key: 'SCHEDULED' as const, icon: CalendarClock, color: 'text-sky-500' },
+          { key: 'IN_PROGRESS' as const, icon: PlayCircle, color: 'text-amber-500' },
+          { key: 'COMPLETED' as const, icon: CheckCircle2, color: 'text-emerald-500' },
+          { key: 'OVERDUE' as const, icon: AlertTriangle, color: 'text-red-500' },
+        ].map((stat) => (
+          <button
+            key={stat.key}
+            onClick={() => setFilterStatus(filterStatus === stat.key ? 'all' : stat.key)}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 border transition-all duration-200 flex-shrink-0 cursor-pointer ${
+              filterStatus === stat.key
+                ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20'
+                : 'bg-muted/60 dark:bg-muted/30 hover:bg-muted dark:hover:bg-muted/50'
+            }`}
+          >
+            <stat.icon className={`w-4 h-4 ${stat.color}`} />
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{statusConfig[stat.key].label}</span>
+            <span className={`text-sm font-bold ${filterStatus === stat.key ? 'text-foreground' : stat.color}`}>
+              {statusCounts[stat.key]}
+            </span>
+          </button>
+        ))}
+      </motion.div>
 
       {/* Search, Filters, View Toggle */}
       <Card className="border-dashed">
@@ -622,26 +669,44 @@ export default function AuditScheduler() {
           ))}
         </div>
       ) : filteredAssignments.length === 0 ? (
+        /* ─── Enhanced Empty State ───────────────────────────────────────── */
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center py-16"
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-2xl border border-dashed bg-gradient-to-b from-muted/40 to-muted/10 dark:from-muted/20 dark:to-muted/5"
         >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
-            <CalendarDays className="w-8 h-8 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-20 px-6">
+            {/* Floating animated icon */}
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity }}
+              className="relative mb-6"
+            >
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 flex items-center justify-center shadow-lg">
+                <CalendarDays className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <motion.div
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity }}
+                className="absolute -inset-2 rounded-3xl bg-emerald-400/20 blur-md -z-10"
+              />
+            </motion.div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Назначения не найдены</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-md">
+              {hasActiveFilters || searchQuery
+                ? 'Попробуйте изменить параметры поиска или фильтры'
+                : 'Создайте первое назначение, чтобы начать управление расписанием аудитов'}
+            </p>
+            {!hasActiveFilters && !searchQuery && (
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="mt-6">
+                <Button onClick={openCreate} className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20">
+                  <Plus className="w-4 h-4" />
+                  Назначить аудит
+                </Button>
+              </motion.div>
+            )}
           </div>
-          <h3 className="text-lg font-semibold text-muted-foreground">Назначения не найдены</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {hasActiveFilters || searchQuery
-              ? 'Попробуйте изменить параметры поиска или фильтры'
-              : 'Нажмите кнопку выше, чтобы создать первое назначение'}
-          </p>
-          {!hasActiveFilters && !searchQuery && (
-            <Button onClick={openCreate} className="mt-4 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
-              <Plus className="w-4 h-4" />
-              Назначить аудит
-            </Button>
-          )}
         </motion.div>
       ) : viewMode === 'grid' ? (
         /* ─── Grid View ─────────────────────────────────────────────────── */
@@ -664,9 +729,7 @@ export default function AuditScheduler() {
                   exit="exit"
                   layout
                 >
-                  <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 border hover:border-emerald-200 dark:hover:border-emerald-800 h-full flex flex-col">
-                    {/* Status color strip */}
-                    <div className={`h-1 ${statusCfg.dotColor}`} />
+                  <Card className={`group overflow-hidden transition-all duration-300 border border-l-4 ${statusCfg.borderColor} hover:shadow-lg hover:-translate-y-0.5 dark:shadow-none h-full flex flex-col`}>
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
@@ -694,7 +757,7 @@ export default function AuditScheduler() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                             onClick={() => openDelete(item)}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -736,8 +799,8 @@ export default function AuditScheduler() {
                         )}
                       </div>
                       <div className="flex items-center justify-between pt-2 border-t">
-                        <Badge variant="outline" className={`text-[11px] gap-1.5 ${statusCfg.color}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dotColor}`} />
+                        <Badge variant="outline" className={`text-[11px] gap-1 ${statusCfg.color}`}>
+                          <StatusIcon className="w-3 h-3" />
                           {statusCfg.label}
                         </Badge>
                         <Button
@@ -813,6 +876,7 @@ export default function AuditScheduler() {
                 <AnimatePresence mode="popLayout">
                   {filteredAssignments.map((item) => {
                     const statusCfg = statusConfig[item.status] || statusConfig.SCHEDULED;
+                    const TableStatusIcon = statusCfg.icon;
 
                     return (
                       <motion.tr
@@ -822,15 +886,16 @@ export default function AuditScheduler() {
                         animate="visible"
                         exit="exit"
                         layout
-                        className="group border-b transition-colors hover:bg-muted/50 cursor-default"
+                        className={`group border-b transition-all duration-200 hover:bg-muted/50 hover:shadow-sm cursor-default ${statusCfg.borderColor}`}
                       >
                         <TableCell>
                           <div className="flex items-center gap-3 min-w-0">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center border flex-shrink-0 ${
-                              item.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200' :
-                              item.status === 'OVERDUE' ? 'bg-red-50 text-red-600 border-red-200' :
-                              item.status === 'IN_PROGRESS' ? 'bg-amber-50 text-amber-600 border-amber-200' :
-                              'bg-blue-50 text-blue-600 border-blue-200'
+                              item.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' :
+                              item.status === 'OVERDUE' ? 'bg-red-50 text-red-600 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
+                              item.status === 'IN_PROGRESS' ? 'bg-amber-50 text-amber-600 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800' :
+                              item.status === 'CANCELLED' ? 'bg-slate-50 text-slate-500 border-slate-200 dark:bg-slate-800/30 dark:text-slate-400 dark:border-slate-700' :
+                              'bg-sky-50 text-sky-600 border-sky-200 dark:bg-sky-900/30 dark:text-sky-400 dark:border-sky-800'
                             }`}>
                               <ClipboardList className="w-4 h-4" />
                             </div>
@@ -867,8 +932,8 @@ export default function AuditScheduler() {
                             onClick={() => openStatusChange(item)}
                             className="cursor-pointer"
                           >
-                            <Badge variant="outline" className={`text-[11px] gap-1.5 transition-colors hover:opacity-80 ${statusCfg.color}`}>
-                              <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dotColor}`} />
+                            <Badge variant="outline" className={`text-[11px] gap-1 transition-colors hover:opacity-80 ${statusCfg.color}`}>
+                              <TableStatusIcon className="w-3 h-3" />
                               {statusCfg.label}
                             </Badge>
                           </button>
@@ -887,7 +952,7 @@ export default function AuditScheduler() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                              className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                               onClick={() => openDelete(item)}
                               title="Удалить"
                             >
@@ -1077,6 +1142,13 @@ export default function AuditScheduler() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ─── Auto-Assign Dialog ────────────────────────────────────────── */}
+      <AutoAssignDialog
+        open={autoAssignOpen}
+        onOpenChange={setAutoAssignOpen}
+        onCreated={fetchAssignments}
+      />
 
       {/* ─── Delete Confirmation Dialog ──────────────────────────────────── */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>

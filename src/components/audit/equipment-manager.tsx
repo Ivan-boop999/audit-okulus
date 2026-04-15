@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Search, Pencil, Trash2, Wrench, Cpu, BriefcaseConveyorBelt,
   Thermometer, Gauge, Zap, Factory, MapPin, X, Filter,
   MoreHorizontal, ArrowUpDown, Eye, EyeOff, LayoutGrid, List,
-  ChevronDown, AlertTriangle, CheckCircle2, Clock, Package
+  ChevronDown, AlertTriangle, CheckCircle2, Clock, Package,
+  Download, Upload, FileText
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +29,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogFooter, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
+import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -128,6 +130,97 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
   },
 };
 
+// ─── CSV Helpers ──────────────────────────────────────────────────────────────
+
+const CSV_BOM = '\uFEFF';
+const CSV_SEPARATOR = ';';
+
+const STATUS_MAP_RU_TO_EN: Record<string, 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE'> = {
+  'Активно': 'ACTIVE',
+  'На обслуживании': 'MAINTENANCE',
+  'Неактивно': 'INACTIVE',
+};
+
+const COLUMN_ALIASES: Record<string, keyof EquipmentFormData> = {
+  'Код': 'code',
+  'Название': 'name',
+  'Категория': 'category',
+  'Местоположение': 'location',
+  'Статус': 'status',
+  'Описание': 'description',
+  'code': 'code',
+  'name': 'name',
+  'category': 'category',
+  'location': 'location',
+  'status': 'status',
+  'description': 'description',
+};
+
+function escapeCSVField(value: string): string {
+  if (value.includes(CSV_SEPARATOR) || value.includes('"') || value.includes('\n')) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
+
+function parseCSVLine(line: string): string[] {
+  const fields: string[] = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const char = line[i];
+    if (inQuotes) {
+      if (char === '"') {
+        if (i + 1 < line.length && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += char;
+      }
+    } else {
+      if (char === '"') {
+        inQuotes = true;
+      } else if (char === CSV_SEPARATOR) {
+        fields.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+  }
+  fields.push(current.trim());
+  return fields;
+}
+
+function parseCSVContent(text: string): string[][] {
+  const lines: string[] = [];
+  let currentLine = '';
+  let inQuotes = false;
+  for (let i = 0; i < text.length; i++) {
+    const char = text[i];
+    if (char === '"') {
+      if (inQuotes && i + 1 < text.length && text[i + 1] === '"') {
+        currentLine += '""';
+        i++;
+      } else {
+        inQuotes = !inQuotes;
+      }
+      currentLine += char;
+    } else if ((char === '\n' || char === '\r') && !inQuotes) {
+      if (currentLine.trim()) lines.push(currentLine);
+      currentLine = '';
+      if (char === '\r' && i + 1 < text.length && text[i + 1] === '\n') i++;
+    } else {
+      currentLine += char;
+    }
+  }
+  if (currentLine.trim()) lines.push(currentLine);
+  return lines.map(parseCSVLine);
+}
+
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
 const containerVariants = {
@@ -176,6 +269,20 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
   const [deletingItem, setDeletingItem] = useState<Equipment | null>(null);
   const [formData, setFormData] = useState<EquipmentFormData>(emptyForm);
   const [submitting, setSubmitting] = useState(false);
+
+  // CSV Import state
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
+  const [importFile, setImportFile] = useState<File | null>(null);
+  const [importPreview, setImportPreview] = useState<string[][]>([]);
+  const [importHeaders, setImportHeaders] = useState<string[]>([]);
+  const [importRows, setImportRows] = useState<EquipmentFormData[]>([]);
+  const [importing, setImporting] = useState(false);
+  const [importProgress, setImportProgress] = useState(0);
+  const [importTotal, setImportTotal] = useState(0);
+  const [importErrors, setImportErrors] = useState<string[]>([]);
+  const [importDone, setImportDone] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dropZoneRef = useRef<HTMLDivElement>(null);
 
   // ─── Fetch ────────────────────────────────────────────────────────────────
 
@@ -335,6 +442,237 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
     }
   };
 
+  // ─── CSV Export ──────────────────────────────────────────────────────────
+
+  const handleExportCSV = useCallback(() => {
+    if (equipment.length === 0) {
+      toast.error('Нет данных для экспорта');
+      return;
+    }
+
+    const statusRuMap: Record<string, string> = {
+      ACTIVE: 'Активно',
+      MAINTENANCE: 'На обслуживании',
+      INACTIVE: 'Неактивно',
+    };
+
+    const headers = ['Код', 'Название', 'Категория', 'Местоположение', 'Статус', 'Описание'];
+    const rows = equipment.map((item) => [
+      escapeCSVField(item.code),
+      escapeCSVField(item.name),
+      escapeCSVField(item.category),
+      escapeCSVField(item.location),
+      escapeCSVField(statusRuMap[item.status] || item.status),
+      escapeCSVField(item.description || ''),
+    ]);
+
+    const csvContent = CSV_BOM + headers.join(CSV_SEPARATOR) + '\n' +
+      rows.map((row) => row.join(CSV_SEPARATOR)).join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const today = new Date().toISOString().split('T')[0];
+    a.href = url;
+    a.download = `equipment_export_${today}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success(`Экспортировано ${equipment.length} записей`);
+  }, [equipment]);
+
+  // ─── CSV Template Download ──────────────────────────────────────────────────
+
+  const handleDownloadTemplate = useCallback(() => {
+    const headers = ['Код', 'Название', 'Категория', 'Местоположение', 'Статус', 'Описание'];
+    const exampleRow = ['PRS-001', 'Гидравлический пресс ПГ-100', 'Пресс', 'Цех №1, Линия А', 'Активно', 'Описание оборудования'];
+    const csvContent = CSV_BOM + headers.join(CSV_SEPARATOR) + '\n' + exampleRow.join(CSV_SEPARATOR);
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'equipment_template.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    toast.success('Шаблон CSV загружен');
+  }, []);
+
+  // ─── CSV Import ──────────────────────────────────────────────────────────
+
+  const resetImportState = useCallback(() => {
+    setImportFile(null);
+    setImportPreview([]);
+    setImportHeaders([]);
+    setImportRows([]);
+    setImporting(false);
+    setImportProgress(0);
+    setImportTotal(0);
+    setImportErrors([]);
+    setImportDone(false);
+  }, []);
+
+  const openImportDialog = useCallback(() => {
+    resetImportState();
+    setImportDialogOpen(true);
+  }, [resetImportState]);
+
+  const processFile = useCallback((file: File) => {
+    if (!file.name.endsWith('.csv')) {
+      toast.error('Выберите файл в формате .csv');
+      return;
+    }
+
+    setImportFile(file);
+    setImportDone(false);
+    setImportErrors([]);
+
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      const rows = parseCSVContent(text);
+
+      if (rows.length < 2) {
+        toast.error('Файл пуст или не содержит данных');
+        return;
+      }
+
+      const headers = rows[0];
+      setImportHeaders(headers);
+
+      // Auto-detect column mapping
+      const mapping: Record<number, keyof EquipmentFormData> = {};
+      headers.forEach((h, idx) => {
+        const mapped = COLUMN_ALIASES[h];
+        if (mapped) mapping[idx] = mapped;
+      });
+
+      // Parse all data rows
+      const parsedRows: EquipmentFormData[] = [];
+      const errors: string[] = [];
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (row.every((cell) => !cell)) continue; // skip empty rows
+
+        const formDataRow: EquipmentFormData = { ...emptyForm };
+        let hasData = false;
+
+        Object.entries(mapping).forEach(([colIdx, field]) => {
+          const value = row[parseInt(colIdx)] || '';
+          if (value) {
+            hasData = true;
+            if (field === 'status') {
+              const mappedStatus = STATUS_MAP_RU_TO_EN[value] || (
+                ['ACTIVE', 'MAINTENANCE', 'INACTIVE'].includes(value) ? value as 'ACTIVE' | 'MAINTENANCE' | 'INACTIVE' : 'ACTIVE'
+              );
+              formDataRow[field] = mappedStatus;
+            } else {
+              formDataRow[field] = value;
+            }
+          }
+        });
+
+        if (hasData) {
+          if (!formDataRow.name || !formDataRow.code) {
+            errors.push(`Строка ${i + 1}: отсутствует название или код`);
+          } else {
+            parsedRows.push(formDataRow);
+          }
+        }
+      }
+
+      if (parsedRows.length === 0) {
+        toast.error('Не удалось найти валидные данные для импорта');
+        return;
+      }
+
+      setImportRows(parsedRows);
+      setImportErrors(errors);
+      setImportPreview(rows.slice(0, 6)); // header + 5 data rows
+    };
+    reader.readAsText(file, 'utf-8');
+  }, []);
+
+  const handleFileSelect = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) processFile(file);
+  }, [processFile]);
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZoneRef.current?.classList.add('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-950/20');
+    dropZoneRef.current?.classList.remove('border-dashed', 'border-muted-foreground/25');
+  }, []);
+
+  const handleDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZoneRef.current?.classList.remove('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-950/20');
+    dropZoneRef.current?.classList.add('border-dashed', 'border-muted-foreground/25');
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    dropZoneRef.current?.classList.remove('border-emerald-400', 'bg-emerald-50/50', 'dark:bg-emerald-950/20');
+    dropZoneRef.current?.classList.add('border-dashed', 'border-muted-foreground/25');
+    const file = e.dataTransfer.files[0];
+    if (file) processFile(file);
+  }, [processFile]);
+
+  const handleImport = useCallback(async () => {
+    if (importRows.length === 0) return;
+
+    setImporting(true);
+    setImportProgress(0);
+    setImportTotal(importRows.length);
+    setImportErrors([]);
+
+    let successCount = 0;
+    let errorCount = 0;
+    const newErrors: string[] = [];
+
+    for (let i = 0; i < importRows.length; i++) {
+      const row = importRows[i];
+      try {
+        const res = await fetch('/api/equipment', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(row),
+        });
+        if (res.ok) {
+          successCount++;
+        } else {
+          errorCount++;
+          newErrors.push(`Строка ${i + 1}: ошибка создания «${row.name}»`);
+        }
+      } catch {
+        errorCount++;
+        newErrors.push(`Строка ${i + 1}: ошибка сети при создании «${row.name}»`);
+      }
+      setImportProgress(i + 1);
+    }
+
+    setImportErrors(newErrors);
+    setImportDone(true);
+    setImporting(false);
+
+    if (errorCount === 0) {
+      toast.success(`Успешно импортировано ${successCount} записей`);
+    } else {
+      toast.warning(`Импортировано ${successCount} из ${importRows.length}. ${errorCount} ошибок.`);
+    }
+
+    fetchEquipment();
+  }, [importRows, fetchEquipment]);
+
   // ─── Helpers ─────────────────────────────────────────────────────────────
 
   const getCategoryIcon = (category: string) => categoryIcons[category] || Package;
@@ -352,10 +690,40 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
             Управление парком производственного оборудования
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
-          <Plus className="w-4 h-4" />
-          Добавить оборудование
-        </Button>
+        <div className="flex items-center gap-2 flex-wrap">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleDownloadTemplate}
+            className="gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            Шаблон CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportCSV}
+            className="gap-2"
+            disabled={equipment.length === 0}
+          >
+            <Download className="w-4 h-4" />
+            Экспорт CSV
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={openImportDialog}
+            className="gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            Импорт CSV
+          </Button>
+          <Button onClick={openCreate} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
+            <Plus className="w-4 h-4" />
+            Добавить
+          </Button>
+        </div>
       </div>
 
       {/* Status Summary Cards */}
@@ -999,6 +1367,215 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ─── CSV Import Dialog ──────────────────────────────────────────────── */}
+      <Dialog open={importDialogOpen} onOpenChange={(open) => { setImportDialogOpen(open); if (!open) resetImportState(); }}>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 0.25, ease: 'easeOut' }}
+        >
+          <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <Upload className="w-5 h-5 text-emerald-600" />
+                Импорт оборудования из CSV
+              </DialogTitle>
+              <DialogDescription>
+                Загрузите файл CSV для массового импорта оборудования
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-2">
+              {/* Drop Zone */}
+              <div
+                ref={dropZoneRef}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+                onClick={() => fileInputRef.current?.click()}
+                className={`border-2 border-dashed border-muted-foreground/25 rounded-xl p-8 text-center cursor-pointer transition-all duration-200 hover:border-emerald-400 hover:bg-emerald-50/30 dark:hover:bg-emerald-950/10 ${importFile ? 'border-emerald-400 bg-emerald-50/30 dark:bg-emerald-950/10' : ''}`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".csv"
+                  onChange={handleFileSelect}
+                  className="hidden"
+                />
+                <motion.div
+                  animate={importFile ? { scale: [1, 1.1, 1] } : {}}
+                  transition={{ duration: 0.3 }}
+                >
+                  <div className={`w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-colors ${importFile ? 'bg-emerald-100 dark:bg-emerald-900/30' : 'bg-muted'}`}>
+                    <Upload className={`w-6 h-6 transition-colors ${importFile ? 'text-emerald-600' : 'text-muted-foreground'}`} />
+                  </div>
+                  {importFile ? (
+                    <div>
+                      <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                        {importFile.name}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {(importFile.size / 1024).toFixed(1)} КБ · Нажмите для замены
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-sm font-medium">Перетащите CSV-файл сюда</p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        или нажмите для выбора файла
+                      </p>
+                    </div>
+                  )}
+                </motion.div>
+              </div>
+
+              {/* Template download hint */}
+              {!importFile && (
+                <p className="text-xs text-center text-muted-foreground">
+                  Нет файла?{' '}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setImportDialogOpen(false); handleDownloadTemplate(); }}
+                    className="text-emerald-600 hover:text-emerald-700 underline underline-offset-2"
+                  >
+                    Скачайте шаблон CSV
+                  </button>
+                </p>
+              )}
+
+              {/* Preview Table */}
+              {importPreview.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-medium">
+                      Предпросмотр данных
+                    </p>
+                    <Badge variant="secondary" className="text-xs">
+                      {importRows.length} записей для импорта
+                    </Badge>
+                  </div>
+                  <div className="rounded-lg border overflow-hidden max-h-48 overflow-y-auto">
+                    <Table>
+                      <TableHeader>
+                        <TableRow>
+                          {importHeaders.map((header, idx) => (
+                            <TableHead key={idx} className="text-xs whitespace-nowrap">
+                              {header}
+                            </TableHead>
+                          ))}
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {importPreview.slice(1).map((row, rowIdx) => (
+                          <TableRow key={rowIdx}>
+                            {row.map((cell, cellIdx) => (
+                              <TableCell key={cellIdx} className="text-xs py-1.5 max-w-[120px] truncate">
+                                {cell || <span className="text-muted-foreground">—</span>}
+                              </TableCell>
+                            ))}
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  </div>
+                  {importRows.length > 5 && (
+                    <p className="text-xs text-muted-foreground text-center">
+                      Показаны первые 5 из {importRows.length} записей
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Progress Bar */}
+              {importing && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Импорт...</span>
+                    <span className="font-medium">
+                      {importProgress} из {importTotal} импортировано
+                    </span>
+                  </div>
+                  <Progress value={importTotal > 0 ? (importProgress / importTotal) * 100 : 0} className="h-2" />
+                </div>
+              )}
+
+              {/* Completion Summary */}
+              {importDone && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="space-y-3"
+                >
+                  <div className={`rounded-lg p-4 ${importErrors.length === 0 ? 'bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-800' : 'bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-800'}`}>
+                    <div className="flex items-center gap-2 mb-1">
+                      {importErrors.length === 0 ? (
+                        <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                      ) : (
+                        <AlertTriangle className="w-5 h-5 text-amber-600" />
+                      )}
+                      <p className={`text-sm font-medium ${importErrors.length === 0 ? 'text-emerald-700 dark:text-emerald-400' : 'text-amber-700 dark:text-amber-400'}`}>
+                        {importErrors.length === 0
+                          ? `Все ${importTotal} записей успешно импортированы`
+                          : `Импортировано ${importProgress - importErrors.length} из ${importTotal}`}
+                      </p>
+                    </div>
+                  </div>
+
+                  {importErrors.length > 0 && (
+                    <div className="max-h-32 overflow-y-auto rounded-lg border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/20 p-3">
+                      <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-2">Ошибки:</p>
+                      <ul className="space-y-1">
+                        {importErrors.map((err, idx) => (
+                          <li key={idx} className="text-xs text-red-600 dark:text-red-400">{err}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </motion.div>
+              )}
+            </div>
+
+            <DialogFooter>
+              {!importDone ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => { setImportDialogOpen(false); resetImportState(); }}
+                    disabled={importing}
+                  >
+                    Отмена
+                  </Button>
+                  <Button
+                    onClick={handleImport}
+                    disabled={importRows.length === 0 || importing}
+                    className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    {importing ? (
+                      <motion.div
+                        animate={{ rotate: 360 }}
+                        transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                        className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                      />
+                    ) : (
+                      <>
+                        <Upload className="w-4 h-4" />
+                        Импортировать ({importRows.length})
+                      </>
+                    )}
+                  </Button>
+                </>
+              ) : (
+                <Button
+                  onClick={() => { setImportDialogOpen(false); resetImportState(); }}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                >
+                  Готово
+                </Button>
+              )}
+            </DialogFooter>
+          </DialogContent>
+        </motion.div>
+      </Dialog>
     </div>
   );
 }

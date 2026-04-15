@@ -6,7 +6,7 @@ import {
   Plus, Search, Pencil, Trash2, FileText, HelpCircle, AlertTriangle,
   CheckCircle2, Clock, Archive, Eye, X, Filter,
   ListChecks, ClipboardList, CalendarClock,
-  Star, ArrowUpDown, Settings2, Copy, Loader2,
+  Star, ArrowUpDown, Settings2, Copy, Loader2, Sparkles, Layers,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -149,24 +149,36 @@ const STATUS_CONFIG: Record<TemplateStatus, {
   color: string;
   dotColor: string;
   icon: React.ElementType;
+  borderColor: string;
+  gradientBg: string;
+  stripGradient: string;
 }> = {
   DRAFT: {
     label: 'Черновик',
-    color: 'bg-slate-100 text-slate-600 border-slate-200',
+    color: 'bg-slate-100 text-slate-600 border-slate-200 dark:bg-slate-800/40 dark:text-slate-400 dark:border-slate-700',
     dotColor: 'bg-slate-400',
     icon: FileText,
+    borderColor: 'border-l-slate-300 dark:border-l-slate-600',
+    gradientBg: 'bg-gradient-to-br from-slate-50/80 to-gray-50/80 dark:from-slate-900/30 dark:to-gray-900/30',
+    stripGradient: 'bg-gradient-to-r from-slate-300 to-slate-400',
   },
   ACTIVE: {
     label: 'Активен',
-    color: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    color: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800',
     dotColor: 'bg-emerald-500',
     icon: CheckCircle2,
+    borderColor: 'border-l-emerald-400',
+    gradientBg: 'bg-gradient-to-br from-emerald-50/80 to-teal-50/80 dark:from-emerald-950/20 dark:to-teal-950/20',
+    stripGradient: 'bg-gradient-to-r from-emerald-400 to-teal-400',
   },
   ARCHIVED: {
     label: 'Архив',
-    color: 'bg-amber-100 text-amber-700 border-amber-200',
+    color: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800',
     dotColor: 'bg-amber-500',
     icon: Archive,
+    borderColor: 'border-l-amber-400',
+    gradientBg: 'bg-gradient-to-br from-amber-50/80 to-yellow-50/80 dark:from-amber-950/20 dark:to-yellow-950/20',
+    stripGradient: 'bg-gradient-to-r from-amber-400 to-yellow-400',
   },
 };
 
@@ -532,50 +544,73 @@ export default function TemplateBuilder() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Шаблоны аудитов</h1>
-          <p className="text-muted-foreground mt-1">
-            Создание и управление шаблонами проверок
-          </p>
-        </div>
-        <Button onClick={openCreateTemplate} className="gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm">
-          <Plus className="w-4 h-4" />
-          Создать шаблон
-        </Button>
-      </div>
+      {/* ─── Gradient Header Section ──────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-700 p-6 sm:p-8 text-white"
+      >
+        {/* Decorative blurred circles */}
+        <div className="absolute -top-12 -right-12 w-48 h-48 bg-emerald-400/20 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute -bottom-16 -left-16 w-56 h-56 bg-teal-400/20 rounded-full blur-[80px] pointer-events-none" />
+        <div className="absolute top-1/2 right-1/4 w-32 h-32 bg-teal-300/10 rounded-full blur-[60px] pointer-events-none" />
 
-      {/* Status Summary Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-10 h-10 rounded-xl bg-white/15 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                <ClipboardList className="w-5 h-5" />
+              </div>
+              <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Шаблоны аудитов</h1>
+            </div>
+            <p className="text-emerald-100/80 text-sm sm:text-base">
+              Создание и управление шаблонами проверок
+            </p>
+          </div>
+          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+            <Button onClick={openCreateTemplate} className="gap-2 bg-white text-emerald-700 hover:bg-emerald-50 shadow-lg border-0 font-semibold">
+              <Plus className="w-4 h-4" />
+              Создать шаблон
+            </Button>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* ─── Stats Summary Bar ────────────────────────────────────────── */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15, duration: 0.4 }}
+        className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none"
+      >
+        <div className="flex items-center gap-2 bg-muted/60 dark:bg-muted/30 rounded-xl px-4 py-2.5 border flex-shrink-0">
+          <Layers className="w-4 h-4 text-muted-foreground" />
+          <span className="text-xs text-muted-foreground whitespace-nowrap">Всего</span>
+          <span className="text-sm font-bold">{templates.length}</span>
+        </div>
         {([
-          { key: 'ACTIVE' as TemplateStatus, label: 'Активные', color: 'text-emerald-600', bg: 'bg-emerald-50', border: 'border-emerald-200' },
-          { key: 'DRAFT' as TemplateStatus, label: 'Черновики', color: 'text-slate-500', bg: 'bg-slate-50', border: 'border-slate-200' },
-          { key: 'ARCHIVED' as TemplateStatus, label: 'В архиве', color: 'text-amber-600', bg: 'bg-amber-50', border: 'border-amber-200' },
-        ]).map((s) => {
-          const cfg = STATUS_CONFIG[s.key];
-          const Icon = cfg.icon;
-          return (
-            <motion.div
-              key={s.key}
-              whileHover={{ scale: 1.02, y: -1 }}
-              transition={{ duration: 0.2 }}
-            >
-              <Card className={`border ${s.border}`}>
-                <CardContent className="p-4 flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${s.bg}`}>
-                    <Icon className={`w-5 h-5 ${s.color}`} />
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold">{statusCounts[s.key]}</div>
-                    <div className="text-sm text-muted-foreground">{s.label}</div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+          { key: 'ACTIVE' as TemplateStatus, icon: CheckCircle2, color: 'text-emerald-500' },
+          { key: 'DRAFT' as TemplateStatus, icon: FileText, color: 'text-slate-400' },
+          { key: 'ARCHIVED' as TemplateStatus, icon: Archive, color: 'text-amber-500' },
+        ]).map((stat) => (
+          <button
+            key={stat.key}
+            onClick={() => setFilterStatus(filterStatus === stat.key ? 'all' : stat.key)}
+            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 border transition-all duration-200 flex-shrink-0 cursor-pointer ${
+              filterStatus === stat.key
+                ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20'
+                : 'bg-muted/60 dark:bg-muted/30 hover:bg-muted dark:hover:bg-muted/50'
+            }`}
+          >
+            <stat.icon className={`w-4 h-4 ${stat.color}`} />
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{STATUS_CONFIG[stat.key].label}</span>
+            <span className={`text-sm font-bold ${filterStatus === stat.key ? 'text-foreground' : stat.color}`}>
+              {statusCounts[stat.key]}
+            </span>
+          </button>
+        ))}
+      </motion.div>
 
       {/* Search & Filters */}
       <Card className="border-dashed">
@@ -654,26 +689,43 @@ export default function TemplateBuilder() {
           ))}
         </div>
       ) : filteredTemplates.length === 0 ? (
+        /* ─── Enhanced Empty State ───────────────────────────────────────── */
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="text-center py-16"
+          transition={{ duration: 0.5 }}
+          className="relative overflow-hidden rounded-2xl border border-dashed bg-gradient-to-b from-muted/40 to-muted/10 dark:from-muted/20 dark:to-muted/5"
         >
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
-            <ClipboardList className="w-8 h-8 text-muted-foreground" />
+          <div className="flex flex-col items-center justify-center py-20 px-6">
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, ease: 'easeInOut', repeat: Infinity }}
+              className="relative mb-6"
+            >
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/40 dark:to-teal-900/40 flex items-center justify-center shadow-lg">
+                <ClipboardList className="w-10 h-10 text-emerald-600 dark:text-emerald-400" />
+              </div>
+              <motion.div
+                animate={{ opacity: [0.3, 0.6, 0.3] }}
+                transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity }}
+                className="absolute -inset-2 rounded-3xl bg-emerald-400/20 blur-md -z-10"
+              />
+            </motion.div>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Шаблоны не найдены</h3>
+            <p className="text-sm text-muted-foreground text-center max-w-md">
+              {searchQuery || filterCategory !== 'all' || filterStatus !== 'all'
+                ? 'Попробуйте изменить параметры поиска или фильтры'
+                : 'Создайте первый шаблон, чтобы начать создавать чек-листы для аудитов'}
+            </p>
+            {!searchQuery && filterCategory === 'all' && filterStatus === 'all' && (
+              <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} className="mt-6">
+                <Button onClick={openCreateTemplate} className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20">
+                  <Plus className="w-4 h-4" />
+                  Создать шаблон
+                </Button>
+              </motion.div>
+            )}
           </div>
-          <h3 className="text-lg font-semibold text-muted-foreground">Шаблоны не найдены</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            {searchQuery || filterCategory !== 'all' || filterStatus !== 'all'
-              ? 'Попробуйте изменить параметры поиска или фильтры'
-              : 'Нажмите кнопку выше, чтобы создать первый шаблон'}
-          </p>
-          {!searchQuery && filterCategory === 'all' && filterStatus === 'all' && (
-            <Button onClick={openCreateTemplate} className="mt-4 gap-2 bg-emerald-600 hover:bg-emerald-700 text-white">
-              <Plus className="w-4 h-4" />
-              Создать шаблон
-            </Button>
-          )}
         </motion.div>
       ) : (
         /* ─── Template Cards Grid ─────────────────────────────────────────── */
@@ -700,12 +752,9 @@ export default function TemplateBuilder() {
                   exit="exit"
                   layout
                 >
-                  <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 border hover:border-emerald-200 dark:hover:border-emerald-800">
-                    {/* Status color strip */}
-                    <div className={`h-1 ${
-                      template.status === 'ACTIVE' ? 'bg-emerald-500' :
-                      template.status === 'ARCHIVED' ? 'bg-amber-500' : 'bg-slate-300'
-                    }`} />
+                  <Card className={`group overflow-hidden transition-all duration-300 border border-l-4 ${statusCfg.borderColor} hover:shadow-lg hover:-translate-y-0.5 dark:shadow-none`}>
+                    {/* Gradient status strip */}
+                    <div className={`h-1 ${statusCfg.stripGradient}`} />
 
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between gap-3">
@@ -759,7 +808,7 @@ export default function TemplateBuilder() {
                     </CardHeader>
 
                     <CardContent className="pt-0 space-y-3">
-                      {/* Info row */}
+                      {/* Info row with question count badge */}
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <ListChecks className="w-3.5 h-3.5" />
@@ -775,42 +824,64 @@ export default function TemplateBuilder() {
                           <Clock className="w-3.5 h-3.5" />
                           {freqLabel}
                         </span>
+                        {/* Question count indicator badge */}
+                        {questionCount > 0 && (
+                          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[11px] font-semibold">
+                            <ListChecks className="w-3 h-3" />
+                            {questionCount}
+                          </span>
+                        )}
                       </div>
 
-                      {/* Badges */}
+                      {/* Badges with animated pulsing status dot */}
                       <div className="flex items-center gap-2 flex-wrap">
                         <Badge variant="outline" className={`text-[11px] ${catColor}`}>
                           {template.category}
                         </Badge>
-                        <Badge variant="outline" className={`text-[11px] gap-1.5 ${statusCfg.color}`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${statusCfg.dotColor}`} />
+                        <Badge variant="outline" className={`text-[11px] gap-1 ${statusCfg.color}`}>
+                          <motion.span
+                            className={`w-1.5 h-1.5 rounded-full ${statusCfg.dotColor}`}
+                            animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
+                            transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity }}
+                          />
                           {statusCfg.label}
                         </Badge>
                       </div>
 
-                      {/* Expand questions toggle */}
+                      {/* Expand questions toggle with enhanced accordion animation */}
                       {questionCount > 0 && (
                         <>
                           <Separator />
-                          <Accordion
-                            type="single"
-                            collapsible
-                            value={expandedTemplates.includes(template.id) ? template.id : undefined}
-                            onValueChange={(value) => {
-                              setExpandedTemplates((prev) =>
-                                value === template.id
-                                  ? [...prev, template.id]
-                                  : prev.filter((id) => id !== template.id),
-                              );
-                            }}
+                          <motion.div
+                            initial={false}
+                            animate={{ backgroundColor: expandedTemplates.includes(template.id) ? 'rgba(16,185,129,0.03)' : 'rgba(0,0,0,0)' }}
+                            transition={{ duration: 0.3 }}
+                            className="-mx-1 px-1"
                           >
-                            <AccordionItem value={template.id} className="border-none">
-                              <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground hover:no-underline hover:text-foreground transition-colors">
-                                <span className="flex items-center gap-1.5">
-                                  <Eye className="w-3.5 h-3.5" />
-                                  Просмотр вопросов ({questionCount})
-                                </span>
-                              </AccordionTrigger>
+                            <Accordion
+                              type="single"
+                              collapsible
+                              value={expandedTemplates.includes(template.id) ? template.id : undefined}
+                              onValueChange={(value) => {
+                                setExpandedTemplates((prev) =>
+                                  value === template.id
+                                    ? [...prev, template.id]
+                                    : prev.filter((id) => id !== template.id),
+                                );
+                              }}
+                            >
+                              <AccordionItem value={template.id} className="border-none">
+                                <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground hover:no-underline hover:text-foreground transition-colors">
+                                  <span className="flex items-center gap-1.5">
+                                    <motion.div
+                                      animate={{ rotate: expandedTemplates.includes(template.id) ? 90 : 0 }}
+                                      transition={{ duration: 0.2 }}
+                                    >
+                                      <Eye className="w-3.5 h-3.5" />
+                                    </motion.div>
+                                    Просмотр вопросов ({questionCount})
+                                  </span>
+                                </AccordionTrigger>
                               <AccordionContent>
                                 <ScrollArea className="max-h-[320px] pr-2">
                                   <div className="space-y-2">
@@ -907,6 +978,7 @@ export default function TemplateBuilder() {
                               </AccordionContent>
                             </AccordionItem>
                           </Accordion>
+                          </motion.div>
                         </>
                       )}
 

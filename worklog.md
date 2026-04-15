@@ -582,6 +582,55 @@ Unresolved Issues / Risks:
   10. Improve mobile responsiveness for analytics charts
 
 ---
+Task ID: 9-c
+Agent: Full-stack Developer
+Task: Add Equipment Import/Export CSV feature to AuditPro
+
+Work Log:
+- Read project worklog.md and understood full project context (AuditPro audit management app, Russian UI, Next.js 16, shadcn/ui)
+- Read existing equipment-manager.tsx (1004 lines) and /api/equipment route to understand data format and current structure
+- Added new imports: Download, Upload, FileText from lucide-react; Progress from shadcn/ui; useRef from React
+- Added CSV helper constants and functions (before animation variants):
+  - CSV_BOM, CSV_SEPARATOR (semicolon for Russian Excel compatibility)
+  - STATUS_MAP_RU_TO_EN: Russian→English status value mapping (Активно→ACTIVE, На обслуживании→MAINTENANCE, Неактивно→INACTIVE)
+  - COLUMN_ALIASES: Auto-detect columns from both Russian and English CSV headers
+  - escapeCSVField(): Proper CSV field escaping with quotes
+  - parseCSVLine(): Manual CSV line parser handling quoted fields with semicolons
+  - parseCSVContent(): Full CSV content parser handling multi-line fields, BOM, CRLF/LF
+- Added CSV import state variables (12 states + 2 refs for file input and drop zone)
+- Added CSV Export handler (handleExportCSV):
+  - Exports all equipment data as semicolon-separated CSV with UTF-8 BOM for Russian character support
+  - Fields: Код, Название, Категория, Местоположение, Статус, Описание
+  - Status values translated to Russian
+  - File name: equipment_export_YYYY-MM-DD.csv
+  - Shows toast with count of exported records
+- Added CSV Template Download handler (handleDownloadTemplate):
+  - Downloads blank CSV template with correct Russian headers and one example row
+  - File name: equipment_template.csv
+- Added CSV Import feature with full dialog UI:
+  - openImportDialog/resetImportState state management
+  - processFile: FileReader-based CSV parsing with auto-detect column mapping
+  - Validates required fields (name, code) per row
+  - Maps Russian status values back to English enum values
+  - handleDragOver/handleDragLeave/handleDrop: Drag & drop zone with visual feedback
+  - handleImport: Sequential POST /api/equipment calls with progress tracking
+  - Dialog UI: framer-motion entrance animation, drag & drop zone, preview table (first 5 rows), Progress bar, success/error summary
+- Modified header area: Added 3 new buttons (Шаблон CSV, Экспорт CSV, Импорт CSV) alongside existing "Добавить" button
+- Added Import Dialog JSX at bottom of component with all states (upload, preview, progress, done)
+- ESLint: 0 errors, 0 warnings (final check)
+- Dev server: compiled successfully (488ms), all routes return 200
+
+Stage Summary:
+- 3 new features added to Equipment Manager: CSV Export, CSV Import, CSV Template Download
+- CSV Export: semicolon-separated with UTF-8 BOM, Russian status values, date-stamped filename
+- CSV Import: drag & drop upload, preview table, auto column detection (Russian + English), progress bar, error summary
+- CSV Template: pre-filled example row with correct format for import
+- Manual CSV parsing (no external dependencies added)
+- All existing CRUD functionality preserved — no breaking changes
+- All text in Russian
+- Responsive design maintained
+
+---
 Task ID: 8-a
 Agent: Full-stack Developer
 Task: Action Plans database persistence + Audit Response Form enhancements
@@ -677,3 +726,49 @@ Part 2 - Analytics Dashboard Mobile Responsiveness:
 - Summary cards grid: Already uses grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 (verified correct)
 
 Lint check: Passed with zero errors
+
+---
+Task ID: 9-d
+Agent: Full-stack Developer
+Task: Add Bulk Auto-Assign feature to Audit Scheduler
+
+Work Log:
+- Read worklog.md to understand project context (AuditPro v2.2, Next.js 16, Prisma, shadcn/ui, Russian UI)
+- Read existing audit-scheduler.tsx (~1282 lines) to understand component structure, dialogs, data fetching, and styling patterns
+- Read existing API routes: /api/assignments (POST creates single assignment), /api/users (GET with filters), /api/templates (GET all with relations)
+- Verified POST /api/assignments accepts { templateId, auditorId, scheduledDate, dueDate, notes } — no changes needed
+
+Created `/src/components/audit/auto-assign-dialog.tsx` (~480 lines) with:
+- Props interface: `AutoAssignDialogProps { open, onOpenChange, onCreated }`
+- Data fetching: fetches ACTIVE templates from /api/templates and active AUDITOR users from /api/users on dialog open
+- Template Selection section: multi-select checkboxes with "Выбрать все" (Select All) toggle, shows template name, category badge, question count; collapsible list with emerald highlight on selected items; counter badge (X/Y)
+- Auditor Selection section: multi-select checkboxes with "Выбрать все" toggle, shows auditor name with initials avatar, department; collapsible list with emerald highlight; counter badge
+- Assignment Method: RadioGroup with 2 styled card options — "Равномерно" (Evenly, round-robin using modulo) and "Случайно" (Random, Math.random)
+- Schedule Settings: start date picker, end date picker (min=start), frequency selector with 3 radio pills (Еженедельно/Ежемесячно/Ежеквартально); info bar showing template count, auditor count, frequency description
+- Preview Section: useMemo computed preview items using `generateDates()` (weekly=+7d, monthly=+1month, quarterly=+3months) and assignment distribution functions; "Будет создано X назначений" badge; scrollable Table with columns Шаблон/Аудитор/Дата; toggleable visibility
+- Progress indicator: Progress bar with emerald styling, real-time counter (X/Y), animated entrance
+- Bulk creation: sequential POST to /api/assignments for each preview item with 3-day due date offset, abort support via useRef
+- Toast notifications on success/failure with count summary
+- Auto-reset of all state on dialog close
+- framer-motion animations on dialog content, collapsible sections (AnimatePresence)
+- Gradient header matching scheduler theme (emerald-to-teal)
+- All text in Russian
+
+Modified `/src/components/audit/audit-scheduler.tsx`:
+- Added Wand2 to lucide-react imports
+- Added `import AutoAssignDialog from './auto-assign-dialog'`
+- Added `autoAssignOpen` state variable
+- Added "Автоназначение" button in scheduler header (glass-morphism style: bg-white/15 backdrop-blur, text-white, border-white/20) next to existing "Назначить аудит" button
+- Rendered `<AutoAssignDialog open={autoAssignOpen} onOpenChange={setAutoAssignOpen} onCreated={fetchAssignments} />` before delete dialog
+
+Verification:
+- ESLint: 0 errors, 0 warnings
+- Dev server: compiled successfully, no build errors
+- All existing scheduler functionality preserved (create/edit/delete assignments, filters, view modes, status changes)
+
+Stage Summary:
+- New feature: Bulk Auto-Assign dialog in Audit Scheduler
+- New component: auto-assign-dialog.tsx with full template/auditor multi-select, 2 assignment methods, frequency-based scheduling, preview table, progress indicator
+- No breaking changes to existing scheduler functionality
+- Uses existing POST /api/assignments endpoint for each assignment
+- All text in Russian, emerald/teal color scheme maintained

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle, CheckCircle2, Clock, ArrowRight, Flame, TrendingUp,
   Target, ListTodo, Filter, ChevronDown, Plus, CircleDot, CircleCheck,
-  CircleAlert, Shield, Zap, Trash2,
+  CircleAlert, Shield, Zap, Trash2, Trophy,
 } from 'lucide-react';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription,
@@ -216,6 +216,29 @@ function isOverdue(dueDate: string, status: ActionStatus): boolean {
   return new Date(dueDate) < new Date();
 }
 
+function getDueDateStyle(dueDate: string, status: ActionStatus): { color: string; label: string } {
+  if (status === 'done') return { color: 'text-emerald-600 dark:text-emerald-400', label: '' };
+  const now = new Date();
+  const due = new Date(dueDate);
+  const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  if (diffDays < 0) return { color: 'text-red-600 dark:text-red-400 font-semibold', label: '(просрочено)' };
+  if (diffDays <= 3) return { color: 'text-amber-600 dark:text-amber-400', label: '' };
+  return { color: 'text-emerald-600 dark:text-emerald-400', label: '' };
+}
+
+function getWelcomeData(stats: { total: number; critical: number; inProgress: number; completed: number; overdue: number }) {
+  if (stats.total === 0) {
+    return { message: 'Все аудиты проходят успешно!', sub: 'Корректирующие действия не требуются', icon: Trophy, gradient: 'from-emerald-500 to-teal-500', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' };
+  }
+  if (stats.overdue > 0 || stats.critical > 0) {
+    return { message: 'Требует внимания', sub: `${stats.overdue} просрочено, ${stats.critical} критических`, icon: AlertTriangle, gradient: 'from-red-500 to-orange-500', badgeColor: 'bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300' };
+  }
+  if (stats.inProgress > 0) {
+    return { message: 'Работа в процессе', sub: `${stats.inProgress} действий выполняется`, icon: Clock, gradient: 'from-amber-500 to-orange-500', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300' };
+  }
+  return { message: 'Всё под контролем!', sub: `${stats.completed} из ${stats.total} выполнено`, icon: CheckCircle2, gradient: 'from-emerald-500 to-teal-500', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300' };
+}
+
 // ─── Animation Variants ───────────────────────────────────────────────────────
 
 const containerVariants = {
@@ -345,12 +368,18 @@ function PriorityBadge({ priority }: { priority: Priority }) {
     medium: Clock,
     low: CheckCircle2,
   };
+  const gradientMap: Record<Priority, string> = {
+    critical: 'bg-gradient-to-r from-red-500/10 to-rose-500/10 dark:from-red-900/30 dark:to-rose-900/20',
+    high: 'bg-gradient-to-r from-orange-500/10 to-amber-500/10 dark:from-orange-900/30 dark:to-amber-900/20',
+    medium: 'bg-gradient-to-r from-amber-500/10 to-yellow-500/10 dark:from-amber-900/30 dark:to-yellow-900/20',
+    low: 'bg-gradient-to-r from-emerald-500/10 to-teal-500/10 dark:from-emerald-900/30 dark:to-teal-900/20',
+  };
   const Icon = icons[priority];
 
   return (
     <Badge
       variant="outline"
-      className={`gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 border-0 ${config.bgColor} ${config.textColor}`}
+      className={`gap-1.5 text-[11px] font-semibold px-2.5 py-0.5 border border-current/10 ${gradientMap[priority]} ${config.textColor}`}
     >
       <Icon className="w-3 h-3" />
       {config.label}
@@ -774,6 +803,47 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
         </div>
       </motion.div>
 
+      {/* Welcome Section */}
+      {(() => {
+        const welcome = getWelcomeData(stats);
+        const WelcomeIcon = welcome.icon;
+        return (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/5 via-primary/10 to-transparent border border-primary/10 p-5"
+          >
+            <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-primary/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/3" />
+            <div className="absolute bottom-0 left-1/2 w-32 h-32 bg-gradient-to-tr from-teal-500/5 to-transparent rounded-full translate-y-1/2" />
+            <div className="relative flex items-center gap-4">
+              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${welcome.gradient} flex items-center justify-center shadow-lg flex-shrink-0`}>
+                <WelcomeIcon className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <h2 className="text-lg font-bold tracking-tight">{welcome.message}</h2>
+                  <Badge className={`text-[10px] px-2 py-0 rounded-full border-0 ${welcome.badgeColor}`}>
+                    {stats.total} {stats.total === 1 ? 'действие' : stats.total < 5 ? 'действия' : 'действий'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-muted-foreground">{welcome.sub}</p>
+              </div>
+              {stats.total > 0 && (
+                <div className="hidden sm:flex items-center gap-3">
+                  <div className="text-right">
+                    <div className="text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                      {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
+                    </div>
+                    <div className="text-[10px] text-muted-foreground">выполнено</div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        );
+      })()}
+
       {/* Statistics Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {[
@@ -782,9 +852,9 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
             value: stats.total,
             icon: ListTodo,
             color: 'text-slate-700 dark:text-slate-300',
-            bgColor: 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900/60 dark:to-slate-800/40',
+            bgColor: 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950/30 dark:to-slate-900/20',
             iconBg: 'bg-slate-200 dark:bg-slate-700',
-            border: 'border-l-slate-500',
+            borderColor: 'border-slate-100 dark:border-slate-900/50',
             desc: 'Мер принято',
           },
           {
@@ -792,19 +862,19 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
             value: stats.critical,
             icon: Flame,
             color: 'text-red-700 dark:text-red-400',
-            bgColor: 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/40 dark:to-rose-950/30',
-            iconBg: 'bg-red-100 dark:bg-red-900/60',
-            border: 'border-l-red-500',
+            bgColor: 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/20',
+            iconBg: 'bg-red-100 dark:bg-red-900/50',
+            borderColor: 'border-red-100 dark:border-red-900/50',
             desc: `${stats.overdue} просрочено`,
           },
           {
             title: 'В работе',
             value: stats.inProgress,
             icon: Clock,
-            color: 'text-blue-700 dark:text-blue-400',
-            bgColor: 'bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/30',
-            iconBg: 'bg-blue-100 dark:bg-blue-900/60',
-            border: 'border-l-blue-500',
+            color: 'text-amber-700 dark:text-amber-400',
+            bgColor: 'bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20',
+            iconBg: 'bg-amber-100 dark:bg-amber-900/50',
+            borderColor: 'border-amber-100 dark:border-amber-900/50',
             desc: 'Исполняется сейчас',
           },
           {
@@ -812,9 +882,9 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
             value: stats.completed,
             icon: CheckCircle2,
             color: 'text-emerald-700 dark:text-emerald-400',
-            bgColor: 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30',
-            iconBg: 'bg-emerald-100 dark:bg-emerald-900/60',
-            border: 'border-l-emerald-500',
+            bgColor: 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20',
+            iconBg: 'bg-emerald-100 dark:bg-emerald-900/50',
+            borderColor: 'border-emerald-100 dark:border-emerald-900/50',
             desc: stats.total > 0 ? `${((stats.completed / stats.total) * 100).toFixed(0)}% готово` : '—',
           },
         ].map((card, i) => {
@@ -826,10 +896,10 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
               animate={{ opacity: 1, y: 0, scale: 1 }}
               transition={{ delay: i * 0.07, duration: 0.4, ease: 'easeOut' }}
             >
-              <Card className={`overflow-hidden border-l-4 ${card.border} hover:shadow-lg transition-all duration-300 ${card.bgColor}`}>
-                <CardContent className="p-4 sm:p-5">
+              <Card className={`overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 border ${card.borderColor}`}>
+                <CardContent className={`p-4 sm:p-5 ${card.bgColor}`}>
                   <div className="flex items-start justify-between">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.iconBg}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.iconBg} shadow-sm`}>
                       <Icon className={`w-5 h-5 ${card.color}`} />
                     </div>
                     <div className="text-right">
@@ -863,7 +933,8 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
           transition={{ delay: 0.3 }}
           className="lg:col-span-2"
         >
-          <Card className="h-full">
+          <Card className="h-full border-orange-100 dark:border-orange-900/50 overflow-hidden relative">
+            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-500 via-amber-500 to-emerald-500" />
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-orange-500" />
@@ -953,21 +1024,44 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              {/* Completion Rate */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <span className="text-sm text-muted-foreground">Прогресс выполнения</span>
-                  <span className="text-sm font-bold text-emerald-600 dark:text-emerald-400 tabular-nums">
-                    {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
-                  </span>
+              {/* Completion Rate Ring */}
+              <div className="flex items-center gap-4">
+                <div className="relative w-16 h-16 flex-shrink-0">
+                  <svg className="w-16 h-16 -rotate-90" viewBox="0 0 64 64">
+                    <circle cx="32" cy="32" r="26" fill="none" stroke="currentColor" strokeWidth="5" className="text-muted/30" />
+                    <motion.circle
+                      cx="32" cy="32" r="26" fill="none" stroke="url(#completionGrad)" strokeWidth="5" strokeLinecap="round"
+                      strokeDasharray={2 * Math.PI * 26}
+                      initial={{ strokeDashoffset: 2 * Math.PI * 26 }}
+                      animate={{ strokeDashoffset: 2 * Math.PI * 26 * (1 - (stats.total > 0 ? stats.completed / stats.total : 0)) }}
+                      transition={{ delay: 0.6, duration: 1, ease: 'easeOut' }}
+                    />
+                    <defs>
+                      <linearGradient id="completionGrad" x1="0" y1="0" x2="1" y2="1">
+                        <stop offset="0%" stopColor="#10b981" />
+                        <stop offset="100%" stopColor="#14b8a6" />
+                      </linearGradient>
+                    </defs>
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                      {stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0}%
+                    </span>
+                  </div>
                 </div>
-                <div className="h-2.5 w-full rounded-full bg-muted overflow-hidden">
-                  <motion.div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%` }}
-                    transition={{ delay: 0.5, duration: 0.8, ease: 'easeOut' }}
-                  />
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-semibold">Прогресс выполнения</div>
+                  <div className="text-xs text-muted-foreground mt-0.5">
+                    {stats.completed} из {stats.total} выполнено
+                  </div>
+                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden mt-2">
+                    <motion.div
+                      className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-teal-400"
+                      initial={{ width: 0 }}
+                      animate={{ width: `${stats.total > 0 ? (stats.completed / stats.total) * 100 : 0}%` }}
+                      transition={{ delay: 0.5, duration: 0.8, ease: 'easeOut' }}
+                    />
+                  </div>
                 </div>
               </div>
 
@@ -1034,8 +1128,8 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
       >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <TabsList className="bg-muted/60 backdrop-blur-sm p-1 h-auto flex-wrap">
-              <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm px-3 py-1.5">
+            <TabsList className="bg-muted/60 backdrop-blur-sm p-1 h-auto flex-wrap border border-border/50 shadow-sm">
+              <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm px-3 py-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:shadow-orange-500/20">
                 <ListTodo className="w-3.5 h-3.5" />
                 Все
                 {stats.total > 0 && (
@@ -1044,7 +1138,7 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="critical" className="gap-1.5 text-xs sm:text-sm px-3 py-1.5">
+              <TabsTrigger value="critical" className="gap-1.5 text-xs sm:text-sm px-3 py-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:shadow-red-500/20">
                 <Flame className="w-3.5 h-3.5 text-red-500" />
                 Критические
                 {stats.critical > 0 && (
@@ -1053,11 +1147,11 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
                   </Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="in_progress" className="gap-1.5 text-xs sm:text-sm px-3 py-1.5">
-                <Clock className="w-3.5 h-3.5 text-blue-500" />
+              <TabsTrigger value="in_progress" className="gap-1.5 text-xs sm:text-sm px-3 py-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:shadow-amber-500/20">
+                <Clock className="w-3.5 h-3.5" />
                 В работе
               </TabsTrigger>
-              <TabsTrigger value="completed" className="gap-1.5 text-xs sm:text-sm px-3 py-1.5">
+              <TabsTrigger value="completed" className="gap-1.5 text-xs sm:text-sm px-3 py-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:shadow-emerald-500/20">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
                 Выполнено
               </TabsTrigger>
@@ -1220,13 +1314,13 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
                               whileHover="hover"
                             >
                               <Card
-                                className={`overflow-hidden border-l-4 ${priorityCfg.borderColor} transition-all duration-300 ${
+                                className={`overflow-hidden border-l-4 ${priorityCfg.borderColor} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 ${
                                   isDone
                                     ? 'opacity-70 bg-muted/30'
                                     : action.status === 'overdue'
                                       ? 'ring-1 ring-red-200 dark:ring-red-800/50'
                                       : ''
-                                }`}
+                                } ${action.priority === 'critical' && !isDone ? 'pulse-glow' : ''}`}
                               >
                                 <CardContent className="p-4 sm:p-5">
                                   <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
@@ -1273,11 +1367,12 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
                                         <span className="flex items-center gap-1.5">
                                           <Clock className="w-3 h-3" />
                                           Срок: {formatDateShort(action.dueDate)}
-                                          {isOverdue(action.dueDate, action.status) && (
-                                            <span className="text-red-500 font-semibold ml-1">
-                                              (просрочено)
-                                            </span>
-                                          )}
+                                          {(() => {
+                                            const dueStyle = getDueDateStyle(action.dueDate, action.status);
+                                            return dueStyle.label ? (
+                                              <span className={`ml-1 ${dueStyle.color}`}>{dueStyle.label}</span>
+                                            ) : null;
+                                          })()}
                                         </span>
                                       </div>
                                     </div>

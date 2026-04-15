@@ -415,112 +415,121 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport }: 
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
-            <History className="w-6 h-6 text-emerald-600" />
-            История аудитов
-          </h1>
-          <p className="text-muted-foreground mt-1">
-            {userId ? 'Ваши завершённые аудиты и результаты' : 'Все завершённые аудиты с подробными результатами'}
-          </p>
+      <motion.div
+        initial={{ opacity: 0, y: -12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/20">
+            <History className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              История аудитов
+            </h1>
+            <p className="text-muted-foreground mt-0.5 text-sm">
+              {userId ? 'Ваши завершённые аудиты и результаты' : 'Все завершённые аудиты с подробными результатами'}
+            </p>
+          </div>
         </div>
-        <Button
-          onClick={handleExportCSV}
-          variant="outline"
-          className="gap-2 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-800 dark:hover:bg-emerald-950"
-          disabled={filteredAudits.length === 0}
-        >
-          <Download className="w-4 h-4" />
-          Экспорт CSV
-        </Button>
-      </div>
+        <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+          <Button
+            onClick={handleExportCSV}
+            className="gap-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white shadow-lg shadow-emerald-500/20 border-0"
+            disabled={filteredAudits.length === 0}
+          >
+            <Download className="w-4 h-4" />
+            Экспорт CSV
+          </Button>
+        </motion.div>
+      </motion.div>
 
       {/* Statistics Summary Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0, duration: 0.35 }}
-        >
-          <Card className="hover:shadow-md transition-shadow duration-300">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-blue-50 dark:bg-blue-950">
-                  <ClipboardCheck className="w-5 h-5 text-blue-600" />
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold">{stats.total}</div>
-                  <div className="text-xs text-muted-foreground">Всего завершено</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.05, duration: 0.35 }}
-        >
-          <Card className="hover:shadow-md transition-shadow duration-300">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-50 dark:bg-emerald-950">
-                  <TrendingUp className="w-5 h-5 text-emerald-600" />
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold">{stats.avgScore.toFixed(1)}%</div>
-                  <div className="text-xs text-muted-foreground">Средний балл</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.35 }}
-        >
-          <Card className="hover:shadow-md transition-shadow duration-300">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-50 dark:bg-amber-950">
-                  <Trophy className="w-5 h-5 text-amber-600" />
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold">{stats.total > 0 ? stats.bestScore.toFixed(1) : '—'}%</div>
-                  <div className="text-xs text-muted-foreground">Лучший результат</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.15, duration: 0.35 }}
-        >
-          <Card className="hover:shadow-md transition-shadow duration-300">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-red-50 dark:bg-red-950">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
-                </div>
-                <div className="text-right">
-                  <div className="text-2xl font-bold">{stats.total > 0 ? stats.worstScore.toFixed(1) : '—'}%</div>
-                  <div className="text-xs text-muted-foreground">Худший результат</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {[
+          {
+            title: 'Всего завершено',
+            value: stats.total,
+            icon: ClipboardCheck,
+            color: 'text-sky-700 dark:text-sky-400',
+            bgColor: 'bg-gradient-to-br from-sky-50 to-blue-50 dark:from-sky-950/30 dark:to-blue-950/20',
+            iconBg: 'bg-sky-100 dark:bg-sky-900/50',
+            borderColor: 'border-sky-100 dark:border-sky-900/50',
+            desc: 'Проверок пройдено',
+          },
+          {
+            title: 'Средний балл',
+            value: `${stats.avgScore.toFixed(1)}%`,
+            icon: TrendingUp,
+            color: 'text-emerald-700 dark:text-emerald-400',
+            bgColor: 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20',
+            iconBg: 'bg-emerald-100 dark:bg-emerald-900/50',
+            borderColor: 'border-emerald-100 dark:border-emerald-900/50',
+            desc: 'Средний результат',
+          },
+          {
+            title: 'Лучший результат',
+            value: stats.total > 0 ? `${stats.bestScore.toFixed(1)}%` : '—',
+            icon: Trophy,
+            color: 'text-amber-700 dark:text-amber-400',
+            bgColor: 'bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20',
+            iconBg: 'bg-amber-100 dark:bg-amber-900/50',
+            borderColor: 'border-amber-100 dark:border-amber-900/50',
+            desc: 'Максимальная оценка',
+ },
+          {
+            title: 'Худший результат',
+            value: stats.total > 0 ? `${stats.worstScore.toFixed(1)}%` : '—',
+            icon: AlertTriangle,
+            color: 'text-red-700 dark:text-red-400',
+            bgColor: 'bg-gradient-to-br from-red-50 to-rose-50 dark:from-red-950/30 dark:to-rose-950/20',
+            iconBg: 'bg-red-100 dark:bg-red-900/50',
+            borderColor: 'border-red-100 dark:border-red-900/50',
+            desc: 'Минимальная оценка',
+ },
+        ].map((card, i) => {
+          const Icon = card.icon;
+          return (
+            <motion.div
+              key={card.title}
+              initial={{ opacity: 0, y: 24, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: i * 0.07, duration: 0.4, ease: 'easeOut' }}
+            >
+              <Card className={`overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 border ${card.borderColor}`}>
+                <CardContent className={`p-4 sm:p-5 ${card.bgColor}`}>
+                  <div className="flex items-center justify-between">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.iconBg} shadow-sm`}>
+                      <Icon className={`w-5 h-5 ${card.color}`} />
+                    </div>
+                    <div className="text-right">
+                      <motion.div
+                        className="text-xl sm:text-2xl font-bold tracking-tight tabular-nums"
+                        initial={{ scale: 0.5, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        transition={{ delay: i * 0.07 + 0.2, type: 'spring', stiffness: 200, damping: 15 }}
+                      >
+                        {card.value}
+                      </motion.div>
+                      <div className="text-[11px] text-muted-foreground mt-0.5">{card.desc}</div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
       </div>
 
-      {/* Filters */}
-      <Card className="border-dashed">
+      {/* Filters — glass effect */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25 }}
+      >
+      <Card className="border-dashed backdrop-blur-sm bg-card/60"
         <CardContent className="p-4">
           <div className="flex flex-col gap-3">
             {/* Search */}
@@ -631,7 +640,11 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport }: 
       </Card>
 
       {/* Sort Controls */}
-      <div className="flex items-center gap-2 flex-wrap">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.3 }}
+        className="flex items-center gap-2 flex-wrap"
         <span className="text-sm text-muted-foreground flex items-center gap-1.5">
           <ArrowUpDown className="w-3.5 h-3.5" />
           Сортировка:

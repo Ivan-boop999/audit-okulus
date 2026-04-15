@@ -6,7 +6,7 @@ import {
   Bell, BellOff, Search, ExternalLink, Check, Filter,
   Trash2, Inbox, Clock, AlertCircle, AlertTriangle,
   Info, Sparkles, ArrowUpDown, ChevronDown, Mail,
-  CheckCheck2, Eye, EyeOff, X,
+  CheckCheck, CheckCircle2, Eye, EyeOff, X,
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -295,7 +295,7 @@ export default function NotificationCenter({ isAdmin = false }: NotificationCent
               onClick={handleMarkAllRead}
               disabled={unreadCount === 0}
             >
-              <CheckCheck2 className="w-4 h-4" />
+              <CheckCheck className="w-4 h-4" />
               Прочитать все
             </Button>
             <Button
