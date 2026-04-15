@@ -140,9 +140,9 @@ function getScoreRowBg(percent: number): string {
 
 // ─── Scoring Logic ────────────────────────────────────────────────────────────
 
-function calculateQuestionScore(answer: Answer): number {
-  const { answerType, answer } = answer.question;
-  const val = answer?.toString().trim();
+function calculateQuestionScore(entry: Answer): number {
+  const answerType = entry.question.answerType;
+  const val = entry.answer?.toString().trim();
 
   switch (answerType) {
     case 'YES_NO':
@@ -383,9 +383,6 @@ export default function AuditReportDetail({ responseId, onBack }: AuditReportDet
   useEffect(() => {
     let cancelled = false;
 
-    setLoading(true);
-    setError(null);
-
     fetch(`/api/responses?id=${responseId}`)
       .then((res) => {
         if (!res.ok) throw new Error(`Ошибка загрузки: ${res.status}`);
@@ -394,15 +391,15 @@ export default function AuditReportDetail({ responseId, onBack }: AuditReportDet
       .then((json: AuditResponse) => {
         if (!cancelled) {
           setData(json);
+          setLoading(false);
+          setError(null);
         }
       })
       .catch((err) => {
         if (!cancelled) {
           setError(err.message || 'Не удалось загрузить данные отчёта');
+          setLoading(false);
         }
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
       });
 
     return () => { cancelled = true; };
@@ -410,13 +407,14 @@ export default function AuditReportDetail({ responseId, onBack }: AuditReportDet
 
   // ─── Derived Data ──────────────────────────────────────────────────────────
 
+  const answers = data?.answers;
   const scoredAnswers = useMemo<ScoredAnswer[]>(() => {
-    if (!data?.answers) return [];
-    return data.answers.map((a) => ({
+    if (!answers) return [];
+    return answers.map((a) => ({
       ...a,
       scorePercent: calculateQuestionScore(a),
     }));
-  }, [data?.answers]);
+  }, [answers]);
 
   const overallPercent = useMemo(() => {
     if (!data || data.maxScore === 0) return 0;

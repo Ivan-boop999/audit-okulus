@@ -10,6 +10,7 @@ import TemplateBuilder from '@/components/audit/template-builder';
 import AuditScheduler from '@/components/audit/audit-scheduler';
 import AnalyticsDashboard from '@/components/audit/analytics-dashboard';
 import AuditorCalendar from '@/components/audit/auditor-calendar';
+import AuditorDashboard from '@/components/audit/auditor-dashboard';
 import AuditResponseForm from '@/components/audit/audit-response-form';
 import AuditHistory from '@/components/audit/audit-history';
 import ActionPlans from '@/components/audit/action-plans';
@@ -131,7 +132,7 @@ export default function Home() {
     // Auditor views
     switch (activeView) {
       case 'dashboard':
-        return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
+        return <AuditorDashboard userId={user.id} onStartAudit={handleStartAudit} />;
       case 'calendar':
         return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
       case 'audits':
@@ -139,7 +140,7 @@ export default function Home() {
       case 'history':
         return <AuditHistory userId={user.id} isAdmin={false} onViewReport={handleViewReport} />;
       default:
-        return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
+        return <AuditorDashboard userId={user.id} onStartAudit={handleStartAudit} />;
     }
   };
 
