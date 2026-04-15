@@ -21,6 +21,9 @@ import EquipmentDetail from '@/components/audit/equipment-detail';
 import NotificationCenter from '@/components/audit/notification-center';
 import AuditorMyAudits from '@/components/audit/auditor-my-audits';
 import MaintenanceScheduler from '@/components/audit/maintenance-scheduler';
+import AuditSummaryReport from '@/components/audit/audit-summary-report';
+import TemplateLibrary from '@/components/audit/template-library';
+import AdminCalendar from '@/components/audit/admin-calendar';
 
 const emptySubscribe = () => () => {};
 function useMounted() {
@@ -154,13 +157,19 @@ export default function Home() {
         case 'scheduling':
           return <AuditScheduler />;
         case 'history':
-          return <AuditHistory isAdmin={true} onViewReport={handleViewReport} userId={user.id} userName={user.name} />;
+          return <AuditHistory isAdmin={true} onViewReport={handleViewReport} userId={undefined} userName={user.name} />;
         case 'team':
           return <TeamMembers />;
         case 'maintenance':
           return <MaintenanceScheduler />;
+        case 'admin-calendar':
+          return <AdminCalendar />;
+        case 'summary':
+          return <AuditSummaryReport />;
         case 'analytics':
           return <AnalyticsDashboard />;
+        case 'library':
+          return <TemplateLibrary creatorId={user.id} />;
         default:
           return <AdminDashboard />;
       }

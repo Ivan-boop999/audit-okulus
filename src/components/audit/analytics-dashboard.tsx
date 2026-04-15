@@ -558,7 +558,7 @@ export default function AnalyticsDashboard() {
                           tick={{ fontSize: 10, fill: 'oklch(0.55 0 0)' }}
                           axisLine={{ stroke: 'oklch(0.88 0 0)' }}
                           tickLine={false}
-                          tickFormatter={(v: string) => v.slice(5)}
+                          tickFormatter={(v: string) => formatAnalyticsDate(v)}
                         />
                         <YAxis
                           domain={[0, 100]}
@@ -618,7 +618,7 @@ export default function AnalyticsDashboard() {
                           tick={{ fontSize: 10, fill: 'oklch(0.55 0 0)' }}
                           axisLine={{ stroke: 'oklch(0.88 0 0)' }}
                           tickLine={false}
-                          tickFormatter={(v: string) => v.slice(5)}
+                          tickFormatter={(v: string) => formatAnalyticsDate(v)}
                         />
                         <YAxis
                           tick={{ fontSize: 11, fill: 'oklch(0.55 0 0)' }}
@@ -824,7 +824,8 @@ export default function AnalyticsDashboard() {
                           tick={{ fontSize: 11, fill: 'oklch(0.55 0 0)' }}
                           axisLine={false}
                           tickLine={false}
-                          width={160}
+                          width={200}
+                          tickFormatter={(v: string) => v.length > 18 ? v.slice(0, 17) + '…' : v}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="count" name="Количество аудитов" radius={[0, 8, 8, 0]} maxBarSize={28}>

@@ -8,6 +8,7 @@ import {
   Bell, User, LogOut, Moon, Sun, Menu, X, ChevronLeft,
   Factory, Search, History, UserCircle, ListChecks, Wifi, WifiOff, Users,
   BookOpen, Settings, ChevronDown, Copy, CheckCircle2, AlertCircle,
+  FileBarChart, Calendar, Library,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -71,6 +72,8 @@ const adminNavGroups: NavGroup[] = [
       { id: 'equipment', label: 'Оборудование', icon: Wrench },
       { id: 'templates', label: 'Шаблоны аудитов', icon: FileText },
       { id: 'scheduling', label: 'Расписание', icon: CalendarDays },
+      { id: 'admin-calendar', label: 'Календарь', icon: Calendar },
+      { id: 'summary', label: 'Сводка', icon: FileBarChart },
     ],
   },
   {
@@ -87,6 +90,7 @@ const adminNavGroups: NavGroup[] = [
     items: [
       { id: 'history', label: 'История аудитов', icon: History },
       { id: 'analytics', label: 'Аналитика', icon: BarChart3 },
+      { id: 'library', label: 'Библиотека', icon: Library },
     ],
   },
 ];
@@ -919,7 +923,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                   {isAdmin ? 'Администратор' : user?.department || 'Аудитор'}
                 </span>
                 <Separator orientation="vertical" className="h-3" />
-                <span className="tabular-nums">v2.1</span>
+                <span className="tabular-nums">v2.4</span>
                 <Separator orientation="vertical" className="h-3" />
                 {/* Quick Stats */}
                 <span className={`flex items-center gap-1.5 transition-colors ${isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>

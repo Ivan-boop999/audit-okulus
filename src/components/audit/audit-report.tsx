@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, FileText, User, Calendar, Target, TrendingUp, TrendingDown,
@@ -19,6 +19,26 @@ import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
 import AuditComments from '@/components/audit/audit-comments';
+
+// ─── useCountUp Hook ────────────────────────────────────────────────────────
+function useCountUp(end: number, duration: number = 1200, delay: number = 0) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (end === 0) return;
+    let raf: number;
+    const startTime = performance.now() + delay;
+    const step = (now: number) => {
+      if (now < startTime) { raf = requestAnimationFrame(step); return; }
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(eased * end * 10) / 10);
+      if (progress < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [end, duration, delay]);
+  return count;
+}
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -181,10 +201,15 @@ function ScoreGauge({ percent, size = 160, strokeWidth = 12 }: { percent: number
   const offset = circumference - (percent / 100) * circumference;
   const color = getScoreColor(percent);
   const badge = getScoreBadgeStyle(percent);
+  const animatedScore = useCountUp(percent, 1400, 500);
 
   return (
     <div className="relative inline-flex items-center justify-center">
-      <svg width={size} height={size} className="-rotate-90">
+      {/* Subtle emerald radial gradient behind the SVG ring */}
+      <div className="absolute inset-[-20%] rounded-full" style={{
+        background: 'radial-gradient(circle, oklch(0.52 0.17 145 / 0.08) 0%, transparent 70%)',
+      }} />
+      <svg width={size} height={size} className="-rotate-90 relative z-10">
         {/* Background circle */}
         <circle
           cx={size / 2}
@@ -213,13 +238,13 @@ function ScoreGauge({ percent, size = 160, strokeWidth = 12 }: { percent: number
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.span
-          className="text-3xl font-bold tracking-tight"
+          className="text-3xl font-bold tracking-tight tabular-nums"
           style={{ color }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
         >
-          {percent.toFixed(1)}
+          {animatedScore.toFixed(1)}
         </motion.span>
         <span className="text-xs text-muted-foreground mt-0.5">из 100</span>
         <Badge variant="outline" className={`mt-1.5 text-[10px] px-2 py-0 border-0 ${badge.bg} ${badge.text}`}>
@@ -585,6 +610,17 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
 
   return (
     <div className="space-y-6 print:space-y-4">
+      {/* Print Header (visible only when printing) */}
+      <div className="print-header">
+        <div className="print-logo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><rect width="20" height="8" x="2" y="14" rx="2"/></svg>
+        </div>
+        <div>
+          <div className="print-title">AuditPro — Отчёт аудита</div>
+          <div className="print-subtitle">{template?.title || 'Аудит'} · {formatDate(data.completedAt)}</div>
+        </div>
+      </div>
+
       {/* Back Button & Actions */}
       <motion.div
         initial={{ opacity: 0, x: -10 }}
@@ -709,7 +745,8 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
               <div className="bg-white/10 backdrop-blur-md rounded-2xl p-6 print:bg-white/20 print:p-4">
                 <div className="flex flex-col items-center gap-2">
                   <span className="text-xs font-medium text-white/60 uppercase tracking-wider">Итоговый балл</span>
-                  <div className="bg-white rounded-full p-1">
+                  <div className="relative bg-white rounded-full p-1">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 rounded-2xl -z-10" />
                     <ScoreGauge percent={overallPercent} size={140} strokeWidth={10} />
                   </div>
                   <div className="flex items-center gap-1 text-white/70 text-xs">
@@ -726,6 +763,8 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
       </motion.div>
 
       {/* ═══════════════════════ STATS CARDS ═══════════════════════════════════ */}
+      {/* Section divider: header → stats */}
+      <hr className="section-divider" />
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 md:gap-4 print:grid-cols-5 print:gap-2">
         {[
           {
@@ -789,6 +828,8 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
       </div>
 
       {/* ═══════════════════════ QUESTION BREAKDOWN TABLE ═════════════════════ */}
+      {/* Section divider: stats → questions */}
+      <hr className="section-divider" />
       <motion.div
         initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
@@ -902,6 +943,8 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
       </motion.div>
 
       {/* ═══════════════════════ DISTRIBUTION & RECOMMENDATIONS ═════════════════ */}
+      {/* Section divider: questions → analysis */}
+      <hr className="section-divider" />
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 print:grid-cols-2 print:gap-4">
         {/* Score Distribution */}
         <motion.div

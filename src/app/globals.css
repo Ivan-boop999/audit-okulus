@@ -1090,6 +1090,200 @@ button:active, a:active {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   BREATHING GLOW (subtle scale + box-shadow pulse for login card)
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes breathing-glow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 oklch(0.52 0.17 145 / 0);
+  }
+  50% {
+    transform: scale(1.005);
+    box-shadow: 0 0 30px -5px oklch(0.52 0.17 145 / 0.12), 0 0 60px -10px oklch(0.45 0.15 160 / 0.08);
+  }
+}
+
+.breathing-glow {
+  animation: breathing-glow 4s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATED GRADIENT BORDER (for avatar)
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes gradient-border-rotate {
+  0% { --border-angle: 0deg; }
+  100% { --border-angle: 360deg; }
+}
+
+@property --border-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.animated-gradient-border {
+  position: relative;
+  border-radius: 50%;
+  padding: 3px;
+  background: conic-gradient(from var(--border-angle), #059669, #0d9488, #0891b2, #059669);
+  animation: gradient-border-rotate 3s linear infinite;
+}
+
+.animated-gradient-border > * {
+  border-radius: 50%;
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STAT CARD HOVER GLOW (for equipment detail stats)
+   ═══════════════════════════════════════════════════════════════ */
+
+.stat-card-glow {
+  transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.stat-card-glow:hover {
+  transform: translateY(-2px) scale(1.01);
+  box-shadow: 0 0 20px -4px oklch(0.52 0.17 145 / 0.2);
+  border-color: oklch(0.52 0.17 145 / 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BACK TO TOP BUTTON
+   ═══════════════════════════════════════════════════════════════ */
+
+.back-to-top {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.back-to-top.hidden {
+  opacity: 0;
+  transform: translateY(16px);
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CUSTOM CHECKBOX STYLING
+   ═══════════════════════════════════════════════════════════════ */
+
+.custom-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  border: 2px solid oklch(0.8 0.01 160);
+  border-radius: 4px;
+  background: oklch(1 0 0);
+  cursor: pointer;
+  position: relative;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.custom-checkbox:hover {
+  border-color: oklch(0.37 0.13 160);
+  box-shadow: 0 0 0 3px oklch(0.37 0.13 160 / 0.1);
+}
+
+.custom-checkbox:checked {
+  background: oklch(0.37 0.13 160);
+  border-color: oklch(0.37 0.13 160);
+}
+
+.custom-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 5px;
+  width: 5px;
+  height: 9px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.dark .custom-checkbox {
+  background: oklch(0.2 0 0);
+  border-color: oklch(0.5 0.01 160);
+}
+
+.dark .custom-checkbox:checked {
+  background: oklch(0.55 0.15 160);
+  border-color: oklch(0.55 0.15 160);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PRINT HEADER & FOOTER FOR REPORTS
+   ═══════════════════════════════════════════════════════════════ */
+
+.print-header {
+  display: none;
+}
+
+.print-footer {
+  display: none;
+}
+
+@page {
+  margin: 2cm;
+  @bottom-center {
+    content: "Страница " counter(page) " из " counter(pages);
+    font-size: 10px;
+    color: #9ca3af;
+  }
+}
+
+@media print {
+  .print-header {
+    display: flex !important;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    margin-bottom: 16px;
+    border-bottom: 2px solid oklch(0.37 0.13 160 / 0.3);
+  }
+
+  .print-header .print-logo {
+    width: 32px;
+    height: 32px;
+    background: oklch(0.37 0.13 160);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .print-header .print-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: oklch(0.2 0 0);
+  }
+
+  .print-header .print-subtitle {
+    font-size: 11px;
+    color: oklch(0.5 0 0);
+  }
+
+  .print-footer {
+    display: flex !important;
+    justify-content: space-between;
+    padding: 12px 0;
+    margin-top: 24px;
+    border-top: 1px solid oklch(0.9 0 0);
+    font-size: 9px;
+    color: #9ca3af;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    CHART CARD TOP ACCENT GRADIENT LINE
    ═══════════════════════════════════════════════════════════════ */
 
@@ -1243,5 +1437,14 @@ button:active, a:active {
     oklch(0.55 0.15 160 / 0.08) 80%,
     transparent 100%
   );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN CARD BREATHING GLOW
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(16, 185, 129, 0.1); }
+  50% { box-shadow: 0 0 40px rgba(16, 185, 129, 0.2); }
 }
 

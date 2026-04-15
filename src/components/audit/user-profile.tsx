@@ -22,6 +22,9 @@ import {
   LogOut,
   Info,
   LayoutGrid,
+  Monitor,
+ Fingerprint,
+ Globe,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -145,6 +148,19 @@ export default function UserProfilePanel() {
   const [prefs, setPrefs] = useState<UserPreferences>(loadPreferences);
   const [activeTab, setActiveTab] = useState('settings');
 
+  // ── Session info ─────────────────────────────────────────────────────
+  const sessionInfo = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    return {
+      browser: navigator.userAgent.includes('Chrome') ? 'Google Chrome' :
+        navigator.userAgent.includes('Firefox') ? 'Mozilla Firefox' :
+        navigator.userAgent.includes('Safari') ? 'Apple Safari' : 'Другой',
+      loginTime: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+      platform: navigator.platform,
+      lastActivity: new Date().toLocaleTimeString('ru-RU', { hour: '2-digit', minute: '2-digit' }),
+    };
+  }, []);
+
   // Sync preferences to localStorage on change
   useEffect(() => {
     savePreferences(prefs);
@@ -237,9 +253,14 @@ export default function UserProfilePanel() {
           {/* Profile info section — overlapping the gradient */}
           <CardContent className="relative px-6 -mt-10">
             <div className="flex flex-col sm:flex-row items-center sm:items-end gap-4">
-              {/* Large avatar */}
-              <Avatar className={`w-24 h-24 ${avatarRingClass} bg-white shadow-lg border-4 border-white`}>
-                <AvatarFallback
+              {/* Large avatar with animated gradient border */}
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ duration: 20, repeat: Infinity, ease: 'linear' }}
+                className="w-24 h-24 rounded-full p-[3px] bg-gradient-to-br from-emerald-400 via-teal-500 to-emerald-600"
+              >
+                <Avatar className="w-full h-full bg-white shadow-lg border-4 border-white">
+                  <AvatarFallback
                   className={`text-2xl font-bold ${
                     isAdmin
                       ? 'bg-amber-100 text-amber-700'
@@ -249,6 +270,7 @@ export default function UserProfilePanel() {
                   {initials}
                 </AvatarFallback>
               </Avatar>
+              </motion.div>
 
               <div className="text-center sm:text-left flex-1 pb-1">
                 <h1 className="text-2xl font-bold tracking-tight">{user.name}</h1>

@@ -10,6 +10,26 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 
+// ─── useCountUp Hook ────────────────────────────────────────────────────────
+function useCountUp(end: number, duration: number = 1200, delay: number = 0) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (end === 0) return;
+    let raf: number;
+    const startTime = performance.now() + delay;
+    const step = (now: number) => {
+      if (now < startTime) { raf = requestAnimationFrame(step); return; }
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setCount(Math.round(eased * end));
+      if (progress < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
+  }, [end, duration, delay]);
+  return count;
+}
+
 interface LoginScreenProps {
   onLogin: () => void;
 }
@@ -95,8 +115,14 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [rememberMe, setRememberMe] = useState(false);
   const leftPanelRef = useRef<HTMLDivElement>(null);
   const login = useAuthStore((s) => s.login);
+
+  // Count-up for stats
+  const statAudits = useCountUp(2847, 1500, 1200);
+  const statEquipment = useCountUp(156, 1200, 1400);
+  const statAuditors = useCountUp(24, 1000, 1600);
 
   // Typing animation for the heading
   const { displayText: headingLine1, isComplete: line1Done } = useTypingEffect('Управление аудитами', 70, 800);
@@ -288,12 +314,12 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
             </p>
             <div className="mt-12 flex gap-8">
               {[
-                { label: 'Аудитов проведено', value: '2,847' },
-                { label: 'Оборудования', value: '156' },
-                { label: 'Аудиторов', value: '24' },
+                { label: 'Аудитов проведено', value: statAudits.toLocaleString('ru-RU') },
+                { label: 'Оборудования', value: statEquipment.toLocaleString('ru-RU') },
+                { label: 'Аудиторов', value: statAuditors.toLocaleString('ru-RU') },
               ].map((stat) => (
                 <div key={stat.label}>
-                  <div className="text-3xl font-bold">{stat.value}</div>
+                  <div className="text-3xl font-bold tabular-nums">{stat.value}</div>
                   <div className="text-sm text-white/60">{stat.label}</div>
                 </div>
               ))}
@@ -336,7 +362,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
         initial={{ x: 100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
-        className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-background to-muted/30 relative overflow-hidden"
+        className="flex-1 flex items-center justify-center p-6 sm:p-8 bg-gradient-to-br from-background to-muted/30 relative overflow-hidden noise-overlay"
       >
         {/* Subtle background decoration */}
         <div className="absolute top-0 right-0 w-64 h-64 rounded-full bg-emerald-500/5 blur-3xl" />
@@ -349,11 +375,6 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
               <Factory className="w-7 h-7 text-primary-foreground" />
             </div>
             <span className="text-2xl font-bold">AuditPro</span>
-          </div>
-
-          {/* Gradient top border card wrapper */}
-          <div className="relative">
-            <div className="absolute -top-[2px] left-8 right-8 h-[2px] rounded-full bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-500 opacity-80" />
           </div>
 
           <motion.div
@@ -413,10 +434,11 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
               </div>
             </motion.div>
 
+
             <motion.div
               initial={{ y: 20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.7, duration: 0.5 }}
+              transition={{ delay: 0.75, duration: 0.5 }}
             >
               <Button
                 type="submit"

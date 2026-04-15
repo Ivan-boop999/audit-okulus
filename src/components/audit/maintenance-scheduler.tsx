@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import {
   Wrench, Calendar, AlertTriangle, CheckCircle2, Clock,
-  Plus, Trash2, RefreshCw, Package, Search, Filter,
+  Plus, Trash2, RefreshCw, Package, Search, Filter, TrendingUp,
 } from 'lucide-react';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription,
@@ -19,6 +19,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogTrigger,
 } from '@/components/ui/dialog';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Calendar as CalendarUI } from '@/components/ui/calendar';
 import {
   format, differenceInDays, isBefore, startOfDay, parseISO,
 } from 'date-fns';
@@ -228,6 +230,13 @@ export default function MaintenanceScheduler() {
     noDate: equipment.length - Object.keys(reminders).length,
   };
 
+  // ── Progress Ring ─────────────────────────────────────────────────────
+  const assignedCount = equipment.length - stats.noDate;
+  const assignedPercent = equipment.length > 0 ? Math.round((assignedCount / equipment.length) * 100) : 0;
+  const progressRadius = 40;
+  const progressCircumference = 2 * Math.PI * progressRadius;
+  const progressOffset = progressCircumference - (assignedPercent / 100) * progressCircumference;
+
   // ── Loading ───────────────────────────────────────────────────────────────
 
   if (loading) {
@@ -312,6 +321,69 @@ export default function MaintenanceScheduler() {
         })}
       </div>
 
+      {/* Maintenance Progress Ring */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.15 }}
+      >
+        <Card className="card-glass">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-6">
+              <div className="relative shrink-0">
+                <svg width={100} height={100} className="-rotate-90">
+                  <circle
+                    cx="50" cy="50" r={progressRadius}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    className="text-muted/30"
+                  />
+                  <motion.circle
+                    cx="50" cy="50" r={progressRadius}
+                    fill="none"
+                    stroke="oklch(0.37 0.13 160)"
+                    strokeWidth="8"
+                    strokeLinecap="round"
+                    strokeDasharray={progressCircumference}
+                    initial={{ strokeDashoffset: progressCircumference }}
+                    animate={{ strokeDashoffset: progressOffset }}
+                    transition={{ duration: 1.5, ease: 'easeOut', delay: 0.3 }}
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-lg font-bold text-primary">{assignedPercent}%</span>
+                  <span className="text-[10px] text-muted-foreground">назначено</span>
+                </div>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-primary" />
+                  Покрытие назначениями
+                </h3>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {assignedCount} из {equipment.length} единиц оборудования имеют назначенное ТО
+                </p>
+                <div className="flex items-center gap-4 mt-3">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-emerald-500" />
+                    <span className="text-xs text-muted-foreground">В норме: {stats.ok}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-amber-500" />
+                    <span className="text-xs text-muted-foreground">Скоро: {stats.dueSoon}</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-2 h-2 rounded-full bg-red-500" />
+                    <span className="text-xs text-muted-foreground">Просрочено: {stats.overdue}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
+
       {/* Controls */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -388,7 +460,12 @@ export default function MaintenanceScheduler() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
                         transition={{ delay: idx * 0.03, duration: 0.25 }}
-                        className={`rounded-xl border p-4 transition-all duration-200 hover:shadow-md group ${config.bg} ${config.border}`}
+                        className={`rounded-xl border p-4 transition-all duration-200 hover:shadow-md group ${
+                          status === 'ok' ? 'bg-emerald-500/[0.02] border-emerald-200/40 dark:bg-emerald-500/[0.04] dark:border-emerald-800/30' :
+                          status === 'due-soon' ? 'bg-amber-500/[0.02] border-amber-200/40 dark:bg-amber-500/[0.04] dark:border-amber-800/30' :
+                          status === 'overdue' ? 'bg-red-500/[0.02] border-red-200/40 dark:bg-red-500/[0.04] dark:border-red-800/30' :
+                          config.bg + ' ' + config.border
+                        }`}
                       >
                         <div className="flex flex-col sm:flex-row sm:items-center gap-3">
                           {/* Status indicator */}
@@ -473,12 +550,34 @@ export default function MaintenanceScheduler() {
                                   <div className="space-y-4 pt-2">
                                     <div className="space-y-2">
                                       <Label htmlFor="due-date">Дата следующего ТО</Label>
-                                      <Input
-                                        id="due-date"
-                                        type="date"
-                                        value={newDueDate}
-                                        onChange={(e) => setNewDueDate(e.target.value)}
-                                      />
+                                      <Popover>
+                                        <PopoverTrigger asChild>
+                                          <Button
+                                            type="button"
+                                            variant="outline"
+                                            id="due-date"
+                                            className="w-full justify-start text-left font-normal h-10"
+                                          >
+                                            <Calendar className="w-4 h-4 mr-2 text-muted-foreground" />
+                                            {newDueDate
+                                              ? format(parseISO(newDueDate), 'd MMMM yyyy', { locale: ru })
+                                              : 'Выберите дату'}
+                                          </Button>
+                                        </PopoverTrigger>
+                                        <PopoverContent className="w-auto p-0" align="start">
+                                          <CalendarUI
+                                            mode="single"
+                                            selected={newDueDate ? parseISO(newDueDate) : undefined}
+                                            onSelect={(date) => {
+                                              if (date) {
+                                                setNewDueDate(format(date, 'yyyy-MM-dd'));
+                                              }
+                                            }}
+                                            className="rounded-md border"
+                                            locale={ru}
+                                          />
+                                        </PopoverContent>
+                                      </Popover>
                                     </div>
                                     <div className="space-y-2">
                                       <Label htmlFor="notes">Примечание (необязательно)</Label>

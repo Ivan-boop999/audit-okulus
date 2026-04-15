@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft, MapPin, ClipboardCheck, Calendar, FileText,
   BarChart3, Clock, CheckCircle2, AlertTriangle,
   Download, Wrench, Cpu, BriefcaseConveyorBelt, Thermometer,
-  Gauge, Zap, Factory, Package, Hash,
+  Gauge, Zap, Factory, Package, Hash, ArrowUp,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -244,7 +244,12 @@ function QRStyleBadge({ code }: { code: string }) {
         transition={{ duration: 0.4, delay: 0.2 }}
         className="relative"
       >
-        <div className="bg-white dark:bg-slate-800 rounded-xl p-3 shadow-lg border border-slate-200 dark:border-slate-700">
+        <div className="bg-white dark:bg-slate-800 rounded-xl p-3 shadow-lg border border-slate-200 dark:border-slate-700 relative overflow-hidden">
+          {/* Decorative dot pattern behind QR */}
+          <div className="absolute inset-0 opacity-[0.04]" style={{
+            backgroundImage: 'radial-gradient(circle, #1e293b 1px, transparent 1px)',
+            backgroundSize: '8px 8px',
+          }} />
           <svg
             width={totalSize}
             height={totalSize}
@@ -332,6 +337,8 @@ export default function EquipmentDetail({ equipmentId, onBack }: EquipmentDetail
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const auditTableRef = useRef<HTMLDivElement>(null);
 
   // ─── Fetch ─────────────────────────────────────────────────────────────────
 
@@ -633,7 +640,7 @@ export default function EquipmentDetail({ equipmentId, onBack }: EquipmentDetail
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + i * 0.08 }}
             >
-              <Card className={`${stat.bg} border ${stat.borderColor} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300`}>
+              <Card className={`${stat.bg} border ${stat.borderColor} stat-card-glow card-shine hover:shadow-lg hover:-translate-y-1 transition-all duration-300`}>
                 <CardContent className="p-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Icon className={`w-4 h-4 ${stat.color}`} />
@@ -783,7 +790,7 @@ export default function EquipmentDetail({ equipmentId, onBack }: EquipmentDetail
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="max-h-96 overflow-y-auto custom-scrollbar space-y-3">
+              <div className="max-h-96 overflow-y-auto custom-scrollbar space-y-3 stagger-children">
                 {linkedTemplates.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-8 text-muted-foreground">
                     <FileText className="w-8 h-8 mb-2 opacity-40" />
@@ -842,7 +849,19 @@ export default function EquipmentDetail({ equipmentId, onBack }: EquipmentDetail
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.45 }}
+          className="relative"
         >
+          {/* Back to top floating button */}
+          <motion.button
+            onClick={() => auditTableRef.current?.scrollTo({ top: 0, behavior: 'smooth' })}
+            className={`back-to-top fixed bottom-24 right-8 z-50 w-10 h-10 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/20 flex items-center justify-center hover:bg-primary/90 ${showBackToTop ? 'visible' : 'hidden'}`}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            aria-label="Наверх"
+          >
+            <ArrowUp className="w-4 h-4" />
+          </motion.button>
+
           <Card>
             <CardHeader>
               <CardTitle className="text-lg font-semibold flex items-center gap-2">
@@ -854,7 +873,11 @@ export default function EquipmentDetail({ equipmentId, onBack }: EquipmentDetail
               </CardDescription>
             </CardHeader>
             <CardContent className="p-0 md:p-6">
-              <div className="max-h-96 overflow-y-auto custom-scrollbar">
+              <div
+                ref={auditTableRef}
+                className="max-h-96 overflow-y-auto custom-scrollbar"
+                onScroll={(e) => setShowBackToTop(e.currentTarget.scrollTop > 200)}
+              >
                 <Table>
                   <TableHeader>
                     <TableRow className="hover:bg-transparent">
