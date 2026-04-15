@@ -10,7 +10,7 @@ import {
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle } from '@/components/ui/responsive-dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
@@ -749,12 +749,12 @@ export default function TeamMembers() {
       )}
 
       {/* Add / Edit Dialog — Enhanced with gradient header */}
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-md overflow-hidden">
+      <ResponsiveDialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <ResponsiveDialogContent className="sm:max-w-md overflow-hidden">
           {/* Gradient top bar */}
           <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-emerald-500 via-teal-500 to-amber-500" />
-          <DialogHeader className="pt-4">
-            <DialogTitle className="flex items-center gap-2.5">
+          <ResponsiveDialogHeader className="pt-4">
+            <ResponsiveDialogTitle className="flex items-center gap-2.5">
               <div className={`w-9 h-9 rounded-xl flex items-center justify-center shadow-sm ${
                 editingUser
                   ? 'bg-amber-100 dark:bg-amber-900/50'
@@ -767,8 +767,8 @@ export default function TeamMembers() {
                 )}
               </div>
               {editingUser ? 'Редактировать сотрудника' : 'Новый сотрудник'}
-            </DialogTitle>
-          </DialogHeader>
+            </ResponsiveDialogTitle>
+          </ResponsiveDialogHeader>
 
           <div className="space-y-4 mt-2">
             {/* Name */}
@@ -957,8 +957,8 @@ export default function TeamMembers() {
               </Button>
             </div>
           </div>
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }

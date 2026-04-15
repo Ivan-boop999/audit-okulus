@@ -17,9 +17,9 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-  DialogTrigger,
-} from '@/components/ui/dialog';
+  ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle, ResponsiveDialogDescription,
+  ResponsiveDialogTrigger,
+} from '@/components/ui/responsive-dialog';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem,
   DropdownMenuSeparator, DropdownMenuTrigger, DropdownMenuLabel,
@@ -455,7 +455,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
           {/* Logo */}
           <div className="h-16 flex flex-col items-stretch px-4 border-b relative">
             <div className="flex items-center gap-3 overflow-hidden flex-1">
-              <img src="/logo.png" alt="Окулус-Аудит" className="w-9 h-9 rounded-xl object-cover shadow-md shadow-primary/20" />
+              <img src="/logo.png" alt="Аудит-Окулус" className="w-9 h-9 rounded-xl object-cover shadow-md shadow-primary/20" />
               <AnimatePresence>
                 {sidebarOpen && (
                   <motion.div
@@ -464,8 +464,8 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                     exit={{ opacity: 0, width: 0 }}
                     className="flex flex-col whitespace-nowrap"
                   >
-                    <span className="font-bold text-lg leading-none tracking-tight">Окулус-Аудит</span>
-                    <span className="text-[10px] text-muted-foreground mt-0.5">v2.5</span>
+                    <span className="font-bold text-lg leading-none tracking-tight">Аудит-Окулус</span>
+                    <span className="text-[10px] text-muted-foreground mt-0.5">v3.0</span>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -500,8 +500,8 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
               {/* Scoring Guide button */}
               <div className="pt-2">
                 {sidebarOpen ? (
-                  <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
-                    <DialogTrigger asChild>
+                  <ResponsiveDialog open={guideOpen} onOpenChange={setGuideOpen}>
+                    <ResponsiveDialogTrigger asChild>
                       <Button
                         variant="ghost"
                         className="w-full justify-start gap-3 h-10 px-3 text-muted-foreground hover:bg-accent hover:text-accent-foreground"
@@ -509,26 +509,26 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                         <BookOpen className="w-[18px] h-[18px]" />
                         <span className="text-[13px] font-medium">Справочник</span>
                       </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-                      <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
+                    </ResponsiveDialogTrigger>
+                    <ResponsiveDialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+                      <ResponsiveDialogHeader>
+                        <ResponsiveDialogTitle className="flex items-center gap-2">
                           <BookOpen className="w-5 h-5 text-primary" />
                           Справочник оценок
-                        </DialogTitle>
-                        <DialogDescription>
+                        </ResponsiveDialogTitle>
+                        <ResponsiveDialogDescription>
                           Подробная информация о системе оценивания и типах вопросов
-                        </DialogDescription>
-                      </DialogHeader>
+                        </ResponsiveDialogDescription>
+                      </ResponsiveDialogHeader>
                       <ScoringGuide />
-                    </DialogContent>
-                  </Dialog>
+                    </ResponsiveDialogContent>
+                  </ResponsiveDialog>
                 ) : (
                   <TooltipProvider delayDuration={0}>
                     <Tooltip>
                       <TooltipTrigger asChild>
-                        <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
-                          <DialogTrigger asChild>
+                        <ResponsiveDialog open={guideOpen} onOpenChange={setGuideOpen}>
+                          <ResponsiveDialogTrigger asChild>
                             <Button
                               variant="ghost"
                               size="icon"
@@ -536,20 +536,20 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                             >
                               <BookOpen className="w-[18px] h-[18px]" />
                             </Button>
-                          </DialogTrigger>
-                          <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-                            <DialogHeader>
-                              <DialogTitle className="flex items-center gap-2">
+                          </ResponsiveDialogTrigger>
+                          <ResponsiveDialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+                            <ResponsiveDialogHeader>
+                              <ResponsiveDialogTitle className="flex items-center gap-2">
                                 <BookOpen className="w-5 h-5 text-primary" />
                                 Справочник оценок
-                              </DialogTitle>
-                              <DialogDescription>
+                              </ResponsiveDialogTitle>
+                              <ResponsiveDialogDescription>
                                 Подробная информация о системе оценивания
-                              </DialogDescription>
-                            </DialogHeader>
+                              </ResponsiveDialogDescription>
+                            </ResponsiveDialogHeader>
                             <ScoringGuide />
-                          </DialogContent>
-                        </Dialog>
+                          </ResponsiveDialogContent>
+                        </ResponsiveDialog>
                       </TooltipTrigger>
                       <TooltipContent side="right" sideOffset={8} className="font-medium text-xs">
                         Справочник
@@ -595,8 +595,8 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                 className="lg:hidden fixed left-0 top-0 bottom-0 w-[280px] bg-card z-50 shadow-xl">
                 <div className="h-16 flex items-center justify-between px-4 border-b">
                   <div className="flex items-center gap-3">
-                    <img src="/logo.png" alt="Окулус-Аудит" className="w-9 h-9 rounded-xl object-cover shadow-lg shadow-primary/20" />
-                    <span className="font-bold text-lg tracking-tight">Окулус-Аудит</span>
+                    <img src="/logo.png" alt="Аудит-Окулус" className="w-9 h-9 rounded-xl object-cover shadow-lg shadow-primary/20" />
+                    <span className="font-bold text-lg tracking-tight">Аудит-Окулус</span>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(false)}>
                     <X className="w-5 h-5" />
@@ -621,8 +621,8 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                       </div>
                     ))}
                     {/* Mobile scoring guide */}
-                    <Dialog open={guideOpen} onOpenChange={setGuideOpen}>
-                      <DialogTrigger asChild>
+                    <ResponsiveDialog open={guideOpen} onOpenChange={setGuideOpen}>
+                      <ResponsiveDialogTrigger asChild>
                         <Button
                           variant="ghost"
                           className="w-full justify-start gap-3 h-10 px-3 text-muted-foreground"
@@ -630,17 +630,17 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                           <BookOpen className="w-[18px] h-[18px]" />
                           <span className="text-[13px] font-medium">Справочник</span>
                         </Button>
-                      </DialogTrigger>
-                      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
-                        <DialogHeader>
-                          <DialogTitle className="flex items-center gap-2">
+                      </ResponsiveDialogTrigger>
+                      <ResponsiveDialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+                        <ResponsiveDialogHeader>
+                          <ResponsiveDialogTitle className="flex items-center gap-2">
                             <BookOpen className="w-5 h-5 text-primary" />
                             Справочник оценок
-                          </DialogTitle>
-                        </DialogHeader>
+                          </ResponsiveDialogTitle>
+                        </ResponsiveDialogHeader>
                         <ScoringGuide />
-                      </DialogContent>
-                    </Dialog>
+                      </ResponsiveDialogContent>
+                    </ResponsiveDialog>
                   </nav>
                 </ScrollArea>
 
@@ -908,8 +908,8 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
           <footer className="hidden lg:block border-t bg-card/60 backdrop-blur-sm px-6 py-3 mt-auto">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <img src="/logo.png" alt="Окулус-Аудит" className="w-5 h-5 rounded object-cover" />
-                <span className="font-medium text-foreground/80">Окулус-Аудит</span>
+                <img src="/logo.png" alt="Аудит-Окулус" className="w-5 h-5 rounded object-cover" />
+                <span className="font-medium text-foreground/80">Аудит-Окулус</span>
                 <span>© {new Date().getFullYear()}</span>
               </div>
               <div className="flex items-center gap-4">
@@ -918,7 +918,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                   {isAdmin ? 'Администратор' : user?.department || 'Аудитор'}
                 </span>
                 <Separator orientation="vertical" className="h-3" />
-                <span className="tabular-nums text-violet-500/60">v2.5</span>
+                <span className="tabular-nums text-violet-500/60">v3.0</span>
                 <Separator orientation="vertical" className="h-3" />
                 {/* Quick Stats */}
                 <span className={`flex items-center gap-1.5 transition-colors ${isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>

@@ -16,9 +16,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogFooter, DialogDescription,
-} from '@/components/ui/dialog';
+  ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle,
+  ResponsiveDialogFooter, ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -1127,10 +1127,10 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
       )}
 
       {/* ─── Create / Edit Dialog ───────────────────────────────────────── */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+      <ResponsiveDialog open={formOpen} onOpenChange={setFormOpen}>
+        <ResponsiveDialogContent className="sm:max-w-[520px] max-h-[90vh] overflow-y-auto">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2">
               {editingId ? (
                 <>
                   <Pencil className="w-5 h-5 text-emerald-600" />
@@ -1142,13 +1142,13 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
                   Добавить оборудование
                 </>
               )}
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               {editingId
                 ? 'Измените данные оборудования и сохраните'
                 : 'Заполните информацию о новом оборудовании'}
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
           <div className="grid gap-4 py-4">
             {/* Name */}
@@ -1267,7 +1267,7 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
             </div>
           </div>
 
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button
               variant="outline"
               onClick={() => setFormOpen(false)}
@@ -1298,9 +1298,9 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
                 </>
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* ─── Delete Confirmation Dialog ──────────────────────────────────── */}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
@@ -1369,22 +1369,22 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
       </AlertDialog>
 
       {/* ─── CSV Import Dialog ──────────────────────────────────────────────── */}
-      <Dialog open={importDialogOpen} onOpenChange={(open) => { setImportDialogOpen(open); if (!open) resetImportState(); }}>
+      <ResponsiveDialog open={importDialogOpen} onOpenChange={(open) => { setImportDialogOpen(open); if (!open) resetImportState(); }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.95, y: 20 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           transition={{ duration: 0.25, ease: 'easeOut' }}
         >
-          <DialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2">
+          <ResponsiveDialogContent className="sm:max-w-[640px] max-h-[90vh] overflow-y-auto">
+            <ResponsiveDialogHeader>
+              <ResponsiveDialogTitle className="flex items-center gap-2">
                 <Upload className="w-5 h-5 text-emerald-600" />
                 Импорт оборудования из CSV
-              </DialogTitle>
-              <DialogDescription>
+              </ResponsiveDialogTitle>
+              <ResponsiveDialogDescription>
                 Загрузите файл CSV для массового импорта оборудования
-              </DialogDescription>
-            </DialogHeader>
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
 
             <div className="space-y-4 py-2">
               {/* Drop Zone */}
@@ -1535,7 +1535,7 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
               )}
             </div>
 
-            <DialogFooter>
+            <ResponsiveDialogFooter>
               {!importDone ? (
                 <>
                   <Button
@@ -1572,10 +1572,10 @@ export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps
                   Готово
                 </Button>
               )}
-            </DialogFooter>
-          </DialogContent>
+            </ResponsiveDialogFooter>
+          </ResponsiveDialogContent>
         </motion.div>
-      </Dialog>
+      </ResponsiveDialog>
     </div>
   );
 }

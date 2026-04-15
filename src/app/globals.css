@@ -595,7 +595,7 @@
 
   /* Print watermark */
   body::after {
-    content: "Окулус-Аудит — Система управления аудитами";
+    content: "Аудит-Окулус — Система управления аудитами";
     position: fixed;
     bottom: 0;
     left: 0;
@@ -1440,27 +1440,27 @@ button:active, a:active {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   OCULUS THEME — LOGO COLOR ACCENTS
+   AUDIT-OKULUS THEME — LOGO COLOR ACCENTS
    ═══════════════════════════════════════════════════════════════ */
 
 :root {
-  --oculus-blue: #1e1b4b;
-  --oculus-purple: #7c3aed;
-  --oculus-gradient: linear-gradient(135deg, #1e1b4b, #7c3aed);
+  --brand-blue: #1e1b4b;
+  --brand-purple: #7c3aed;
+  --brand-gradient: linear-gradient(135deg, #1e1b4b, #7c3aed);
 }
 
-.oculus-gradient-text {
-  background: var(--oculus-gradient);
+.brand-gradient-text {
+  background: var(--brand-gradient);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.oculus-glow {
+.brand-glow {
   box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
 }
 
-.dark .oculus-glow {
+.dark .brand-glow {
   box-shadow: 0 0 20px rgba(124, 58, 237, 0.25);
 }
 
@@ -1503,15 +1503,15 @@ button:active, a:active {
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   BUTTON HOVER SHIMMER EFFECT (OCULUS)
+   BUTTON HOVER SHIMMER EFFECT (BRAND)
    ═══════════════════════════════════════════════════════════════ */
 
-.btn-oculus-hover {
+.btn-brand-hover {
   position: relative;
   overflow: hidden;
 }
 
-.btn-oculus-hover::before {
+.btn-brand-hover::before {
   content: '';
   position: absolute;
   top: 0; left: -100%; width: 100%; height: 100%;
@@ -1521,7 +1521,7 @@ button:active, a:active {
   z-index: 1;
 }
 
-.btn-oculus-hover:hover::before {
+.btn-brand-hover:hover::before {
   left: 100%;
 }
 

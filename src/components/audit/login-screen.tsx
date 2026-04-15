@@ -307,14 +307,14 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
                   animate={{ rotate: -360 }}
                   transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
                 />
-                <img src="/logo.png" alt="Окулус-Аудит" className="relative w-14 h-14 rounded-xl object-cover shadow-lg shadow-black/20" />
+                <img src="/logo.png" alt="Аудит-Окулус" className="relative w-14 h-14 rounded-xl object-cover shadow-lg shadow-black/20" />
               </div>
-              <span className="text-3xl font-bold tracking-tight">Окулус-Аудит</span>
+              <span className="text-3xl font-bold tracking-tight">Аудит-Окулус</span>
             </div>
             <h1 className="text-5xl font-bold leading-tight mb-6 min-h-[7rem]">
               <span>{headingLine1}<span className={`inline-block w-[3px] h-[1.1em] bg-emerald-300 ml-1 align-middle ${line1Done ? 'animate-pulse' : ''}`} /></span>
               <br />
-              <span className="oculus-gradient-text">
+              <span className="brand-gradient-text">
                 {headingLine2}
                 {line2Done && <span className="inline-block w-[3px] h-[1.1em] bg-violet-400/60 ml-1 align-middle animate-pulse" />}
               </span>
@@ -381,8 +381,8 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
         <div className="w-full max-w-md relative z-10">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <img src="/logo.png" alt="Окулус-Аудит" className="w-12 h-12 rounded-xl object-cover shadow-lg shadow-primary/20" />
-            <span className="text-2xl font-bold">Окулус-Аудит</span>
+            <img src="/logo.png" alt="Аудит-Окулус" className="w-12 h-12 rounded-xl object-cover shadow-lg shadow-primary/20" />
+            <span className="text-2xl font-bold">Аудит-Окулус</span>
           </div>
 
           <motion.div
@@ -556,7 +556,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
             className="mt-8 text-center"
           >
             <p className="text-xs text-muted-foreground">
-              Окулус-Аудит v2.5 &middot; Система управления аудитами
+              Аудит-Окулус v3.0 &middot; Система управления аудитами
             </p>
           </motion.div>
         </div>

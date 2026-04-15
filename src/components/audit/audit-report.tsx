@@ -613,10 +613,10 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
       {/* Print Header (visible only when printing) */}
       <div className="print-header">
         <div className="print-logo">
-          <img src="/logo.png" alt="Окулус-Аудит" style="width:18px;height:18px;border-radius:4px;" />
+          <img src="/logo.png" alt="Аудит-Окулус" style="width:18px;height:18px;border-radius:4px;" />
         </div>
         <div>
-          <div className="print-title">Окулус-Аудит — Отчёт аудита</div>
+          <div className="print-title">Аудит-Окулус — Отчёт аудита</div>
           <div className="print-subtitle">{template?.title || 'Аудит'} · {formatDate(data.completedAt)}</div>
         </div>
       </div>
@@ -1119,7 +1119,7 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
       >
         <Separator className="my-4" />
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Окулус-Аудит — Система управления аудитами</span>
+          <span>Аудит-Окулус — Система управления аудитами</span>
           <span>Отчёт сгенерирован: {new Date().toLocaleDateString('ru-RU')}</span>
         </div>
       </motion.div>

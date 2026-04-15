@@ -15,9 +15,9 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle,
-  DialogFooter, DialogDescription,
-} from '@/components/ui/dialog';
+  ResponsiveDialog, ResponsiveDialogContent, ResponsiveDialogHeader, ResponsiveDialogTitle,
+  ResponsiveDialogFooter, ResponsiveDialogDescription,
+} from '@/components/ui/responsive-dialog';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
@@ -997,10 +997,10 @@ export default function AuditScheduler() {
       )}
 
       {/* ─── Create / Edit Dialog ───────────────────────────────────────── */}
-      <Dialog open={formOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+      <ResponsiveDialog open={formOpen} onOpenChange={setFormOpen}>
+        <ResponsiveDialogContent className="sm:max-w-[540px] max-h-[90vh] overflow-y-auto">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2">
               {editingId ? (
                 <>
                   <Pencil className="w-5 h-5 text-emerald-600" />
@@ -1012,13 +1012,13 @@ export default function AuditScheduler() {
                   Назначить аудит
                 </>
               )}
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               {editingId
                 ? 'Измените параметры назначения и сохраните'
                 : 'Выберите шаблон и аудитора для назначения проверки'}
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
           <div className="grid gap-4 py-4">
             {/* Template Selector */}
@@ -1127,7 +1127,7 @@ export default function AuditScheduler() {
             </div>
           </div>
 
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button
               variant="outline"
               onClick={() => setFormOpen(false)}
@@ -1158,9 +1158,9 @@ export default function AuditScheduler() {
                 </>
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* ─── Auto-Assign Dialog ────────────────────────────────────────── */}
       <AutoAssignDialog
@@ -1252,14 +1252,14 @@ export default function AuditScheduler() {
       </motion.div>
 
       {/* ─── Status Change Dialog ────────────────────────────────────────── */}
-      <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
-        <DialogContent className="sm:max-w-[420px]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
+      <ResponsiveDialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>
+        <ResponsiveDialogContent className="sm:max-w-[420px]">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="flex items-center gap-2">
               <ArrowUpDown className="w-5 h-5 text-emerald-600" />
               Изменить статус
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               {statusChangingItem && (
                 <>
                   Для назначения{' '}
@@ -1268,8 +1268,8 @@ export default function AuditScheduler() {
                   </span>
                 </>
               )}
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
           <div className="grid gap-4 py-4">
             {/* Current status */}
@@ -1308,7 +1308,7 @@ export default function AuditScheduler() {
             </div>
           </div>
 
-          <DialogFooter>
+          <ResponsiveDialogFooter>
             <Button
               variant="outline"
               onClick={() => setStatusDialogOpen(false)}
@@ -1334,9 +1334,9 @@ export default function AuditScheduler() {
                 </>
               )}
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }
