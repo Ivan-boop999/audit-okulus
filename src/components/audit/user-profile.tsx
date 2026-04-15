@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth';
 import { toast } from 'sonner';
@@ -22,10 +22,13 @@ import {
   LogOut,
   Info,
   LayoutGrid,
-  Monitor,
- Fingerprint,
- Globe,
+  Lock,
+  Trophy,
+  Star,
+  Zap,
+  Target,
 } from 'lucide-react';
+import { Tooltip, TooltipTrigger, TooltipContent } from '@/components/ui/tooltip';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -57,6 +60,8 @@ interface UserStats {
   auditsPending: number;
   memberSince: string;
   completionRate: number;
+  avgScore: number;
+  overdueCount: number;
 }
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
@@ -131,6 +136,8 @@ function generateMockStats(userRole: string): UserStats {
       auditsPending: 12,
       memberSince: '2023-01-15',
       completionRate: 94,
+      avgScore: 82,
+      overdueCount: 0,
     };
   }
   return {
@@ -138,7 +145,121 @@ function generateMockStats(userRole: string): UserStats {
     auditsPending: 5,
     memberSince: '2023-06-20',
     completionRate: 91,
+    avgScore: 78,
+    overdueCount: 1,
   };
+}
+
+// ─── Animated Counter Hook ────────────────────────────────────────────────
+
+function useAnimatedCounter(target: number, duration: number = 1200) {
+  const [count, setCount] = useState(0);
+  const ref = useRef<HTMLElement | null>(null);
+  const hasAnimated = useRef(false);
+
+  useEffect(() => {
+    if (hasAnimated.current) return;
+    hasAnimated.current = true;
+
+    let start = 0;
+    const startTime = performance.now();
+
+    function step(now: number) {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      // easeOutExpo
+      const eased = progress === 1 ? 1 : 1 - Math.pow(2, -10 * progress);
+      const current = Math.round(eased * target);
+      setCount(current);
+      if (progress < 1) {
+        requestAnimationFrame(step);
+      }
+    }
+    requestAnimationFrame(step);
+  }, [target, duration]);
+
+  return { count, ref };
+}
+
+// ─── Heatmap Data Generator ──────────────────────────────────────────────
+
+function generateHeatmapData(totalAudits: number): number[][] {
+  const weeks = 12;
+  const days = 7;
+  const data: number[][] = [];
+  const total = weeks * days;
+  const baseRate = Math.min(totalAudits / 80, 0.6);
+  for (let w = 0; w < weeks; w++) {
+    const week: number[] = [];
+    for (let d = 0; d < days; d++) {
+      const r = Math.random();
+      let count = 0;
+      if (r < baseRate * 0.3) count = 0;
+      else if (r < baseRate * 0.6) count = 1;
+      else if (r < baseRate * 0.85) count = 2;
+      else count = 3;
+      // Weekend bias: slightly lower
+      if (d >= 5 && count > 0 && Math.random() > 0.5) count = Math.max(0, count - 1);
+      week.push(count);
+    }
+    data.push(week);
+  }
+  return data;
+}
+
+function getHeatmapCellColor(count: number): string {
+  if (count === 0) return 'bg-muted/40 dark:bg-muted/20';
+  if (count === 1) return 'bg-emerald-200 dark:bg-emerald-900/50';
+  if (count === 2) return 'bg-emerald-400 dark:bg-emerald-700';
+  return 'bg-emerald-600 dark:bg-emerald-500';
+}
+
+// ─── Achievement Badge Helper ────────────────────────────────────────────
+
+interface Achievement {
+  id: string;
+  name: string;
+  description: string;
+  icon: React.ElementType;
+  unlocked: boolean;
+  glowColor: string;
+}
+
+function getAchievements(stats: UserStats): Achievement[] {
+  return [
+    {
+      id: 'first-audit',
+      name: 'Первый аудит',
+      description: 'Завершите первый аудит',
+      icon: Trophy,
+      unlocked: stats.auditsCompleted >= 1,
+      glowColor: 'shadow-amber-500/30 dark:shadow-amber-400/20',
+    },
+    {
+      id: 'ten-audits',
+      name: '10 аудитов',
+      description: 'Завершите 10 аудитов',
+      icon: Star,
+      unlocked: stats.auditsCompleted >= 10,
+      glowColor: 'shadow-emerald-500/30 dark:shadow-emerald-400/20',
+    },
+    {
+      id: 'high-score',
+      name: 'Средний балл ≥ 80%',
+      description: 'Средний балл за аудиты не менее 80%',
+      icon: Target,
+      unlocked: stats.avgScore >= 80,
+      glowColor: 'shadow-teal-500/30 dark:shadow-teal-400/20',
+    },
+    {
+      id: 'no-missed',
+      name: 'Без пропусков',
+      description: 'Нет просроченных аудитов',
+      icon: Zap,
+      unlocked: stats.overdueCount === 0,
+      glowColor: 'shadow-violet-500/30 dark:shadow-violet-400/20',
+    },
+  ];
 }
 
 // ─── Component ──────────────────────────────────────────────────────────────
@@ -177,6 +298,19 @@ export default function UserProfilePanel() {
     () => (user?.role ? generateMockStats(user.role) : null),
     [user],
   );
+
+  const heatmapData = useMemo(
+    () => (stats ? generateHeatmapData(stats.auditsCompleted) : []),
+    [stats],
+  );
+
+  const achievements = useMemo(
+    () => (stats ? getAchievements(stats) : []),
+    [stats],
+  );
+
+  const { count: animatedCompleted, ref: refCompleted } = useAnimatedCounter(stats?.auditsCompleted ?? 0);
+  const { count: animatedPending, ref: refPending } = useAnimatedCounter(stats?.auditsPending ?? 0);
 
   // ── Preference handlers ──
 
@@ -304,45 +438,47 @@ export default function UserProfilePanel() {
         </Card>
       </motion.div>
 
-      {/* ─── Activity Stats ─── */}
+      {/* ─── Activity Stats (Enhanced) ─── */}
       {stats && (
         <motion.div variants={itemVariants} className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {/* Audits Completed */}
-          <Card className="glass card-hover-lift">
-            <CardContent className="p-5">
+          <Card className="card-hover-lift overflow-hidden border-0">
+            <CardContent className={`p-5 bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20`}>
               <div className="flex items-center justify-between mb-3">
-                <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${accentBgClass}`}>
-                  <CheckCircle2 className={`w-5 h-5 ${accentTextClass}`} />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-emerald-100 dark:bg-emerald-900/50 shadow-sm">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
-                <TrendingUp className="w-4 h-4 text-emerald-500" />
+                <span className="flex items-center gap-0.5 text-xs font-semibold text-emerald-600 dark:text-emerald-400">
+                  ↑ 12%
+                </span>
               </div>
-              <div className="text-3xl font-bold count-animate">{stats.auditsCompleted}</div>
+              <div ref={refCompleted} className="text-3xl font-bold tabular-nums">{animatedCompleted}</div>
               <p className="text-sm text-muted-foreground mt-0.5">Аудитов завершено</p>
             </CardContent>
           </Card>
 
           {/* Audits Pending */}
-          <Card className="glass card-hover-lift">
-            <CardContent className="p-5">
+          <Card className="card-hover-lift overflow-hidden border-0">
+            <CardContent className="p-5 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20">
               <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-50">
-                  <Clock className="w-5 h-5 text-amber-600" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-amber-100 dark:bg-amber-900/50 shadow-sm">
+                  <Clock className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                 </div>
-                <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
-                  Активные
-                </Badge>
+                <span className="flex items-center gap-0.5 text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  →
+                </span>
               </div>
-              <div className="text-3xl font-bold count-animate">{stats.auditsPending}</div>
+              <div ref={refPending} className="text-3xl font-bold tabular-nums">{animatedPending}</div>
               <p className="text-sm text-muted-foreground mt-0.5">Аудитов в работе</p>
             </CardContent>
           </Card>
 
           {/* Member Since */}
-          <Card className="glass card-hover-lift">
-            <CardContent className="p-5">
+          <Card className="card-hover-lift overflow-hidden border-0">
+            <CardContent className="p-5 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/20">
               <div className="flex items-center justify-between mb-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-50">
-                  <Calendar className="w-5 h-5 text-teal-600" />
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-teal-100 dark:bg-teal-900/50 shadow-sm">
+                  <Calendar className="w-5 h-5 text-teal-600 dark:text-teal-400" />
                 </div>
                 <Award className="w-4 h-4 text-teal-500" />
               </div>
@@ -350,6 +486,130 @@ export default function UserProfilePanel() {
                 {formatDate(stats.memberSince)}
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">Участник с</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* ─── Activity Heatmap ─── */}
+      {heatmapData.length > 0 && (
+        <motion.div variants={itemVariants}>
+          <Card className="glass card-hover-glow">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accentBgClass}`}>
+                    <TrendingUp className={`w-4 h-4 ${accentTextClass}`} />
+                  </div>
+                  <span className="text-sm font-semibold">Активность</span>
+                </div>
+                <span className="text-xs text-muted-foreground">Последние 12 недель</span>
+              </div>
+              {/* Day labels */}
+              <div className="flex gap-[3px]">
+                <div className="flex flex-col gap-[3px] text-[10px] text-muted-foreground pr-1 justify-between">
+                  <span className="h-[11px] leading-[11px]">Пн</span>
+                  <span className="h-[11px] leading-[11px]">Вт</span>
+                  <span className="h-[11px] leading-[11px]">Ср</span>
+                  <span className="h-[11px] leading-[11px]">Чт</span>
+                  <span className="h-[11px] leading-[11px]">Пт</span>
+                  <span className="h-[11px] leading-[11px]">Сб</span>
+                  <span className="h-[11px] leading-[11px]">Вс</span>
+                </div>
+                <div className="flex gap-[3px] flex-1">
+                  {heatmapData.map((week, wi) => (
+                    <div key={wi} className="flex flex-col gap-[3px]">
+                      {week.map((count, di) => (
+                        <Tooltip key={`${wi}-${di}`}>
+                          <TooltipTrigger asChild>
+                            <motion.div
+                              initial={{ opacity: 0, scale: 0 }}
+                              animate={{ opacity: 1, scale: 1 }}
+                              transition={{ delay: 0.3 + (wi * 7 + di) * 0.005, duration: 0.2 }}
+                              className={`w-[11px] h-[11px] rounded-[2px] cursor-default hover:ring-1 hover:ring-foreground/20 ${getHeatmapCellColor(count)}`}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="text-xs">
+                            {count === 0 ? 'Нет активности' : `${count} аудит${count === 1 ? '' : count < 5 ? 'а' : 'ов'}`}
+                          </TooltipContent>
+                        </Tooltip>
+                      ))}
+                    </div>
+                  ))}
+                </div>
+              </div>
+              {/* Legend */}
+              <div className="flex items-center gap-1.5 mt-3 justify-end">
+                <span className="text-[10px] text-muted-foreground">Меньше</span>
+                <div className="w-[11px] h-[11px] rounded-[2px] bg-muted/40 dark:bg-muted/20" />
+                <div className="w-[11px] h-[11px] rounded-[2px] bg-emerald-200 dark:bg-emerald-900/50" />
+                <div className="w-[11px] h-[11px] rounded-[2px] bg-emerald-400 dark:bg-emerald-700" />
+                <div className="w-[11px] h-[11px] rounded-[2px] bg-emerald-600 dark:bg-emerald-500" />
+                <span className="text-[10px] text-muted-foreground">Больше</span>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* ─── Achievement Badges ─── */}
+      {achievements.length > 0 && (
+        <motion.div variants={itemVariants}>
+          <Card className="glass card-hover-glow">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${accentBgClass}`}>
+                    <Award className={`w-4 h-4 ${accentTextClass}`} />
+                  </div>
+                  <span className="text-sm font-semibold">Достижения</span>
+                </div>
+                <Badge variant="outline" className="text-xs">
+                  {achievements.filter(a => a.unlocked).length}/{achievements.length}
+                </Badge>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                {achievements.map((badge, i) => {
+                  const Icon = badge.icon;
+                  return (
+                    <motion.div
+                      key={badge.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35 + i * 0.07, duration: 0.3 }}
+                      className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border transition-all duration-300 ${
+                        badge.unlocked
+                          ? `bg-card shadow-md hover:shadow-lg ${badge.glowColor} hover:scale-[1.03] cursor-default`
+                          : 'bg-muted/30 border-dashed border-muted-foreground/20 grayscale opacity-60'
+                      }`}
+                    >
+                      {/* Glow effect for unlocked */}
+                      {badge.unlocked && (
+                        <div className="absolute inset-0 rounded-xl bg-gradient-to-br from-emerald-500/5 to-teal-500/5 pointer-events-none" />
+                      )}
+                      <div className={`relative w-10 h-10 rounded-full flex items-center justify-center ${
+                        badge.unlocked
+                          ? 'bg-gradient-to-br from-emerald-100 to-teal-100 dark:from-emerald-900/50 dark:to-teal-900/50'
+                          : 'bg-muted'
+                      }`}>
+                        {badge.unlocked ? (
+                          <Icon className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        ) : (
+                          <Lock className="w-4 h-4 text-muted-foreground" />
+                        )}
+                      </div>
+                      <span className={`text-xs font-semibold text-center leading-tight ${
+                        badge.unlocked ? 'text-foreground' : 'text-muted-foreground'
+                      }`}>
+                        {badge.name}
+                      </span>
+                      <span className="text-[10px] text-muted-foreground text-center leading-tight">
+                        {badge.description}
+                      </span>
+                    </motion.div>
+                  );
+                })}
+              </div>
             </CardContent>
           </Card>
         </motion.div>

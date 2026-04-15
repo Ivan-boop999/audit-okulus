@@ -1,23 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Send, Clock, Trash2, User } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { MessageSquare, Send, Trash2, Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { ScrollArea } from '@/components/ui/scroll-area';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+// ─── Types ───────────────────────────────────────────────────────────────────
 
 interface CommentAuthor {
   id: string;
   name: string;
-  email?: string;
-  department?: string;
-  role?: string;
+  email: string;
+  role: string;
 }
 
 interface Comment {
@@ -36,78 +34,97 @@ interface AuditCommentsProps {
   userName: string;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+const AVATAR_COLORS = [
+  'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+  'bg-teal-500/15 text-teal-700 dark:text-teal-400',
+  'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  'bg-rose-500/15 text-rose-700 dark:text-rose-400',
+  'bg-violet-500/15 text-violet-700 dark:text-violet-400',
+  'bg-sky-500/15 text-sky-700 dark:text-sky-400',
+  'bg-pink-500/15 text-pink-700 dark:text-pink-400',
+  'bg-orange-500/15 text-orange-700 dark:text-orange-400',
+];
+
+function getAvatarColor(userId: string): string {
+  let hash = 0;
+  for (let i = 0; i < userId.length; i++) {
+    hash = userId.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
 
 function getInitials(name: string): string {
   return name
     .split(' ')
-    .map((w) => w[0])
-    .filter(Boolean)
-    .slice(0, 2)
+    .map((n) => n[0])
     .join('')
+    .slice(0, 2)
     .toUpperCase();
 }
 
-function getAvatarColor(name: string): string {
-  const colors = [
-    'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300',
-    'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300',
-    'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300',
-    'bg-rose-100 text-rose-700 dark:bg-rose-900/40 dark:text-rose-300',
-    'bg-violet-100 text-violet-700 dark:bg-violet-900/40 dark:text-violet-300',
-    'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-300',
-  ];
-  let hash = 0;
-  for (let i = 0; i < name.length; i++) {
-    hash = name.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return colors[Math.abs(hash) % colors.length];
-}
-
-function formatTimeAgo(dateStr: string): string {
-  const now = new Date();
+function formatRelativeTime(dateStr: string): string {
   const date = new Date(dateStr);
+  const now = new Date();
   const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHour = Math.floor(diffMin / 60);
-  const diffDay = Math.floor(diffHour / 24);
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
 
-  if (diffMin < 1) return 'только что';
-  if (diffMin < 60) return `${diffMin} мин. назад`;
-  if (diffHour < 24) return `${diffHour} ч. назад`;
-  if (diffDay < 7) return `${diffDay} дн. назад`;
-  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short', year: 'numeric' });
+  if (diffMinutes < 1) return 'только что';
+  if (diffMinutes < 60) {
+    const mins = diffMinutes;
+    if (mins === 1) return '1 мин назад';
+    if (mins < 5) return `${mins} мин назад`;
+    return `${mins} мин назад`;
+  }
+  if (diffHours < 24) {
+    if (diffHours === 1) return '1 час назад';
+    if (diffHours < 5) return `${diffHours} ч назад`;
+    return `${diffHours} ч назад`;
+  }
+  if (diffDays === 1) return 'вчера';
+  if (diffDays < 7) return `${diffDays} дн назад`;
+  return date.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'short',
+    year: diffDays > 365 ? 'numeric' : undefined,
+  });
 }
 
-// ─── Animation Variants ───────────────────────────────────────────────────────
+function formatFullTime(dateStr: string): string {
+  return new Date(dateStr).toLocaleString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
+}
 
-const commentVariants = {
-  hidden: { opacity: 0, y: 12, scale: 0.98 },
-  visible: { opacity: 1, y: 0, scale: 1, transition: { duration: 0.3, ease: 'easeOut' } },
-  exit: { opacity: 0, x: -20, scale: 0.95, transition: { duration: 0.2 } },
-};
-
-// ─── Component ────────────────────────────────────────────────────────────────
+// ─── Component ───────────────────────────────────────────────────────────────
 
 export default function AuditComments({ responseId, userId, userName }: AuditCommentsProps) {
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
-  const [newComment, setNewComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [newComment, setNewComment] = useState('');
   const [deletingId, setDeletingId] = useState<string | null>(null);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // ─── Fetch comments ───────────────────────────────────────────────────────
+  // ─── Fetch comments ─────────────────────────────────────────────────────
 
   const fetchComments = useCallback(async () => {
     try {
       const res = await fetch(`/api/comments?responseId=${responseId}`);
-      if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
-      setComments(data);
-    } catch {
-      // Silent fail for comments
+      if (res.ok) {
+        const data = await res.json();
+        setComments(data);
+      }
+    } catch (err) {
+      console.error('Error fetching comments:', err);
     } finally {
       setLoading(false);
     }
@@ -117,17 +134,19 @@ export default function AuditComments({ responseId, userId, userName }: AuditCom
     fetchComments();
   }, [fetchComments]);
 
-  // Auto-scroll to bottom when new comments arrive
+  // ─── Auto-scroll to bottom on new comments ──────────────────────────────
+
   useEffect(() => {
-    if (scrollRef.current) {
+    if (comments.length > 0 && scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [comments.length]);
 
-  // ─── Submit comment ───────────────────────────────────────────────────────
+  // ─── Submit comment ─────────────────────────────────────────────────────
 
-  const handleSubmit = async () => {
-    if (!newComment.trim() || submitting) return;
+  const handleSubmit = useCallback(async () => {
+    const trimmed = newComment.trim();
+    if (!trimmed || submitting) return;
 
     setSubmitting(true);
     try {
@@ -136,203 +155,251 @@ export default function AuditComments({ responseId, userId, userName }: AuditCom
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           responseId,
-          content: newComment,
+          content: trimmed,
           userId,
         }),
       });
 
-      if (!res.ok) throw new Error('Failed to create comment');
-
-      const comment = await res.json();
-      setComments((prev) => [...prev, comment]);
-      setNewComment('');
-      toast.success('Комментарий добавлен');
+      if (res.ok) {
+        const newCommentData: Comment = await res.json();
+        setComments((prev) => [...prev, newCommentData]);
+        setNewComment('');
+        textareaRef.current?.focus();
+      } else {
+        const errData = await res.json();
+        toast.error('Ошибка', { description: errData.error || 'Не удалось добавить комментарий' });
+      }
     } catch {
-      toast.error('Не удалось добавить комментарий');
+      toast.error('Ошибка', { description: 'Не удалось добавить комментарий' });
     } finally {
       setSubmitting(false);
-      textareaRef.current?.focus();
     }
-  };
+  }, [newComment, submitting, responseId, userId]);
 
-  // ─── Delete comment ───────────────────────────────────────────────────────
+  // ─── Delete comment ─────────────────────────────────────────────────────
 
-  const handleDelete = async (commentId: string) => {
+  const handleDelete = useCallback(async (commentId: string) => {
     setDeletingId(commentId);
     try {
-      const res = await fetch(`/api/comments?id=${commentId}`, { method: 'DELETE' });
-      if (!res.ok) throw new Error('Failed to delete');
-      setComments((prev) => prev.filter((c) => c.id !== commentId));
-      toast.success('Комментарий удалён');
+      const res = await fetch(`/api/comments?id=${commentId}&userId=${userId}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        setComments((prev) => prev.filter((c) => c.id !== commentId));
+        toast.success('Комментарий удалён');
+      } else {
+        const errData = await res.json();
+        toast.error('Ошибка', { description: errData.error || 'Не удалось удалить комментарий' });
+      }
     } catch {
-      toast.error('Не удалось удалить комментарий');
+      toast.error('Ошибка', { description: 'Не удалось удалить комментарий' });
     } finally {
       setDeletingId(null);
     }
-  };
+  }, [userId]);
 
-  // ─── Keyboard shortcut ────────────────────────────────────────────────────
+  // ─── Keyboard submit ────────────────────────────────────────────────────
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
-      e.preventDefault();
-      handleSubmit();
-    }
-  };
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
+        e.preventDefault();
+        handleSubmit();
+      }
+    },
+    [handleSubmit]
+  );
 
-  // ─── Render ───────────────────────────────────────────────────────────────
+  // ─── Loading state ──────────────────────────────────────────────────────
+
+  if (loading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-lg font-semibold flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-teal-500" />
+            Комментарии
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-start gap-3">
+              <div className="shimmer w-9 h-9 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <div className="shimmer h-3.5 w-24 rounded" />
+                <div className="shimmer h-14 w-full rounded-lg" />
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="shimmer w-9 h-9 rounded-full" />
+              <div className="flex-1 space-y-2">
+                <div className="shimmer h-3.5 w-32 rounded" />
+                <div className="shimmer h-10 w-3/4 rounded-lg" />
+              </div>
+            </div>
+          </div>
+          <div className="mt-4">
+            <div className="shimmer h-10 w-full rounded-xl" />
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  // ─── Render ─────────────────────────────────────────────────────────────
 
   return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-3">
+    <Card className="print:hidden">
+      <CardHeader>
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-sm">
-              <MessageSquare className="w-4 h-4 text-white" />
-            </div>
-            <div>
-              <CardTitle className="text-sm font-semibold">Комментарии</CardTitle>
+          <div>
+            <CardTitle className="text-lg font-semibold flex items-center gap-2">
+              <MessageSquare className="w-5 h-5 text-teal-500" />
+              Комментарии
               {comments.length > 0 && (
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  {comments.length} {comments.length === 1 ? 'комментарий' : comments.length < 5 ? 'комментария' : 'комментариев'}
-                </p>
+                <span className="text-sm font-normal text-muted-foreground">
+                  ({comments.length})
+                </span>
               )}
-            </div>
+            </CardTitle>
+            <CardDescription className="mt-1">
+              Обсуждение результатов аудита
+            </CardDescription>
           </div>
         </div>
       </CardHeader>
-
-      <CardContent className="pt-0 space-y-3">
-        {/* Comments list */}
-        <div ref={scrollRef} className="max-h-80 overflow-y-auto custom-scrollbar space-y-2 pr-1">
-          {loading ? (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, i) => (
-                <div key={i} className="flex gap-2.5">
-                  <div className="shimmer w-8 h-8 rounded-full flex-shrink-0" />
-                  <div className="flex-1 space-y-1.5">
-                    <div className="flex items-center gap-2">
-                      <div className="shimmer h-3.5 w-20 rounded" />
-                      <div className="shimmer h-3 w-14 rounded" />
-                    </div>
-                    <div className="shimmer h-4 w-full rounded" />
-                  </div>
+      <CardContent className="space-y-4">
+        {/* ─── Comments List ─────────────────────────────────────────── */}
+        <div
+          ref={scrollRef}
+          className="max-h-96 overflow-y-auto space-y-1 custom-scrollbar"
+        >
+          <AnimatePresence initial={false}>
+            {comments.length === 0 ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="flex flex-col items-center justify-center py-10 text-muted-foreground"
+              >
+                <div className="w-14 h-14 rounded-2xl bg-muted/50 flex items-center justify-center mb-3">
+                  <MessageSquare className="w-7 h-7 text-muted-foreground/40" />
                 </div>
-              ))}
-            </div>
-          ) : comments.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center py-6 text-center"
-            >
-              <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center mb-3">
-                <MessageSquare className="w-6 h-6 text-muted-foreground/50" />
-              </div>
-              <p className="text-sm text-muted-foreground">Пока нет комментариев</p>
-              <p className="text-xs text-muted-foreground/60 mt-0.5">Будьте первым!</p>
-            </motion.div>
-          ) : (
-            <AnimatePresence mode="popLayout">
-              {comments.map((comment) => {
-                const isOwn = comment.userId === userId;
-                const avatarColor = getAvatarColor(comment.author.name);
+                <p className="text-sm font-medium">Пока нет комментариев</p>
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                  Будьте первым, кто оставит комментарий
+                </p>
+              </motion.div>
+            ) : (
+              comments.map((comment, idx) => {
+                const isAuthor = comment.userId === userId;
+                const avatarColor = getAvatarColor(comment.author.id);
 
                 return (
                   <motion.div
                     key={comment.id}
-                    variants={commentVariants}
-                    initial="hidden"
-                    animate="visible"
-                    exit="exit"
-                    layout
-                    className={`flex gap-2.5 p-2.5 rounded-lg transition-colors ${
-                      isOwn
-                        ? 'bg-primary/5 dark:bg-primary/10'
-                        : 'hover:bg-muted/30'
-                    }`}
+                    initial={{ opacity: 0, y: 12, scale: 0.97 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, x: -30, scale: 0.95, transition: { duration: 0.2 } }}
+                    transition={{
+                      duration: 0.3,
+                      ease: 'easeOut',
+                      delay: idx === comments.length - 1 ? 0.05 : 0,
+                    }}
+                    className="group flex items-start gap-3 p-3 rounded-xl hover:bg-muted/40 transition-colors"
                   >
-                    <Avatar className="h-7 w-7 flex-shrink-0 mt-0.5">
-                      <AvatarFallback className={`text-[10px] font-bold ${avatarColor}`}>
+                    {/* Avatar */}
+                    <Avatar className="w-9 h-9 flex-shrink-0 mt-0.5">
+                      <AvatarFallback className={`text-xs font-bold ${avatarColor}`}>
                         {getInitials(comment.author.name)}
                       </AvatarFallback>
                     </Avatar>
+
+                    {/* Content */}
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-0.5">
-                        <span className={`text-xs font-semibold ${isOwn ? 'text-primary' : 'text-foreground'}`}>
-                          {isOwn ? 'Вы' : comment.author.name}
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-sm font-semibold truncate">
+                          {comment.author.name}
                         </span>
                         {comment.author.role === 'ADMIN' && (
-                          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300 font-medium">
+                          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-400 font-medium">
                             Админ
                           </span>
                         )}
-                        <span className="text-[10px] text-muted-foreground flex items-center gap-1">
-                          <Clock className="w-2.5 h-2.5" />
-                          {formatTimeAgo(comment.createdAt)}
+                        <span
+                          className="text-xs text-muted-foreground ml-auto flex-shrink-0"
+                          title={formatFullTime(comment.createdAt)}
+                        >
+                          {formatRelativeTime(comment.createdAt)}
                         </span>
                       </div>
                       <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap break-words">
                         {comment.content}
                       </p>
                     </div>
-                    {isOwn && (
+
+                    {/* Delete button (only for author) */}
+                    {isAuthor && (
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 flex-shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100 text-muted-foreground/40 hover:text-red-500 transition-all"
+                        className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 flex-shrink-0"
                         onClick={() => handleDelete(comment.id)}
                         disabled={deletingId === comment.id}
+                        title="Удалить комментарий"
                       >
-                        <Trash2 className="w-3 h-3" />
+                        {deletingId === comment.id ? (
+                          <Loader2 className="w-4 h-4 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-4 h-4" />
+                        )}
                       </Button>
                     )}
                   </motion.div>
                 );
-              })}
-            </AnimatePresence>
-          )}
+              })
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Input area */}
-        <div className="relative flex gap-2 pt-2 border-t">
-          <Avatar className="h-8 w-8 flex-shrink-0">
-            <AvatarFallback className={`text-[10px] font-bold ${getAvatarColor(userName)}`}>
+        {/* ─── Input Area ─────────────────────────────────────────────── */}
+        <div className="flex items-end gap-3 pt-2 border-t">
+          <Avatar className="w-9 h-9 flex-shrink-0">
+            <AvatarFallback className={`text-xs font-bold ${getAvatarColor(userId)}`}>
               {getInitials(userName)}
             </AvatarFallback>
           </Avatar>
-          <div className="flex-1 flex gap-2">
+          <div className="flex-1 relative">
             <Textarea
               ref={textareaRef}
               value={newComment}
               onChange={(e) => setNewComment(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder="Написать комментарий..."
-              className="min-h-[40px] max-h-32 resize-none text-sm bg-muted/40 border-0 focus-visible:ring-1 focus-visible:ring-primary/30"
+              className="min-h-[42px] max-h-[120px] resize-none pr-12 rounded-xl text-sm"
               rows={1}
             />
-            <Button
-              size="icon"
-              onClick={handleSubmit}
-              disabled={!newComment.trim() || submitting}
-              className="h-9 w-9 flex-shrink-0 bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white shadow-sm border-0 disabled:opacity-40"
-            >
-              {submitting ? (
-                <motion.div
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                >
-                  <Send className="w-4 h-4" />
-                </motion.div>
-              ) : (
-                <Send className="w-4 h-4" />
-              )}
-            </Button>
           </div>
-          <p className="absolute -bottom-4 right-12 text-[10px] text-muted-foreground/50">
-            ⌘+Enter для отправки
-          </p>
+          <Button
+            size="icon"
+            className="h-[42px] w-[42px] rounded-xl flex-shrink-0 bg-gradient-to-r from-primary to-primary/90 hover:from-primary/90 hover:to-primary shadow-sm disabled:opacity-40 transition-all"
+            onClick={handleSubmit}
+            disabled={!newComment.trim() || submitting}
+            title="Отправить (Ctrl+Enter)"
+          >
+            {submitting ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Send className="w-4 h-4" />
+            )}
+          </Button>
         </div>
+
+        {/* Submit hint */}
+        <p className="text-[10px] text-muted-foreground/60 text-right -mt-2">
+          Ctrl+Enter для отправки
+        </p>
       </CardContent>
     </Card>
   );

@@ -1,17 +1,16 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useState, useEffect, useMemo, useCallback } from 'react';
+import { motion } from 'framer-motion';
 import {
   BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Area, AreaChart, RadarChart,
   Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend,
-  ComposedChart, Scatter,
+  ComposedChart,
 } from 'recharts';
 import {
   BarChart3, TrendingUp, Target, Users, Activity, FileText, Wrench,
-  CheckCircle2, Clock, AlertTriangle, CalendarDays, ArrowUpRight,
-  ArrowDownRight, Download, Filter, ChevronDown, Sparkles, LayoutDashboard,
+  CheckCircle2, Clock, AlertTriangle, CalendarDays, Download, Sparkles, LayoutDashboard,
   UserCheck, Shield, BarChartHorizontal, Flame, PieChartIcon,
   TableIcon, BookOpen,
 } from 'lucide-react';
@@ -22,11 +21,7 @@ import { Button } from '@/components/ui/button';
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from '@/components/ui/table';
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
-import { Separator } from '@/components/ui/separator';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger,
 } from '@/components/ui/dialog';
@@ -202,6 +197,17 @@ export default function AnalyticsDashboard() {
   const [timeRange, setTimeRange] = useState('30d');
   const [activeTab, setActiveTab] = useState('overview');
 
+  const handleTimeRangeChange = useCallback((range: string) => {
+    setTimeRange(range);
+  }, []);
+
+  const periodButtons = [
+    { value: '7d', label: '7 дней' },
+    { value: '30d', label: '30 дней' },
+    { value: '90d', label: '90 дней' },
+    { value: 'all', label: 'Год' },
+  ];
+
   useEffect(() => {
     fetch('/api/analytics')
       .then(res => res.json())
@@ -311,42 +317,41 @@ export default function AnalyticsDashboard() {
 
   const summaryCards = [
     {
+      title: 'Всего аудитов',
+      value: overview.totalAssignments,
+      icon: BarChart3,
+      color: 'text-teal-600 dark:text-teal-400',
+      bgColor: 'bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/40 dark:to-cyan-950/30',
+      borderColor: 'border-l-teal-500',
+      description: `${overview.scheduledAssignments + overview.inProgressAssignments} в работе`,
+    },
+    {
       title: 'Средний балл',
       value: overview.avgScore.toFixed(1),
       suffix: '%',
       icon: Target,
       color: 'text-emerald-600 dark:text-emerald-400',
-      bgColor: 'bg-emerald-50 dark:bg-emerald-950/40',
+      bgColor: 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/40 dark:to-teal-950/30',
       borderColor: 'border-l-emerald-500',
       description: 'По всем завершённым аудитам',
     },
     {
-      title: 'Всего аудитов',
-      value: overview.totalAssignments,
-      icon: BarChart3,
-      color: 'text-teal-600 dark:text-teal-400',
-      bgColor: 'bg-teal-50 dark:bg-teal-950/40',
-      borderColor: 'border-l-teal-500',
-      description: `${overview.completedAssignments} завершено`,
-    },
-    {
-      title: 'Процент выполнения',
-      value: overview.completionRate.toFixed(1),
-      suffix: '%',
-      icon: TrendingUp,
+      title: 'Завершено',
+      value: overview.completedAssignments,
+      icon: CheckCircle2,
       color: 'text-cyan-600 dark:text-cyan-400',
-      bgColor: 'bg-cyan-50 dark:bg-cyan-950/40',
+      bgColor: 'bg-gradient-to-br from-cyan-50 to-sky-50 dark:from-cyan-950/40 dark:to-sky-950/30',
       borderColor: 'border-l-cyan-500',
-      description: 'Запланировано → Завершено',
+      description: `${overview.completionRate.toFixed(1)}% от всех`,
     },
     {
-      title: 'Аудиторы',
-      value: overview.totalAuditors,
-      icon: Users,
-      color: 'text-violet-600 dark:text-violet-400',
-      bgColor: 'bg-violet-50 dark:bg-violet-950/40',
-      borderColor: 'border-l-violet-500',
-      description: `${overview.totalTemplates} шаблонов`,
+      title: 'Требуют внимания',
+      value: overview.overdueAssignments,
+      icon: AlertTriangle,
+      color: 'text-red-600 dark:text-red-400',
+      bgColor: 'bg-gradient-to-br from-red-50 to-orange-50 dark:from-red-950/40 dark:to-orange-950/30',
+      borderColor: 'border-l-red-500',
+      description: `${overview.inProgressAssignments} в процессе`,
     },
   ];
 
@@ -370,40 +375,44 @@ export default function AnalyticsDashboard() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Dialog>
-            <DialogTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-1.5 text-xs">
-                <BookOpen className="w-3.5 h-3.5" />
-                Справочник
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle>Справочник оценок аудита</DialogTitle>
-              </DialogHeader>
-              <ScoringGuide />
-            </DialogContent>
-          </Dialog>
-          <Select value={timeRange} onValueChange={setTimeRange}>
-            <SelectTrigger className="w-[140px]">
-              <CalendarDays className="w-4 h-4 mr-1 text-muted-foreground" />
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">7 дней</SelectItem>
-              <SelectItem value="30d">30 дней</SelectItem>
-              <SelectItem value="90d">90 дней</SelectItem>
-              <SelectItem value="all">Весь период</SelectItem>
-            </SelectContent>
-          </Select>
-          <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-xs">
-            <Activity className="w-3.5 h-3.5 text-emerald-500" />
-            Обновлено только что
-          </Badge>
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-1.5 text-xs">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  Справочник
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Справочник оценок аудита</DialogTitle>
+                </DialogHeader>
+                <ScoringGuide />
+              </DialogContent>
+            </Dialog>
+            <div className="flex items-center gap-1 bg-muted/60 backdrop-blur-sm p-1 rounded-lg">
+              {periodButtons.map((btn) => (
+                <motion.button
+                  key={btn.value}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => handleTimeRangeChange(btn.value)}
+                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                    timeRange === btn.value
+                      ? 'bg-primary text-primary-foreground shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                  }`}
+                >
+                  {btn.label}
+                </motion.button>
+              ))}
+            </div>
+            <Badge variant="outline" className="gap-1.5 px-3 py-1.5 text-xs">
+              <Activity className="w-3.5 h-3.5 text-emerald-500" />
+              Обновлено только что
+            </Badge>
         </div>
       </motion.div>
 
-      {/* Summary Cards */}
+      {/* Summary Cards (Enhanced) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {summaryCards.map((card, i) => {
           const Icon = card.icon;
@@ -414,10 +423,10 @@ export default function AnalyticsDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.06, duration: 0.4, ease: 'easeOut' }}
             >
-              <Card className={`overflow-hidden border-l-4 ${card.borderColor} hover:shadow-lg transition-all duration-300`}>
+              <Card className={`overflow-hidden border-l-4 ${card.borderColor} hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 bg-card/50 backdrop-blur-sm`}>
                 <CardContent className="p-5">
                   <div className="flex items-start justify-between">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${card.bgColor}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center shadow-sm ${card.bgColor}`}>
                       <Icon className={`w-5 h-5 ${card.color}`} />
                     </div>
                   </div>
@@ -472,7 +481,7 @@ export default function AnalyticsDashboard() {
               transition={{ delay: 0.1 }}
               className="lg:col-span-2"
             >
-              <Card className="h-full">
+              <Card className="h-full bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <BarChartHorizontal className="w-4 h-4 text-emerald-500" />
@@ -529,7 +538,7 @@ export default function AnalyticsDashboard() {
               transition={{ delay: 0.15 }}
               className="lg:col-span-3"
             >
-              <Card className="h-full">
+              <Card className="h-full bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <TrendingUp className="w-4 h-4 text-teal-500" />
@@ -594,7 +603,7 @@ export default function AnalyticsDashboard() {
               transition={{ delay: 0.2 }}
               className="lg:col-span-2"
             >
-              <Card className="h-full">
+              <Card className="h-full bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <Activity className="w-4 h-4 text-cyan-500" />
@@ -664,7 +673,7 @@ export default function AnalyticsDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25 }}
             >
-              <Card className="h-full">
+              <Card className="h-full bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <PieChartIcon className="w-4 h-4 text-emerald-500" />
@@ -723,7 +732,7 @@ export default function AnalyticsDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
             >
-              <Card className="h-full">
+              <Card className="h-full bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <Flame className="w-4 h-4 text-amber-500" />
@@ -782,7 +791,7 @@ export default function AnalyticsDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.35 }}
             >
-              <Card className="h-full">
+              <Card className="h-full bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <Wrench className="w-4 h-4 text-indigo-500" />
@@ -851,7 +860,7 @@ export default function AnalyticsDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className="h-full">
+              <Card className="h-full bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <UserCheck className="w-4 h-4 text-emerald-500" />
@@ -911,7 +920,7 @@ export default function AnalyticsDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
             >
-              <Card className="h-full">
+              <Card className="h-full bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <BarChartHorizontal className="w-4 h-4 text-teal-500" />
@@ -982,7 +991,7 @@ export default function AnalyticsDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card>
+            <Card className="bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <Users className="w-4 h-4 text-violet-500" />
@@ -1055,7 +1064,7 @@ export default function AnalyticsDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 }}
             >
-              <Card className="h-full">
+              <Card className="h-full bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <BarChart3 className="w-4 h-4 text-emerald-500" />
@@ -1101,7 +1110,7 @@ export default function AnalyticsDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.15 }}
             >
-              <Card className="h-full">
+              <Card className="h-full bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
                 <CardHeader className="pb-2">
                   <CardTitle className="text-base font-semibold flex items-center gap-2">
                     <Wrench className="w-4 h-4 text-indigo-500" />
@@ -1151,7 +1160,7 @@ export default function AnalyticsDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
           >
-            <Card>
+              <Card className="bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <FileText className="w-4 h-4 text-cyan-500" />
@@ -1207,7 +1216,7 @@ export default function AnalyticsDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
           >
-            <Card>
+              <Card className="bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <div>
@@ -1271,7 +1280,7 @@ export default function AnalyticsDashboard() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
           >
-            <Card>
+              <Card className="bg-card/50 backdrop-blur-sm border hover:shadow-md transition-shadow">
               <CardHeader className="pb-2">
                 <CardTitle className="text-base font-semibold flex items-center gap-2">
                   <TableIcon className="w-4 h-4 text-teal-500" />

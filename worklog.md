@@ -545,6 +545,55 @@ Stage Summary:
 - Version: v2.2
 
 ---
+Task ID: 12-c
+Agent: Full-stack Developer
+Task: Add Audit Comments System with DB persistence and enhance Dashboard Quick Stats
+
+Work Log:
+- Read worklog.md and page.tsx to understand project context and routing system
+- Verified AuditComment model already exists in Prisma schema with proper relations to AuditResponse and User
+- Ran `bun run db:push` — schema already in sync, Prisma Client regenerated
+- Created `/src/app/api/comments/route.ts` with 3 endpoints:
+  - GET: List comments by responseId with author user data (name, email, role), ordered by createdAt ASC
+  - POST: Create new comment with validation (responseId, content, userId required; verifies response and user exist)
+  - DELETE: Delete comment by id with userId authorization check (only comment author can delete)
+- Created `/src/components/audit/audit-comments.tsx` (~280 lines) with:
+  - Props: `responseId`, `userId`, `userName`
+  - Comment input with Textarea, Send button (gradient icon), Ctrl+Enter keyboard shortcut
+  - Comment list with: user avatar (colored initials from deterministic hash), name, role badge (Админ), relative timestamp ("2 мин назад", "1 час назад"), full timestamp on hover
+  - Delete button (Trash2 icon) visible on hover, only for comment author, with loading spinner
+  - Loading state with shimmer skeletons
+  - Empty state: "Пока нет комментариев" with MessageSquare icon
+  - AnimatePresence for comment add/remove animations (slide in from bottom, slide out left)
+  - Auto-scroll to bottom on new comments
+  - max-h-96 overflow-y-auto with custom scrollbar styling
+- Enhanced admin-dashboard.tsx Quick Actions section:
+  - Added `AdminDashboardProps` interface with `onNavigate?: (view: string) => void`
+  - Updated "Быстрые действия" section header with Zap icon
+  - Redesigned 4 action cards with: gradient circle icons (white icons on colored gradient backgrounds), colored title text, subtitles
+  - Actions: "Новый аудит" (→scheduling), "Добавить шаблон" (→templates), "Оборудование" (→equipment), "Назначить аудитора" (→scheduling)
+  - Responsive: horizontal scroll on mobile (flex), 2x2 grid on desktop (sm:grid-cols-4)
+  - Hover lift effect (y: -3, scale: 1.02) and tap press (scale: 0.97) via framer-motion
+- Enhanced admin-dashboard.tsx Recent Activity section:
+  - Replaced status icon timeline dots with user avatar circles (colored initials via deterministic hash)
+  - Activity entries now show: user name → action text (template title) → status icon with label → relative timestamp
+  - Added `formatRelativeTime()` helper: "только что", "2 мин назад", "1 час назад", "вчера", "3 дн назад"
+  - Added avatar color helpers: `getAvatarColor()` (deterministic hash), `getInitials()`
+  - Retained "Новое" animated badge on latest entry
+  - Retained "Сегодня" badge for today's entries
+- Wired navigation: passed `onNavigate={setActiveView}` to AdminDashboard in page.tsx
+- ESLint: 0 errors, 0 warnings (final check)
+- Dev server: compiles successfully, all routes return 200
+
+Stage Summary:
+- 1 new API route: /api/comments with GET/POST/DELETE endpoints
+- 1 new component: AuditComments with full CRUD, animations, relative timestamps, empty/loading states
+- 2 dashboard enhancements: Quick Actions with navigation wiring + relative timestamps in activity feed
+- 1 file modified for routing: page.tsx (onNavigate prop for AdminDashboard)
+- Audit Comments system fully integrated into Audit Report Detail view (already imported in audit-report.tsx)
+- All changes maintain existing code style: Russian UI, framer-motion animations, shadcn/ui components, Tailwind CSS
+
+---
 Current Project Status:
 - Application is stable and production-ready at v2.2
 - All core features implemented, tested, and working
@@ -552,7 +601,7 @@ Current Project Status:
 - Dev server compiles successfully (no build errors)
 - Responsive design works on mobile and desktop
 - Dark/light theme support across all components
-- 17 audit components total, 7 API routes, 9 database models
+- 18 audit components total, 8 API routes, 10 database models
 - Admin views: 10 (dashboard, equipment, equipment-detail, templates, scheduling, team, action-plans, history, analytics, profile)
 - Auditor views: 6 (overview, calendar, audits, action-plans, history, profile)
 

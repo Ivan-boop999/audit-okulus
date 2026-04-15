@@ -149,7 +149,7 @@ export default function Home() {
     if (isAdmin) {
       switch (activeView) {
         case 'dashboard':
-          return <AdminDashboard />;
+          return <AdminDashboard onNavigate={setActiveView} />;
         case 'equipment':
           return <EquipmentManager onViewDetail={handleViewEquipment} />;
         case 'templates':

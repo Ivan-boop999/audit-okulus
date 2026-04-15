@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle, CheckCircle2, Clock, ArrowRight, Flame, TrendingUp,
   Target, ListTodo, Filter, ChevronDown, Plus, CircleDot, CircleCheck,
-  CircleAlert, Shield, Zap, Trash2, Trophy,
+  CircleAlert, Shield, Zap, Trash2, Trophy, ShieldCheck,
 } from 'lucide-react';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription,
@@ -301,7 +301,7 @@ function ChartTooltip({ active, payload }: {
 
 // ─── Empty State ──────────────────────────────────────────────────────────────
 
-function EmptyState({ hasFilters }: { hasFilters: boolean }) {
+function EnhancedEmptyState({ hasFilters }: { hasFilters: boolean }) {
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -309,46 +309,67 @@ function EmptyState({ hasFilters }: { hasFilters: boolean }) {
       transition={{ duration: 0.5, ease: 'easeOut' }}
       className="flex flex-col items-center justify-center py-20 px-4"
     >
-      {/* Illustration */}
+      {/* Animated Shield-Check Illustration */}
       <div className="relative mb-8">
         <motion.div
-          animate={{ y: [0, -8, 0] }}
+          animate={{ y: [0, -10, 0] }}
           transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-          className="w-28 h-28 rounded-3xl bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 dark:from-emerald-950/60 dark:via-teal-950/40 dark:to-cyan-950/60 flex items-center justify-center shadow-lg shadow-emerald-500/10"
+          className="w-32 h-32 rounded-3xl bg-gradient-to-br from-emerald-100 via-teal-50 to-cyan-100 dark:from-emerald-950/60 dark:via-teal-950/40 dark:to-cyan-950/60 flex items-center justify-center shadow-xl shadow-emerald-500/15"
         >
-          <Shield className="w-14 h-14 text-emerald-500" />
+          <motion.div
+            animate={{ rotate: [0, 3, -3, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          >
+            <ShieldCheck className="w-16 h-16 text-emerald-500" />
+          </motion.div>
         </motion.div>
+
+        {/* Floating particles */}
         <motion.div
-          animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
-          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-          className="absolute -top-2 -right-2 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg"
+          animate={{ y: [0, -14, 0], x: [0, 4, 0] }}
+          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.2 }}
+          className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg"
         >
           <CheckCircle2 className="w-5 h-5 text-white" />
         </motion.div>
         <motion.div
-          animate={{ scale: [1, 1.1, 1] }}
-          transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut', delay: 0.3 }}
-          className="absolute -bottom-1 -left-3 w-6 h-6 rounded-full bg-teal-500 flex items-center justify-center shadow-md"
+          animate={{ y: [0, -8, 0], x: [0, -6, 0] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut', delay: 0.5 }}
+          className="absolute -bottom-2 -left-4 w-7 h-7 rounded-full bg-teal-500 flex items-center justify-center shadow-md"
         >
           <Zap className="w-3.5 h-3.5 text-white" />
         </motion.div>
+        <motion.div
+          animate={{ y: [0, -6, 0] }}
+          transition={{ duration: 2.8, repeat: Infinity, ease: 'easeInOut', delay: 1 }}
+          className="absolute top-1 -left-6 w-5 h-5 rounded-full bg-cyan-500 flex items-center justify-center shadow-sm"
+        >
+          <Trophy className="w-2.5 h-2.5 text-white" />
+        </motion.div>
+
+        {/* Glow ring */}
+        <motion.div
+          animate={{ scale: [1, 1.15, 1], opacity: [0.3, 0.15, 0.3] }}
+          transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+          className="absolute inset-[-16px] rounded-3xl border-2 border-emerald-300/30 dark:border-emerald-500/20"
+        />
       </div>
 
-      <h3 className="text-xl font-bold text-foreground mb-2">
-        {hasFilters ? 'Ничего не найдено' : 'Всё отлично!'}
+      <h3 className="text-2xl font-extrabold mb-2 bg-gradient-to-r from-emerald-600 via-teal-500 to-cyan-500 dark:from-emerald-400 dark:via-teal-300 dark:to-cyan-400 bg-clip-text text-transparent">
+        {hasFilters ? 'Ничего не найдено' : 'Все аудиты проходят успешно!'}
       </h3>
       <p className="text-muted-foreground text-sm text-center max-w-md leading-relaxed">
         {hasFilters
           ? 'Попробуйте изменить параметры фильтрации для отображения корректирующих действий.'
-          : 'Все завершённые аудиты соответствуют требуемым стандартам. Корректирующие действия не требуются.'}
+          : 'У вас нет корректирующих действий'}
       </p>
 
       {!hasFilters && (
         <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.4 }}
-          className="mt-6 flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-4 py-2 rounded-full"
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="mt-6 flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-4 py-2 rounded-full shadow-sm"
         >
           <CheckCircle2 className="w-3.5 h-3.5" />
           Аудиты с результатом ниже 70% будут автоматически добавлены
@@ -451,6 +472,9 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
 
   // View
   const [activeTab, setActiveTab] = useState('all');
+
+  // Priority chip filter
+  const [chipFilter, setChipFilter] = useState<string>('all');
 
   // ─── Fetch action plans from API ──────────────────────────────────────────
 
@@ -634,6 +658,9 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
     if (filterPriority !== 'all') {
       items = items.filter((a) => a.priority === filterPriority);
     }
+    if (chipFilter !== 'all') {
+      items = items.filter((a) => a.priority === chipFilter);
+    }
     if (filterStatus !== 'all') {
       items = items.filter((a) => a.status === filterStatus);
     }
@@ -655,9 +682,19 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
     });
 
     return items;
-  }, [actionItems, activeTab, filterPriority, filterStatus, filterAssignee, sortBy, sortDir]);
+  }, [actionItems, activeTab, filterPriority, filterStatus, filterAssignee, sortBy, sortDir, chipFilter]);
 
   const hasFilters = filterPriority !== 'all' || filterStatus !== 'all' || filterAssignee !== 'all' || activeTab !== 'all';
+
+  // ─── Priority chip counts ──────────────────────────────────────────────
+
+  const priorityChipCounts = useMemo(() => ({
+    all: actionItems.length,
+    critical: actionItems.filter((a) => a.priority === 'critical').length,
+    high: actionItems.filter((a) => a.priority === 'high').length,
+    medium: actionItems.filter((a) => a.priority === 'medium').length,
+    low: actionItems.filter((a) => a.priority === 'low').length,
+  }), [actionItems]);
 
   // ─── Status change handler (API call) ──────────────────────────────────
 
@@ -1127,6 +1164,56 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
         transition={{ delay: 0.4 }}
       >
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+          {/* Priority Filter Chips */}
+          {actionItems.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45 }}
+              className="flex items-center gap-2 flex-wrap"
+            >
+              <span className="text-sm text-muted-foreground flex items-center gap-1.5 mr-1">
+                <Filter className="w-3.5 h-3.5" />
+                Приоритет:
+              </span>
+              {[
+                { key: 'all', label: 'Все', color: 'bg-slate-500', activeColor: 'bg-primary text-primary-foreground', dot: '' },
+                { key: 'critical', label: 'Критичные', color: 'bg-red-500', activeColor: 'bg-red-500 text-white', dot: 'bg-red-500' },
+                { key: 'high', label: 'Высокие', color: 'bg-amber-500', activeColor: 'bg-amber-500 text-white', dot: 'bg-amber-500' },
+                { key: 'medium', label: 'Средние', color: 'bg-sky-500', activeColor: 'bg-sky-500 text-white', dot: 'bg-sky-500' },
+                { key: 'low', label: 'Низкие', color: 'bg-slate-400', activeColor: 'bg-slate-600 text-white', dot: 'bg-slate-400' },
+              ].map((chip) => (
+                <button
+                  key={chip.key}
+                  onClick={() => setChipFilter(chip.key)}
+                  className={`relative flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors duration-200 border ${
+                    chipFilter === chip.key
+                      ? `${chip.activeColor} border-transparent shadow-sm`
+                      : 'bg-background text-muted-foreground hover:text-foreground border-border'
+                  }`}
+                >
+                  {chipFilter === chip.key && (
+                    <motion.div
+                      layoutId="chipActive"
+                      className="absolute inset-0 rounded-full"
+                      style={{ backgroundColor: chip.key === 'all' ? 'hsl(var(--primary))' : undefined }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                    />
+                  )}
+                  <span className="relative z-10 flex items-center gap-1.5">
+                    {chip.dot && <span className={`w-1.5 h-1.5 rounded-full ${chip.dot}`} />}
+                    {chip.label}
+                    <span className={`ml-0.5 tabular-nums font-semibold ${
+                      chipFilter === chip.key ? 'text-white/90' : 'text-muted-foreground'
+                    }`}>
+                      {priorityChipCounts[chip.key as keyof typeof priorityChipCounts]}
+                    </span>
+                  </span>
+                </button>
+              ))}
+            </motion.div>
+          )}
+
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
             <TabsList className="bg-muted/60 backdrop-blur-sm p-1 h-auto flex-wrap border border-border/50 shadow-sm">
               <TabsTrigger value="all" className="gap-1.5 text-xs sm:text-sm px-3 py-1.5 data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-amber-500 data-[state=active]:text-white data-[state=active]:shadow-sm data-[state=active]:shadow-orange-500/20">
@@ -1282,7 +1369,7 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
           {['all', 'critical', 'in_progress', 'completed'].map((tab) => (
             <TabsContent key={tab} value={tab}>
               {filteredItems.length === 0 ? (
-                <EmptyState hasFilters={hasFilters} />
+                <EnhancedEmptyState hasFilters={hasFilters} />
               ) : (
                 <ScrollArea className="max-h-[calc(100vh-200px)]">
                   <motion.div
@@ -1322,6 +1409,33 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
                                       : ''
                                 } ${action.priority === 'critical' && !isDone ? 'pulse-glow' : ''}`}
                               >
+                                {/* Priority-based progress bar at top */}
+                                {!isDone && (
+                                  <div className="h-1 w-full bg-muted/30 overflow-hidden">
+                                    <motion.div
+                                      className="h-full"
+                                      style={{ backgroundColor: priorityCfg.barColor }}
+                                      initial={{ width: 0 }}
+                                      animate={{
+                                        width: (() => {
+                                          const now = new Date();
+                                          const due = new Date(action.dueDate);
+                                          const diffDays = Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+                                          if (diffDays < 0) return '100%';
+                                          if (diffDays === 0) return '95%';
+                                          if (diffDays <= 3) return '75%';
+                                          if (diffDays <= 7) return '55%';
+                                          if (diffDays <= 14) return '40%';
+                                          return '20%';
+                                        })(),
+                                      }}
+                                      transition={{ duration: 0.8, ease: 'easeOut', delay: idx * 0.04 + 0.2 }}
+                                    />
+                                  </div>
+                                )}
+                                {isDone && (
+                                  <div className="h-1 w-full bg-emerald-500/20" />
+                                )}
                                 <CardContent className="p-4 sm:p-5">
                                   <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
                                     {/* Content */}

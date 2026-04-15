@@ -9,8 +9,8 @@ import {
 import {
   CheckCircle2, Clock, AlertTriangle, Wrench, FileText, Users,
   TrendingUp, Activity, Target, CalendarDays, ArrowUpRight, ArrowDownRight,
-  Sparkles, ClipboardList, UserPlus, Package, FileBarChart, ArrowRight, Download,
-  RotateCw, Loader2,
+  Sparkles, ClipboardList, UserPlus, Package, FileBarChart, Download,
+  RotateCw, Loader2, Zap,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -131,7 +131,62 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
   OVERDUE: { label: 'Просрочен', color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800', icon: AlertTriangle },
 };
 
-export default function AdminDashboard() {
+interface AdminDashboardProps {
+  onNavigate?: (view: string) => void;
+}
+
+function formatRelativeTime(dateStr: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMinutes = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (diffMinutes < 1) return 'только что';
+  if (diffMinutes < 60) {
+    if (diffMinutes === 1) return '1 мин назад';
+    if (diffMinutes < 5) return `${diffMinutes} мин назад`;
+    return `${diffMinutes} мин назад`;
+  }
+  if (diffHours < 24) {
+    if (diffHours === 1) return '1 час назад';
+    if (diffHours < 5) return `${diffHours} ч назад`;
+    return `${diffHours} ч назад`;
+  }
+  if (diffDays === 1) return 'вчера';
+  if (diffDays < 7) return `${diffDays} дн назад`;
+  if (diffDays < 30) {
+    const weeks = Math.floor(diffDays / 7);
+    return weeks === 1 ? '1 нед назад' : `${weeks} нед назад`;
+  }
+  return date.toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+}
+
+const AVATAR_COLORS = [
+  'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400',
+  'bg-teal-500/15 text-teal-700 dark:text-teal-400',
+  'bg-amber-500/15 text-amber-700 dark:text-amber-400',
+  'bg-rose-500/15 text-rose-700 dark:text-rose-400',
+  'bg-violet-500/15 text-violet-700 dark:text-violet-400',
+  'bg-sky-500/15 text-sky-700 dark:text-sky-400',
+  'bg-pink-500/15 text-pink-700 dark:text-pink-400',
+  'bg-orange-500/15 text-orange-700 dark:text-orange-400',
+];
+
+function getAvatarColor(name: string): string {
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+}
+
+function getInitials(name: string): string {
+  return name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+}
+
+export default function AdminDashboard({ onNavigate }: AdminDashboardProps) {
   const [data, setData] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -425,35 +480,38 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25, duration: 0.4 }}
-        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
       >
-        {[
-          { label: 'Создать шаблон', icon: ClipboardList, color: 'from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/5 dark:to-teal-500/5', iconColor: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200/60 dark:border-emerald-800/40', hoverShadow: 'hover:shadow-emerald-500/10' },
-          { label: 'Назначить аудит', icon: UserPlus, color: 'from-sky-500/10 to-blue-500/10 dark:from-sky-500/5 dark:to-blue-500/5', iconColor: 'text-sky-600 dark:text-sky-400', border: 'border-sky-200/60 dark:border-sky-800/40', hoverShadow: 'hover:shadow-sky-500/10' },
-          { label: 'Добавить оборудование', icon: Package, color: 'from-amber-500/10 to-orange-500/10 dark:from-amber-500/5 dark:to-orange-500/5', iconColor: 'text-amber-600 dark:text-amber-400', border: 'border-amber-200/60 dark:border-amber-800/40', hoverShadow: 'hover:shadow-amber-500/10' },
-          { label: 'Просмотреть отчёт', icon: FileBarChart, color: 'from-violet-500/10 to-purple-500/10 dark:from-violet-500/5 dark:to-purple-500/5', iconColor: 'text-violet-600 dark:text-violet-400', border: 'border-violet-200/60 dark:border-violet-800/40', hoverShadow: 'hover:shadow-violet-500/10' },
-        ].map((action, i) => {
-          const Icon = action.icon;
-          return (
-            <motion.button
-              key={action.label}
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 bg-gradient-to-br ${action.color} ${action.border} transition-all duration-200 hover:shadow-md ${action.hoverShadow} cursor-pointer group text-left`}
-              onClick={() => {
-                if (i === 0) { /* navigate to templates */ }
-              }}
-            >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${action.color} ${action.border} group-hover:scale-110 transition-transform duration-200`}>
-                <Icon className={`w-4.5 h-4.5 ${action.iconColor}`} />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium leading-tight truncate">{action.label}</div>
-              </div>
-              <ArrowRight className={`w-3.5 h-3.5 ${action.iconColor} opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200`} />
-            </motion.button>
-          );
-        })}
+        <h3 className="text-sm font-semibold text-muted-foreground mb-3 flex items-center gap-2">
+          <Zap className="w-4 h-4 text-primary" />
+          Быстрые действия
+        </h3>
+        <div className="flex gap-3 overflow-x-auto pb-2 sm:pb-0 sm:grid sm:grid-cols-4 sm:overflow-visible scrollbar-none">
+          {[
+            { label: 'Новый аудит', subtitle: 'Запланировать проверку', icon: ClipboardList, view: 'scheduling', gradient: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50 dark:bg-emerald-950/30', border: 'border-emerald-200/60 dark:border-emerald-800/40', iconBg: 'bg-gradient-to-br from-emerald-500 to-teal-500', textColor: 'text-emerald-700 dark:text-emerald-300' },
+            { label: 'Добавить шаблон', subtitle: 'Создать чек-лист', icon: FileText, view: 'templates', gradient: 'from-sky-500 to-cyan-500', bg: 'bg-sky-50 dark:bg-sky-950/30', border: 'border-sky-200/60 dark:border-sky-800/40', iconBg: 'bg-gradient-to-br from-sky-500 to-cyan-500', textColor: 'text-sky-700 dark:text-sky-300' },
+            { label: 'Оборудование', subtitle: 'Добавить или изменить', icon: Package, view: 'equipment', gradient: 'from-amber-500 to-orange-500', bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-200/60 dark:border-amber-800/40', iconBg: 'bg-gradient-to-br from-amber-500 to-orange-500', textColor: 'text-amber-700 dark:text-amber-300' },
+            { label: 'Назначить аудитора', subtitle: 'Назначение на проверку', icon: UserPlus, view: 'scheduling', gradient: 'from-violet-500 to-purple-500', bg: 'bg-violet-50 dark:bg-violet-950/30', border: 'border-violet-200/60 dark:border-violet-800/40', iconBg: 'bg-gradient-to-br from-violet-500 to-purple-500', textColor: 'text-violet-700 dark:text-violet-300' },
+          ].map((action, i) => {
+            const Icon = action.icon;
+            return (
+              <motion.button
+                key={action.label}
+                whileHover={{ y: -3, scale: 1.02 }}
+                whileTap={{ scale: 0.97 }}
+                className={`flex-shrink-0 sm:flex-shrink flex flex-col items-center gap-3 rounded-xl border px-4 py-4 sm:py-5 ${action.bg} ${action.border} transition-all duration-200 hover:shadow-lg cursor-pointer group text-left sm:text-center min-w-[160px] sm:min-w-0`}
+                onClick={() => onNavigate?.(action.view)}
+              >
+                <div className={`w-11 h-11 rounded-full ${action.iconBg} flex items-center justify-center shadow-md group-hover:scale-110 group-hover:shadow-lg transition-all duration-200`}>
+                  <Icon className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 sm:flex-none">
+                  <div className={`text-sm font-semibold leading-tight ${action.textColor}`}>{action.label}</div>
+                  <div className="text-xs text-muted-foreground mt-0.5 hidden sm:block">{action.subtitle}</div>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
       </motion.div>
 
       {/* Charts Row 1 */}
@@ -737,7 +795,7 @@ export default function AdminDashboard() {
                     const config = statusConfig[activity.status] || statusConfig.SCHEDULED;
                     const Icon = config.icon;
                     const activityDate = new Date(activity.date);
-                    const timeStr = activityDate.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    const relativeTime = formatRelativeTime(activity.date);
                     const isToday = new Date().toDateString() === activityDate.toDateString();
                     const isNew = i === 0;
                     return (
@@ -748,15 +806,19 @@ export default function AdminDashboard() {
                         transition={{ delay: 0.9 + i * 0.08, duration: 0.3 }}
                         className="relative flex items-start gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group"
                       >
-                        {/* Timeline dot */}
+                        {/* User Avatar */}
                         <div className="relative z-10 mt-0.5 flex-shrink-0">
-                          <div className={`w-[30px] h-[30px] rounded-full flex items-center justify-center border-2 border-background shadow-sm ${config.color} group-hover:scale-110 transition-transform duration-200`}>
-                            <Icon className="w-3.5 h-3.5" />
-                          </div>
+                          <Avatar className="w-[30px] h-[30px]">
+                            <AvatarFallback className={`text-[10px] font-bold ${getAvatarColor(activity.auditorName)}`}>
+                              {getInitials(activity.auditorName)}
+                            </AvatarFallback>
+                          </Avatar>
                         </div>
                         {/* Content */}
                         <div className="flex-1 min-w-0 pl-1">
                           <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-muted-foreground">{activity.auditorName}</span>
+                            <span className="text-xs text-muted-foreground/50">—</span>
                             <span className="text-sm font-medium truncate">{activity.templateTitle}</span>
                             {/* "Новое" badge on latest item */}
                             {isNew && (
@@ -771,18 +833,17 @@ export default function AdminDashboard() {
                             )}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs text-muted-foreground">{activity.auditorName}</span>
+                            <Icon className={`w-3 h-3 ${config.color.includes('emerald') ? 'text-emerald-500' : config.color.includes('sky') ? 'text-sky-500' : config.color.includes('amber') ? 'text-amber-500' : 'text-red-500'}`} />
+                            <span className={`text-[10px] ${config.color.includes('emerald') ? 'text-emerald-600 dark:text-emerald-400' : config.color.includes('sky') ? 'text-sky-600 dark:text-sky-400' : config.color.includes('amber') ? 'text-amber-600 dark:text-amber-400' : 'text-red-600 dark:text-red-400'}`}>
+                              {config.label}
+                            </span>
                             <span className="text-[10px] text-muted-foreground/50">·</span>
-                            <span className="text-[10px] text-muted-foreground/70">{timeStr}</span>
+                            <span className="text-[10px] text-muted-foreground/70">{relativeTime}</span>
                             {isToday && (
                               <span className="text-[10px] text-primary font-medium bg-primary/10 px-1.5 py-0.5 rounded-full">Сегодня</span>
                             )}
                           </div>
                         </div>
-                        {/* Status badge */}
-                        <Badge variant="outline" className={`text-[10px] flex-shrink-0 ${config.color}`}>
-                          {config.label}
-                        </Badge>
                       </motion.div>
                     );
                   })}

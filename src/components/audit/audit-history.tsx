@@ -8,7 +8,7 @@ import {
   History, Download, ChevronDown, ChevronUp, Trophy, TrendingUp,
   Calendar, Filter, Star, CheckCircle2, Clock, AlertTriangle,
   BarChart3, X, ArrowUpDown, FileText, MessageSquare,
-  User, Search, ClipboardCheck,
+  User, Search, ClipboardCheck, Eye, LayoutList, Table2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { toast } from 'sonner';
 import AuditComments from '@/components/audit/audit-comments';
 
@@ -172,6 +173,50 @@ function formatDuration(startedAt: string, completedAt?: string | null): string 
   return m > 0 ? `${h} ч ${m} мин` : `${h} ч`;
 }
 
+// ─── Mini Score Ring ─────────────────────────────────────────────────────────
+
+function MiniScoreRing({ score, size = 32 }: { score: number | null | undefined; size?: number }) {
+  const r = (size / 2) - 3;
+  const circumference = 2 * Math.PI * r;
+  const pct = score != null ? score / 100 : 0;
+  const strokeColor = score == null ? '#94a3b8' : score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444';
+  const scoreCfg = getScoreColor(score);
+
+  return (
+    <div className="relative flex-shrink-0" style={{ width: size, height: size }}>
+      <svg className="-rotate-90" width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          className="text-muted/25"
+        />
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={r}
+          fill="none"
+          stroke={strokeColor}
+          strokeWidth="2.5"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: circumference * (1 - pct) }}
+          transition={{ duration: 0.8, ease: 'easeOut', delay: 0.2 }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className={`font-bold tabular-nums ${size >= 32 ? 'text-[10px]' : 'text-[8px]'} ${scoreCfg.text}`}>
+          {score != null ? Math.round(score) : '—'}
+        </span>
+      </div>
+    </div>
+  );
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function AuditHistory({ userId, isAdmin = false, onViewReport, userName }: AuditHistoryProps) {
@@ -193,6 +238,9 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport, us
   // Detail dialog
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedAudit, setSelectedAudit] = useState<CompletedAudit | null>(null);
+
+  // View mode
+  const [viewMode, setViewMode] = useState<'table' | 'timeline'>('table');
 
   // ─── Fetch Data ──────────────────────────────────────────────────────────
 
@@ -404,6 +452,34 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport, us
     URL.revokeObjectURL(url);
     toast.success('Файл CSV успешно загружен');
   }, [filteredAudits]);
+
+  // ─── Single CSV Export ──────────────────────────────────────────────────
+
+  const handleExportSingleCSV = useCallback((audit: CompletedAudit) => {
+    const headers = ['Дата завершения', 'Шаблон', 'Категория', 'Аудитор', 'Отдел', 'Оценка (%)', 'Статус оценки', 'Длительность'];
+    const row = [
+      formatDateTime(audit.completedAt),
+      audit.template?.title || '',
+      audit.template?.category || '',
+      audit.auditor?.name || '',
+      audit.auditor?.department || '',
+      audit.score != null ? audit.score.toFixed(1) : '',
+      getScoreColor(audit.score).label,
+      audit.duration,
+    ];
+    const csvContent = [
+      '\uFEFF' + headers.join(';'),
+      row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(';'),
+    ].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `audit-${audit.template?.title?.replace(/\s+/g, '_') || 'export'}-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+    toast.success('CSV загружен');
+  }, []);
 
   // ─── Detail Dialog ───────────────────────────────────────────────────────
 
@@ -683,6 +759,36 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport, us
         ))}
       </motion.div>
 
+      {/* View Mode Toggle */}
+      {!loading && filteredAudits.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.35 }}
+          className="flex items-center gap-2"
+        >
+          <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+            <LayoutList className="w-3.5 h-3.5" />
+            Вид:
+          </span>
+          <ToggleGroup
+            type="single"
+            value={viewMode}
+            onValueChange={(v) => { if (v) setViewMode(v as 'table' | 'timeline'); }}
+            className="bg-muted/60"
+          >
+            <ToggleGroupItem value="table" className="gap-1.5 text-xs px-3 h-8">
+              <Table2 className="w-3.5 h-3.5" />
+              Таблица
+            </ToggleGroupItem>
+            <ToggleGroupItem value="timeline" className="gap-1.5 text-xs px-3 h-8">
+              <LayoutList className="w-3.5 h-3.5" />
+              Таймлайн
+            </ToggleGroupItem>
+          </ToggleGroup>
+        </motion.div>
+      )}
+
       {/* Content */}
       {loading ? (
         <div className="space-y-3">
@@ -715,7 +821,8 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport, us
         </motion.div>
       ) : (
         <>
-          {/* Audit Cards */}
+          {/* ═══ TABLE VIEW ═══ */}
+          {viewMode === 'table' && (
           <motion.div
             variants={containerVariants}
             initial="hidden"
@@ -735,7 +842,7 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport, us
                     layout
                   >
                     <Card
-                      className={`overflow-hidden transition-all duration-300 hover:shadow-md border ${
+                      className={`group overflow-hidden transition-all duration-300 hover:shadow-md border ${
                         isExpanded
                           ? 'ring-2 ring-emerald-500/30 border-emerald-300 dark:border-emerald-700'
                           : 'hover:border-emerald-200 dark:hover:border-emerald-800'
@@ -777,38 +884,39 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport, us
                               </div>
                             </div>
 
-                            {/* Score + Chevron */}
-                            <div className="flex items-center gap-3 flex-shrink-0">
-                              {/* Circular Score Indicator */}
-                              <div className="relative w-12 h-12">
-                                <svg className="w-12 h-12 -rotate-90" viewBox="0 0 48 48">
-                                  <circle
-                                    cx="24"
-                                    cy="24"
-                                    r="20"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="3"
-                                    className="text-muted/30"
-                                  />
-                                  <circle
-                                    cx="24"
-                                    cy="24"
-                                    r="20"
-                                    fill="none"
-                                    stroke={audit.score != null ? (audit.score >= 80 ? '#10b981' : audit.score >= 60 ? '#f59e0b' : '#ef4444') : '#94a3b8'}
-                                    strokeWidth="3"
-                                    strokeLinecap="round"
-                                    strokeDasharray={`${2 * Math.PI * 20}`}
-                                    strokeDashoffset={`${2 * Math.PI * 20 * (1 - ((audit.score ?? 0) / 100))}`}
-                                    className="transition-all duration-700 ease-out"
-                                  />
-                                </svg>
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                  <span className={`text-xs font-bold ${scoreCfg.text}`}>
-                                    {audit.score != null ? Math.round(audit.score) : '—'}
-                                  </span>
-                                </div>
+                            {/* Score + Quick Actions + Chevron */}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              {/* Mini Score Ring */}
+                              <MiniScoreRing score={audit.score} size={32} />
+
+                              {/* Quick Actions — hidden on desktop until hover, always visible on mobile */}
+                              <div className="flex items-center gap-1 opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">
+                                {onViewReport && (
+                                  <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    className="w-7 h-7 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400"
+                                    title="Просмотр"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      onViewReport(audit.latestResponse.id);
+                                    }}
+                                  >
+                                    <Eye className="w-3.5 h-3.5" />
+                                  </Button>
+                                )}
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="w-7 h-7 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-950/40 dark:hover:text-sky-400"
+                                  title="Скачать CSV"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleExportSingleCSV(audit);
+                                  }}
+                                >
+                                  <FileText className="w-3.5 h-3.5" />
+                                </Button>
                               </div>
 
                               {/* Expand Chevron */}
@@ -976,6 +1084,100 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport, us
               })}
             </AnimatePresence>
           </motion.div>
+          )}
+
+          {/* ═══ TIMELINE VIEW ═══ */}
+          {viewMode === 'timeline' && (
+          <motion.div
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+            className="relative pl-8 sm:pl-12"
+          >
+            {/* Vertical Line */}
+            <div className="absolute left-3 sm:left-5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-emerald-500/60 via-amber-500/40 to-red-500/30" />
+
+            {filteredAudits.map((audit) => {
+              const scoreCfg = getScoreColor(audit.score);
+              const dotColor = audit.score == null ? '#94a3b8' : audit.score >= 80 ? '#10b981' : audit.score >= 60 ? '#f59e0b' : '#ef4444';
+
+              return (
+                <motion.div
+                  key={audit.id}
+                  variants={itemVariants}
+                  className="relative pb-8 last:pb-0"
+                >
+                  {/* Dot */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                    className="absolute -left-5 sm:-left-7 top-1 w-4 h-4 rounded-full border-[3px] border-background z-10"
+                    style={{ backgroundColor: dotColor, boxShadow: `0 0 8px ${dotColor}40` }}
+                  />
+
+                  {/* Card */}
+                  <Card className="hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 border overflow-hidden group">
+                    <div className={`h-1 ${scoreCfg.bar}`} />
+                    <CardContent className="p-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-sm truncate">{audit.template?.title || 'Шаблон'}</h3>
+                            <Badge variant="outline" className="text-[10px] flex-shrink-0 bg-muted/50">
+                              {audit.template?.category}
+                            </Badge>
+                          </div>
+                          <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground mb-2">
+                            <span className="flex items-center gap-1">
+                              <User className="w-3 h-3" />
+                              {audit.auditor?.name || 'Не указан'}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {formatDate(audit.completedAt)}
+                            </span>
+                          </div>
+                          {/* Score badge */}
+                          <div className="flex items-center gap-2">
+                            <MiniScoreRing score={audit.score} size={32} />
+                            <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${scoreCfg.bg}`}>
+                              {scoreCfg.label}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Quick Actions */}
+                        <div className="flex items-center gap-1 opacity-60 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200 flex-shrink-0">
+                          {onViewReport && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-7 h-7 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/40 dark:hover:text-emerald-400"
+                              title="Просмотр"
+                              onClick={() => onViewReport(audit.latestResponse.id)}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                          )}
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="w-7 h-7 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-950/40 dark:hover:text-sky-400"
+                            title="Скачать CSV"
+                            onClick={() => handleExportSingleCSV(audit)}
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </motion.div>
+          )}
 
           {/* Results Count */}
           <div className="text-sm text-muted-foreground text-right">
