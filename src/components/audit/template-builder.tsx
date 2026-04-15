@@ -1,12 +1,12 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus, Search, Pencil, Trash2, FileText, HelpCircle, AlertTriangle,
   CheckCircle2, Clock, Archive, Eye, X, Filter,
   ListChecks, ClipboardList, CalendarClock,
-  Star, ArrowUpDown, Settings2, Copy, Loader2, Sparkles, Layers,
+  Star, ArrowUpDown, Settings2, Copy, Loader2, Sparkles, Layers, Tag,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -132,16 +132,16 @@ const FREQUENCIES: { value: Frequency; label: string; icon: React.ElementType }[
 ];
 
 const ANSWER_TYPES: { value: AnswerType; label: string; shortLabel: string; color: string }[] = [
-  { value: 'TEXT', label: 'Текстовый ответ', shortLabel: 'ТЕКСТ', color: 'bg-slate-100 text-slate-700 border-slate-200' },
-  { value: 'NUMBER', label: 'Числовое значение', shortLabel: 'ЧИСЛО', color: 'bg-blue-100 text-blue-700 border-blue-200' },
-  { value: 'YES_NO', label: 'Да / Нет', shortLabel: 'ДА/НЕТ', color: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  { value: 'SCALE_1_5', label: 'Шкала от 1 до 5', shortLabel: 'Шкала 1-5', color: 'bg-amber-100 text-amber-700 border-amber-200' },
-  { value: 'SCALE_1_10', label: 'Шкала от 1 до 10', shortLabel: 'Шкала 1-10', color: 'bg-orange-100 text-orange-700 border-orange-200' },
-  { value: 'SCALE_1_100', label: 'Шкала от 1 до 100', shortLabel: 'Шкала 1-100', color: 'bg-red-100 text-red-700 border-red-200' },
-  { value: 'MULTIPLE_CHOICE', label: 'Множественный выбор', shortLabel: 'Мн. выбор', color: 'bg-violet-100 text-violet-700 border-violet-200' },
-  { value: 'PHOTO', label: 'Фотография', shortLabel: 'Фото', color: 'bg-pink-100 text-pink-700 border-pink-200' },
-  { value: 'DATE', label: 'Дата', shortLabel: 'Дата', color: 'bg-cyan-100 text-cyan-700 border-cyan-200' },
-  { value: 'CHECKLIST', label: 'Чек-лист', shortLabel: 'Чек-лист', color: 'bg-teal-100 text-teal-700 border-teal-200' },
+  { value: 'TEXT', label: 'Текстовый ответ', shortLabel: 'ТЕКСТ', color: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/40 dark:text-blue-300 dark:border-blue-800' },
+  { value: 'NUMBER', label: 'Числовое значение', shortLabel: 'ЧИСЛО', color: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/40 dark:text-emerald-300 dark:border-emerald-800' },
+  { value: 'YES_NO', label: 'Да / Нет', shortLabel: 'ДА/НЕТ', color: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/40 dark:text-amber-300 dark:border-amber-800' },
+  { value: 'SCALE_1_5', label: 'Шкала от 1 до 5', shortLabel: 'Шкала 1-5', color: 'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-900/40 dark:text-violet-300 dark:border-violet-800' },
+  { value: 'SCALE_1_10', label: 'Шкала от 1 до 10', shortLabel: 'Шкала 1-10', color: 'bg-rose-100 text-rose-700 border-rose-200 dark:bg-rose-900/40 dark:text-rose-300 dark:border-rose-800' },
+  { value: 'SCALE_1_100', label: 'Шкала от 1 до 100', shortLabel: 'Шкала 1-100', color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/40 dark:text-red-300 dark:border-red-800' },
+  { value: 'MULTIPLE_CHOICE', label: 'Множественный выбор', shortLabel: 'Мн. выбор', color: 'bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-900/40 dark:text-sky-300 dark:border-sky-800' },
+  { value: 'PHOTO', label: 'Фотография', shortLabel: 'Фото', color: 'bg-pink-100 text-pink-700 border-pink-200 dark:bg-pink-900/40 dark:text-pink-300 dark:border-pink-800' },
+  { value: 'DATE', label: 'Дата', shortLabel: 'Дата', color: 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/40 dark:text-orange-300 dark:border-orange-800' },
+  { value: 'CHECKLIST', label: 'Чек-лист', shortLabel: 'Чек-лист', color: 'bg-teal-100 text-teal-700 border-teal-200 dark:bg-teal-900/40 dark:text-teal-300 dark:border-teal-800' },
 ];
 
 const STATUS_CONFIG: Record<TemplateStatus, {
@@ -152,6 +152,7 @@ const STATUS_CONFIG: Record<TemplateStatus, {
   borderColor: string;
   gradientBg: string;
   stripGradient: string;
+  headerGradient: string;
 }> = {
   DRAFT: {
     label: 'Черновик',
@@ -161,6 +162,7 @@ const STATUS_CONFIG: Record<TemplateStatus, {
     borderColor: 'border-l-slate-300 dark:border-l-slate-600',
     gradientBg: 'bg-gradient-to-br from-slate-50/80 to-gray-50/80 dark:from-slate-900/30 dark:to-gray-900/30',
     stripGradient: 'bg-gradient-to-r from-slate-300 to-slate-400',
+    headerGradient: 'bg-gradient-to-r from-amber-500/90 to-amber-600/90 dark:from-amber-700/80 dark:to-amber-800/80',
   },
   ACTIVE: {
     label: 'Активен',
@@ -170,6 +172,7 @@ const STATUS_CONFIG: Record<TemplateStatus, {
     borderColor: 'border-l-emerald-400',
     gradientBg: 'bg-gradient-to-br from-emerald-50/80 to-teal-50/80 dark:from-emerald-950/20 dark:to-teal-950/20',
     stripGradient: 'bg-gradient-to-r from-emerald-400 to-teal-400',
+    headerGradient: 'bg-gradient-to-r from-emerald-500/90 to-emerald-600/90 dark:from-emerald-700/80 dark:to-emerald-800/80',
   },
   ARCHIVED: {
     label: 'Архив',
@@ -179,6 +182,7 @@ const STATUS_CONFIG: Record<TemplateStatus, {
     borderColor: 'border-l-amber-400',
     gradientBg: 'bg-gradient-to-br from-amber-50/80 to-yellow-50/80 dark:from-amber-950/20 dark:to-yellow-950/20',
     stripGradient: 'bg-gradient-to-r from-amber-400 to-yellow-400',
+    headerGradient: 'bg-gradient-to-r from-slate-500/90 to-slate-600/90 dark:from-slate-600/80 dark:to-slate-700/80',
   },
 };
 
@@ -203,6 +207,15 @@ const FREQUENCY_LABELS: Record<Frequency, string> = {
   QUARTERLY: 'Ежеквартально',
   YEARLY: 'Ежегодно',
   ONCE: 'Одноразово',
+};
+
+const FREQUENCY_BORDER_COLORS: Record<Frequency, string> = {
+  DAILY: 'border-l-sky-400 dark:border-l-sky-600',
+  WEEKLY: 'border-l-violet-400 dark:border-l-violet-600',
+  MONTHLY: 'border-l-amber-400 dark:border-l-amber-600',
+  QUARTERLY: 'border-l-rose-400 dark:border-l-rose-600',
+  YEARLY: 'border-l-blue-400 dark:border-l-blue-600',
+  ONCE: 'border-l-slate-400 dark:border-l-slate-600',
 };
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
@@ -266,6 +279,10 @@ export default function TemplateBuilder() {
   // Sort state
   const [sortField, setSortField] = useState<'title' | 'status' | 'frequency' | 'createdAt'>('createdAt');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  // Animated counter
+  const [animatedQuestions, setAnimatedQuestions] = useState(0);
+  const counterRef = useRef<NodeJS.Timeout | null>(null);
 
   // ─── Fetch ────────────────────────────────────────────────────────────────
 
@@ -333,6 +350,31 @@ export default function TemplateBuilder() {
     }),
     [templates],
   );
+
+  const totalQuestions = useMemo(
+    () => templates.reduce((sum, t) => sum + (t.questions?.length || t._count?.questions || 0), 0),
+    [templates],
+  );
+
+  // Animated question counter effect
+  useEffect(() => {
+    if (counterRef.current) clearInterval(counterRef.current);
+    if (totalQuestions === 0) { setAnimatedQuestions(0); return; }
+    const duration = 600;
+    const steps = 20;
+    const increment = totalQuestions / steps;
+    let current = 0;
+    counterRef.current = setInterval(() => {
+      current += increment;
+      if (current >= totalQuestions) {
+        setAnimatedQuestions(totalQuestions);
+        if (counterRef.current) clearInterval(counterRef.current);
+      } else {
+        setAnimatedQuestions(Math.floor(current));
+      }
+    }, duration / steps);
+    return () => { if (counterRef.current) clearInterval(counterRef.current); };
+  }, [totalQuestions]);
 
   // ─── Template Handlers ───────────────────────────────────────────────────
 
@@ -568,12 +610,30 @@ export default function TemplateBuilder() {
               Создание и управление шаблонами проверок
             </p>
           </div>
-          <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
-            <Button onClick={openCreateTemplate} className="gap-2 bg-white text-emerald-700 hover:bg-emerald-50 shadow-lg border-0 font-semibold">
-              <Plus className="w-4 h-4" />
-              Создать шаблон
-            </Button>
-          </motion.div>
+          <div className="flex items-center gap-4">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.3, duration: 0.4 }}
+              className="hidden sm:flex items-center gap-2.5 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-2.5 border border-white/10"
+            >
+              <div className="w-8 h-8 rounded-lg bg-white/15 flex items-center justify-center">
+                <ListChecks className="w-4 h-4" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase tracking-wider text-emerald-200/70 font-medium">Всего вопросов</span>
+                <span className="text-lg font-bold leading-none">
+                  {animatedQuestions}
+                </span>
+              </div>
+            </motion.div>
+            <motion.div whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}>
+              <Button onClick={openCreateTemplate} className="gap-2 bg-white text-emerald-700 hover:bg-emerald-50 shadow-lg border-0 font-semibold">
+                <Plus className="w-4 h-4" />
+                Создать шаблон
+              </Button>
+            </motion.div>
+          </div>
         </div>
       </motion.div>
 
@@ -613,7 +673,7 @@ export default function TemplateBuilder() {
       </motion.div>
 
       {/* Search & Filters */}
-      <Card className="border-dashed">
+      <Card className="border-dashed bg-card/60 backdrop-blur-lg sticky top-0 z-10">
         <CardContent className="p-4">
           <div className="flex flex-col lg:flex-row gap-3">
             {/* Search */}
@@ -744,6 +804,7 @@ export default function TemplateBuilder() {
               const questionCount = template.questions?.length || template._count?.questions || 0;
               const assignmentCount = template._count?.assignments || 0;
               const freqLabel = FREQUENCY_LABELS[template.frequency] || template.frequency;
+              const freqBorder = FREQUENCY_BORDER_COLORS[template.frequency] || FREQUENCY_BORDER_COLORS.MONTHLY;
 
               return (
                 <motion.div
@@ -752,26 +813,29 @@ export default function TemplateBuilder() {
                   exit="exit"
                   layout
                 >
-                  <Card className={`group overflow-hidden transition-all duration-300 border border-l-4 ${statusCfg.borderColor} hover:shadow-lg hover:-translate-y-0.5 dark:shadow-none`}>
-                    {/* Gradient status strip */}
-                    <div className={`h-1 ${statusCfg.stripGradient}`} />
+                  <Card className={`group overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 border border-l-4 ${freqBorder}`}>
+                    {/* Gradient status header */}
+                    <div className={`relative ${statusCfg.headerGradient} px-5 py-3`}>
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent pointer-events-none" />
+                      <div className="relative z-10 flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <StatusIcon className="w-4 h-4 text-white/90" />
+                          <span className="text-sm font-semibold text-white">{statusCfg.label}</span>
+                          <span className="text-white/50 text-xs">•</span>
+                          <span className="text-xs text-white/80">{freqLabel}</span>
+                        </div>
+                        <span className="text-xs text-white/70">
+                          {questionCount} {questionCount === 1 ? 'вопрос' : questionCount < 5 ? 'вопроса' : 'вопросов'}
+                        </span>
+                      </div>
+                    </div>
 
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex items-start gap-3 min-w-0 flex-1">
-                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${catColor} flex-shrink-0 mt-0.5`}>
-                            <ClipboardList className="w-5 h-5" />
-                          </div>
-                          <div className="min-w-0">
-                            <CardTitle className="text-base font-semibold leading-tight truncate">
-                              {template.title}
-                            </CardTitle>
-                            {template.description && (
-                              <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
-                                {template.description}
-                              </p>
-                            )}
-                          </div>
+                          <CardTitle className="text-base font-semibold leading-tight truncate">
+                            {template.title}
+                          </CardTitle>
                         </div>
 
                         {/* Action buttons */}
@@ -779,7 +843,7 @@ export default function TemplateBuilder() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 hover:bg-white/10"
                             onClick={() => handleCloneTemplate(template)}
                             title="Клонировать"
                           >
@@ -788,7 +852,7 @@ export default function TemplateBuilder() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8"
+                            className="h-8 w-8 hover:bg-white/10"
                             onClick={() => openEditTemplate(template)}
                             title="Редактировать"
                           >
@@ -805,16 +869,16 @@ export default function TemplateBuilder() {
                           </Button>
                         </div>
                       </div>
+                      {template.description && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-2 leading-relaxed">
+                          {template.description}
+                        </p>
+                      )}
                     </CardHeader>
 
                     <CardContent className="pt-0 space-y-3">
-                      {/* Info row with question count badge */}
+                      {/* Info row with assignment count */}
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1">
-                          <ListChecks className="w-3.5 h-3.5" />
-                          {questionCount} {questionCount === 1 ? 'вопрос' : questionCount < 5 ? 'вопроса' : 'вопросов'}
-                        </span>
-                        <span className="text-muted-foreground/40">|</span>
                         <span className="flex items-center gap-1">
                           <CalendarClock className="w-3.5 h-3.5" />
                           {assignmentCount} {assignmentCount === 1 ? 'назначение' : assignmentCount < 5 ? 'назначения' : 'назначений'}
@@ -824,18 +888,21 @@ export default function TemplateBuilder() {
                           <Clock className="w-3.5 h-3.5" />
                           {freqLabel}
                         </span>
-                        {/* Question count indicator badge */}
-                        {questionCount > 0 && (
-                          <span className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary px-2 py-0.5 text-[11px] font-semibold">
-                            <ListChecks className="w-3 h-3" />
-                            {questionCount}
-                          </span>
+                        {template.equipment && template.equipment.length > 0 && (
+                          <>
+                            <span className="text-muted-foreground/40">|</span>
+                            <span className="flex items-center gap-1">
+                              <Layers className="w-3.5 h-3.5" />
+                              {template.equipment.length} {template.equipment.length === 1 ? 'оборудование' : template.equipment.length < 5 ? 'оборудования' : 'оборудований'}
+                            </span>
+                          </>
                         )}
                       </div>
 
-                      {/* Badges with animated pulsing status dot */}
+                      {/* Badges with animated pulsing status dot and category badge with icon */}
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Badge variant="outline" className={`text-[11px] ${catColor}`}>
+                        <Badge variant="outline" className="text-[11px] gap-1">
+                          <Tag className="w-3 h-3" />
                           {template.category}
                         </Badge>
                         <Badge variant="outline" className={`text-[11px] gap-1 ${statusCfg.color}`}>
@@ -845,6 +912,9 @@ export default function TemplateBuilder() {
                             transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity }}
                           />
                           {statusCfg.label}
+                        </Badge>
+                        <Badge variant="outline" className={`text-[11px] gap-1 ${catColor}`}>
+                          {freqLabel}
                         </Badge>
                       </div>
 
@@ -914,7 +984,7 @@ export default function TemplateBuilder() {
                                             </div>
 
                                             <div className="flex items-center gap-2 flex-wrap">
-                                              <Badge variant="outline" className={`text-[10px] ${atConfig.color}`}>
+                                              <Badge variant="outline" className={`text-[10px] border ${atConfig.color}`}>
                                                 {atConfig.shortLabel}
                                               </Badge>
                                               <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

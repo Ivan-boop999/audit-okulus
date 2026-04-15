@@ -23,6 +23,7 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
+import AuditComments from '@/components/audit/audit-comments';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -30,6 +31,7 @@ interface AuditHistoryProps {
   userId?: string;
   isAdmin?: boolean;
   onViewReport?: (responseId: string) => void;
+  userName?: string;
 }
 
 interface Auditor {
@@ -172,7 +174,7 @@ function formatDuration(startedAt: string, completedAt?: string | null): string 
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function AuditHistory({ userId, isAdmin = false, onViewReport }: AuditHistoryProps) {
+export default function AuditHistory({ userId, isAdmin = false, onViewReport, userName }: AuditHistoryProps) {
   // Data state
   const [assignments, setAssignments] = useState<AuditAssignment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -529,7 +531,7 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport }: 
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25 }}
       >
-      <Card className="border-dashed backdrop-blur-sm bg-card/60"
+      <Card className="border-dashed backdrop-blur-sm bg-card/60">
         <CardContent className="p-4">
           <div className="flex flex-col gap-3">
             {/* Search */}
@@ -638,6 +640,7 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport }: 
           </div>
         </CardContent>
       </Card>
+      </motion.div>
 
       {/* Sort Controls */}
       <motion.div
@@ -645,6 +648,7 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport }: 
         animate={{ opacity: 1 }}
         transition={{ delay: 0.3 }}
         className="flex items-center gap-2 flex-wrap"
+      >
         <span className="text-sm text-muted-foreground flex items-center gap-1.5">
           <ArrowUpDown className="w-3.5 h-3.5" />
           Сортировка:
@@ -677,7 +681,7 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport }: 
             )}
           </Button>
         ))}
-      </div>
+      </motion.div>
 
       {/* Content */}
       {loading ? (
@@ -933,6 +937,17 @@ export default function AuditHistory({ userId, isAdmin = false, onViewReport }: 
                                         </div>
                                       );
                                     })}
+                                </div>
+                              )}
+
+                              {/* Comments Section */}
+                              {userId && userName && audit.latestResponse && (
+                                <div className="pt-2">
+                                  <AuditComments
+                                    responseId={audit.latestResponse.id}
+                                    userId={userId}
+                                    userName={userName}
+                                  />
                                 </div>
                               )}
 

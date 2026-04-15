@@ -769,3 +769,96 @@ button:active, a:active {
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   CARD SHINE EFFECT (moves across cards on hover)
+   ═══════════════════════════════════════════════════════════════ */
+
+.card-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.card-shine::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -75%;
+  width: 50%;
+  height: 200%;
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    oklch(1 0 0 / 0.06) 45%,
+    oklch(1 0 0 / 0.12) 50%,
+    oklch(1 0 0 / 0.06) 55%,
+    transparent 60%
+  );
+  transform: skewX(-15deg);
+  transition: left 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.card-shine:hover::after {
+  left: 125%;
+}
+
+.dark .card-shine::after {
+  background: linear-gradient(
+    105deg,
+    transparent 40%,
+    oklch(1 0 0 / 0.03) 45%,
+    oklch(1 0 0 / 0.07) 50%,
+    oklch(1 0 0 / 0.03) 55%,
+    transparent 60%
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STAT GLOW EFFECT (pulsing glow for stat numbers)
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes stat-glow-pulse {
+  0%, 100% {
+    text-shadow: 0 0 0px transparent;
+    filter: brightness(1);
+  }
+  50% {
+    text-shadow: 0 0 8px oklch(0.52 0.17 145 / 0.3);
+    filter: brightness(1.05);
+  }
+}
+
+.stat-glow {
+  animation: stat-glow-pulse 3s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SECTION DIVIDER (gradient divider line between sections)
+   ═══════════════════════════════════════════════════════════════ */
+
+.section-divider {
+  height: 1px;
+  border: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.37 0.13 160 / 0.15) 20%,
+    oklch(0.37 0.13 160 / 0.3) 50%,
+    oklch(0.37 0.13 160 / 0.15) 80%,
+    transparent 100%
+  );
+  margin: 0;
+}
+
+.dark .section-divider {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.55 0.15 160 / 0.1) 20%,
+    oklch(0.55 0.15 160 / 0.2) 50%,
+    oklch(0.55 0.15 160 / 0.1) 80%,
+    transparent 100%
+  );
+}
+

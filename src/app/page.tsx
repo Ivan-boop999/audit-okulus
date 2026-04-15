@@ -108,6 +108,8 @@ export default function Home() {
         <AuditReportDetail
           responseId={activeReportId}
           onBack={handleBackFromReport}
+          userId={user.id}
+          userName={user.name}
         />
       );
     }
@@ -151,7 +153,7 @@ export default function Home() {
         case 'scheduling':
           return <AuditScheduler />;
         case 'history':
-          return <AuditHistory isAdmin={true} onViewReport={handleViewReport} />;
+          return <AuditHistory isAdmin={true} onViewReport={handleViewReport} userId={user.id} userName={user.name} />;
         case 'team':
           return <TeamMembers />;
         case 'analytics':
@@ -170,7 +172,7 @@ export default function Home() {
       case 'audits':
         return <AuditorMyAudits user={user} onStartAudit={handleStartAudit} />;
       case 'history':
-        return <AuditHistory userId={user.id} isAdmin={false} onViewReport={handleViewReport} />;
+        return <AuditHistory userId={user.id} isAdmin={false} onViewReport={handleViewReport} userName={user.name} />;
       default:
         return <AuditorDashboard userId={user.id} onStartAudit={handleStartAudit} />;
     }

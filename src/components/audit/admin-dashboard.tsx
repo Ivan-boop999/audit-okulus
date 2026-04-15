@@ -122,10 +122,10 @@ interface Analytics {
 const COLORS = ['#059669', '#d97706', '#0ea5e9', '#8b5cf6', '#ec4899', '#ef4444', '#14b8a6', '#f59e0b'];
 
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
-  COMPLETED: { label: 'Завершён', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
-  SCHEDULED: { label: 'Запланирован', color: 'bg-blue-100 text-blue-700 border-blue-200', icon: CalendarDays },
-  IN_PROGRESS: { label: 'В процессе', color: 'bg-amber-100 text-amber-700 border-amber-200', icon: Clock },
-  OVERDUE: { label: 'Просрочен', color: 'bg-red-100 text-red-700 border-red-200', icon: AlertTriangle },
+  COMPLETED: { label: 'Завершён', color: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-300 dark:border-emerald-800', icon: CheckCircle2 },
+  SCHEDULED: { label: 'Запланирован', color: 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-300 dark:border-blue-800', icon: CalendarDays },
+  IN_PROGRESS: { label: 'В процессе', color: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-900/50 dark:text-amber-300 dark:border-amber-800', icon: Clock },
+  OVERDUE: { label: 'Просрочен', color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/50 dark:text-red-300 dark:border-red-800', icon: AlertTriangle },
 };
 
 export default function AdminDashboard() {
@@ -267,9 +267,10 @@ export default function AdminDashboard() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/5 via-primary/10 to-transparent border border-primary/10 p-6"
+        className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/5 via-primary/10 to-transparent border border-primary/10 p-6 shadow-[0_0_20px_-3px_oklch(0.37_0.13_160/0.15)] dark:shadow-[0_0_25px_-3px_oklch(0.55_0.15_160/0.1)]"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-tr from-primary/3 to-transparent rounded-full blur-2xl dark:opacity-50" />
         <div className="relative flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
             <Sparkles className="w-6 h-6 text-primary-foreground" />
@@ -298,7 +299,7 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.4 }}
             >
-              <Card className={`overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border ${kpi.borderColor}`}>
+              <Card className={`overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border card-shine ${kpi.borderColor}`}>
                 <CardContent className={`p-5 ${kpi.bgColor} rounded-lg`}>
                   <div className="flex items-start justify-between">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${kpi.iconBg} shadow-sm`}>

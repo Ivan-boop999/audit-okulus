@@ -29,6 +29,7 @@ model User {
   notifications     Notification[]
   createdTemplates  AuditTemplate[]    @relation("TemplateCreator")
   actionPlans       ActionPlan[]       @relation("ActionPlanAssignee")
+  comments          AuditComment[]     @relation("CommentAuthor")
 }
 
 // ========================
@@ -145,6 +146,7 @@ model AuditResponse {
   auditor         User             @relation("CompletedBy", fields: [auditorId], references: [id])
   answers         QuestionAnswer[]
   actionPlans     ActionPlan[]
+  comments        AuditComment[]
 }
 
 model QuestionAnswer {
@@ -202,4 +204,22 @@ model ActionPlan {
   @@index([status])
   @@index([priority])
   @@map("action_plans")
+}
+
+// ========================
+// AUDIT COMMENTS
+// ========================
+
+model AuditComment {
+  id              String   @id @default(cuid())
+  responseId      String
+  userId          String
+  content         String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  response        AuditResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  author          User          @relation("CommentAuthor", fields: [userId], references: [id])
+
+  @@map("audit_comments")
 }

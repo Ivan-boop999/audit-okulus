@@ -18,6 +18,7 @@ import {
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import { toast } from 'sonner';
+import AuditComments from '@/components/audit/audit-comments';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -371,9 +372,11 @@ function ReportSkeleton() {
 interface AuditReportDetailProps {
   responseId: string;
   onBack?: () => void;
+  userId?: string;
+  userName?: string;
 }
 
-export default function AuditReportDetail({ responseId, onBack }: AuditReportDetailProps) {
+export default function AuditReportDetail({ responseId, onBack, userId, userName }: AuditReportDetailProps) {
   const [data, setData] = useState<AuditResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -1037,6 +1040,21 @@ export default function AuditReportDetail({ responseId, onBack }: AuditReportDet
               )}
             </CardContent>
           </Card>
+        </motion.div>
+      )}
+
+      {/* ═══════════════════════ COMMENTS SECTION ════════════════════════════ */}
+      {userId && userName && (
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.55 }}
+        >
+          <AuditComments
+            responseId={responseId}
+            userId={userId}
+            userName={userName}
+          />
         </motion.div>
       )}
 
