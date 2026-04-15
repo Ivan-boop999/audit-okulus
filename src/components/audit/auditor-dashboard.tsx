@@ -1,10 +1,10 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, CheckCircle2, Clock, TrendingUp, Bell, Award, BarChart3, Target,
-  ArrowRight, Play, User, ClipboardList, Zap, Timer, Sparkles, Flame, Shield,
+  ArrowRight, Play, User, ClipboardList, Zap, Timer, Sparkles, Flame, Shield, Download,
 } from 'lucide-react';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription,
@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
+import { toast } from 'sonner';
 import {
   format, parseISO, isAfter, isToday, isBefore, startOfDay,
   differenceInDays, differenceInHours, startOfWeek, endOfWeek, isSameDay,
@@ -363,6 +364,47 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
   const auditorName = assignments[0]?.auditor?.name || 'Аудитор';
   const department = assignments[0]?.auditor?.department;
 
+  // ── Export handler ────────────────────────────────────────────────────────
+
+  const handleExportProgress = useCallback(() => {
+    const completedAudits = assignments
+      .filter((a) => a.status === 'COMPLETED' && a.responses.length > 0)
+      .map((a) => ({
+        templateTitle: a.template?.title || '—',
+        scheduledDate: a.scheduledDate,
+        completedAt: a.responses[0]?.completedAt || null,
+        score: a.responses[0]?.score,
+        maxScore: a.responses[0]?.maxScore,
+      }));
+
+    const exportPayload = {
+      exportedAt: new Date().toISOString(),
+      reportTitle: `AuditPro — Прогресс: ${auditorName}`,
+      auditor: auditorName,
+      department,
+      stats,
+      completedAudits,
+      upcomingAudits: assignments
+        .filter((a) => a.status === 'SCHEDULED' || a.status === 'IN_PROGRESS')
+        .map((a) => ({
+          templateTitle: a.template?.title || '—',
+          scheduledDate: a.scheduledDate,
+          dueDate: a.dueDate,
+          status: a.status,
+        })),
+    };
+    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `auditpro-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+    toast.success('Прогресс экспортирован', { description: 'Файл JSON загружен' });
+  }, [assignments, stats, auditorName, department]);
+
   // ─── Loading skeleton ─────────────────────────────────────────────────
 
   if (loading) {
@@ -494,6 +536,15 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
 
         {/* Time / Quick action */}
         <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 text-xs hidden sm:flex"
+            onClick={handleExportProgress}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Экспорт прогресса
+          </Button>
           <div className="text-right hidden sm:block">
             <div className="text-2xl font-bold tabular-nums text-foreground">
               {format(currentTime, 'HH:mm')}

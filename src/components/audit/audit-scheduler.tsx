@@ -799,8 +799,13 @@ export default function AuditScheduler() {
                         )}
                       </div>
                       <div className="flex items-center justify-between pt-2 border-t">
-                        <Badge variant="outline" className={`text-[11px] gap-1 ${statusCfg.color}`}>
-                          <StatusIcon className="w-3 h-3" />
+                        <Badge variant="outline" className={`text-[11px] gap-1 ${statusCfg.color}${item.status === 'IN_PROGRESS' ? ' shadow-[0_0_6px_1px_rgba(245,158,11,0.3)]' : ''}`}>
+                          <span className="relative flex items-center">
+                            <StatusIcon className="w-3 h-3" />
+                            {item.status === 'IN_PROGRESS' && (
+                              <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping opacity-60" />
+                            )}
+                          </span>
                           {statusCfg.label}
                         </Badge>
                         <Button
@@ -828,7 +833,7 @@ export default function AuditScheduler() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <Card className="overflow-hidden">
+          <Card className="overflow-hidden card-glass scrollbar-smooth">
             <Table>
               <TableHeader>
                 <TableRow className="hover:bg-transparent">
@@ -932,8 +937,13 @@ export default function AuditScheduler() {
                             onClick={() => openStatusChange(item)}
                             className="cursor-pointer"
                           >
-                            <Badge variant="outline" className={`text-[11px] gap-1 transition-colors hover:opacity-80 ${statusCfg.color}`}>
-                              <TableStatusIcon className="w-3 h-3" />
+                            <Badge variant="outline" className={`text-[11px] gap-1 transition-colors hover:opacity-80 ${statusCfg.color}${item.status === 'IN_PROGRESS' ? ' shadow-[0_0_6px_1px_rgba(245,158,11,0.3)]' : ''}`}>
+                              <span className="relative flex items-center">
+                                <TableStatusIcon className="w-3 h-3" />
+                                {item.status === 'IN_PROGRESS' && (
+                                  <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping opacity-60" />
+                                )}
+                              </span>
                               {statusCfg.label}
                             </Badge>
                           </button>

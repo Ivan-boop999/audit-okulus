@@ -572,7 +572,7 @@ export default function TeamMembers() {
           className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
         >
           <AnimatePresence mode="popLayout">
-            {users.map((user) => {
+            {users.map((user, index) => {
               const borderClass = roleBorderColor[user.role] || roleBorderColor.AUDITOR;
               const isRecentlyActive = user.isActive;
               return (
@@ -583,9 +583,12 @@ export default function TeamMembers() {
                   exit="exit"
                   whileHover={{ y: -3 }}
                   className="group"
+                  custom={index}
+                  initial={{ opacity: 0, y: 20, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1, transition: { delay: index * 0.06, duration: 0.35, ease: 'easeOut' } }}
                 >
                   <Card
-                    className={`overflow-hidden border-l-4 ${borderClass} hover:shadow-lg hover:-translate-y-0.5 cursor-pointer border-border/60 hover:border-primary/30 transition-all duration-300`}
+                    className={`card-glass overflow-hidden border-l-4 ${borderClass} hover:shadow-lg hover:-translate-y-0.5 cursor-pointer border-border/60 hover:border-primary/30 transition-all duration-300`}
                     onClick={() => openEditDialog(user)}
                   >
                     <CardContent className="p-5">
@@ -593,11 +596,21 @@ export default function TeamMembers() {
                       <div className="flex items-start gap-3.5">
                         {/* Avatar with activity indicator */}
                         <div className="relative flex-shrink-0">
-                          <div
-                            className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${getAvatarColor(user.name)}`}
-                          >
-                            {getInitials(user.name)}
-                          </div>
+                          {user.isActive ? (
+                            <div className="avatar-gradient-border">
+                              <div
+                                className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${getAvatarColor(user.name)}`}
+                              >
+                                {getInitials(user.name)}
+                              </div>
+                            </div>
+                          ) : (
+                            <div
+                              className={`w-12 h-12 rounded-full flex items-center justify-center text-sm font-bold ${getAvatarColor(user.name)}`}
+                            >
+                              {getInitials(user.name)}
+                            </div>
+                          )}
                           <div
                             className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-card ${
                               user.isActive

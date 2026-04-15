@@ -969,6 +969,163 @@ button:active, a:active {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   CSS VARIABLE-BASED STAGGER CHILDREN
+   ═══════════════════════════════════════════════════════════════ */
+
+.stagger-children > * {
+  animation: fadeSlideUp 0.4s ease-out both;
+  animation-delay: calc(var(--stagger-delay, 0.05s) * var(--i, 0));
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SMOOTH COUNT-UP ANIMATION
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-count-up {
+  animation: countUp 0.6s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRADIENT TEXT FOR HEADINGS (primary theme)
+   ═══════════════════════════════════════════════════════════════ */
+
+.text-gradient-primary {
+  background: linear-gradient(135deg, oklch(0.37 0.13 160), oklch(0.37 0.13 160 / 0.7));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARD GLASS EFFECT WITH SUBTLE BORDER
+   ═══════════════════════════════════════════════════════════════ */
+
+.card-glass {
+  background: oklch(1 0 0 / 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.922 0.004 160 / 0.5);
+}
+
+.dark .card-glass {
+  background: oklch(0.205 0 0 / 0.8);
+  border: 1px solid oklch(0.3 0 0 / 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SMOOTH SCROLLBAR FOR DARK MODE
+   ═══════════════════════════════════════════════════════════════ */
+
+.scrollbar-smooth::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.scrollbar-smooth::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-smooth::-webkit-scrollbar-thumb {
+  background: oklch(0.55 0.02 160 / 0.2);
+  border-radius: 3px;
+}
+
+.scrollbar-smooth::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.65 0.015 160 / 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PULSE RING ANIMATION FOR STATUS INDICATORS
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes pulse-ring-status {
+  0% { transform: scale(0.8); opacity: 0.8; }
+  100% { transform: scale(2); opacity: 0; }
+}
+
+.pulse-ring {
+  position: relative;
+}
+
+.pulse-ring::after {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  animation: pulse-ring-status 2s ease-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FOCUS VISIBLE RING FOR ACCESSIBILITY
+   ═══════════════════════════════════════════════════════════════ */
+
+.focus-ring:focus-visible {
+  outline: 2px solid oklch(0.37 0.13 160);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RESPONSIVE TEXT TRUNCATION
+   ═══════════════════════════════════════════════════════════════ */
+
+.line-clamp-1 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+
+.line-clamp-2 {
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CHART CARD TOP ACCENT GRADIENT LINE
+   ═══════════════════════════════════════════════════════════════ */
+
+.chart-accent-line {
+  position: relative;
+  overflow: hidden;
+}
+
+.chart-accent-line::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, oklch(0.52 0.17 145), oklch(0.55 0.15 160), oklch(0.45 0.12 180));
+  border-radius: 0 0 4px 4px;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AVATAR GRADIENT BORDER FOR ACTIVE USERS
+   ═══════════════════════════════════════════════════════════════ */
+
+.avatar-gradient-border {
+  position: relative;
+  padding: 2px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, oklch(0.52 0.17 145), oklch(0.55 0.15 160));
+}
+
+.avatar-gradient-border > * {
+  border-radius: 50%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    GRADIENT BORDER (background-clip trick)
    ═══════════════════════════════════════════════════════════════ */
 

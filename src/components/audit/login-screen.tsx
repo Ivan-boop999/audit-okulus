@@ -526,7 +526,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
             className="mt-8 text-center"
           >
             <p className="text-xs text-muted-foreground">
-              AuditPro v2.1 &middot; Система управления аудитами
+              AuditPro v2.4 &middot; Система управления аудитами
             </p>
           </motion.div>
         </div>

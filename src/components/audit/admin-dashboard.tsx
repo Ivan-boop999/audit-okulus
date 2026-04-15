@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   BarChart, LineChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -9,12 +9,14 @@ import {
 import {
   CheckCircle2, Clock, AlertTriangle, Wrench, FileText, Users,
   TrendingUp, Activity, Target, CalendarDays, ArrowUpRight, ArrowDownRight,
-  Sparkles, ClipboardList, UserPlus, Package, FileBarChart, ArrowRight
+  Sparkles, ClipboardList, UserPlus, Package, FileBarChart, ArrowRight, Download,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { toast } from 'sonner';
 
 // ─── Sparkline Helper ──────────────────────────────────────────────────────
 
@@ -138,6 +140,32 @@ export default function AdminDashboard() {
       .then(setData)
       .finally(() => setLoading(false));
   }, []);
+
+  // ── Export handler ────────────────────────────────────────────────────────
+
+  const handleExportData = useCallback(() => {
+    if (!data) return;
+    const exportPayload = {
+      exportedAt: new Date().toISOString(),
+      reportTitle: 'AuditPro — Панель управления',
+      overview: data.overview,
+      scoresOverTime: data.scoresOverTime,
+      categoryData: data.categoryData,
+      auditorPerformance: data.auditorPerformance,
+      equipmentCategories: data.equipmentCategories,
+      recentActivity: data.recentActivity,
+    };
+    const blob = new Blob([JSON.stringify(exportPayload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `auditpro-dashboard-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    toast.success('Данные экспортированы', { description: 'Файл JSON загружен' });
+  }, [data]);
 
   if (loading || !data) {
     return (
@@ -285,6 +313,15 @@ export default function AdminDashboard() {
               <div className="text-xs">{overview.scheduledAssignments} аудит(ов) запланировано</div>
             </div>
           </div>
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 text-xs hidden sm:flex"
+            onClick={handleExportData}
+          >
+            <Download className="w-3.5 h-3.5" />
+            Экспорт данных
+          </Button>
         </div>
       </motion.div>
 
@@ -413,7 +450,7 @@ export default function AdminDashboard() {
           transition={{ delay: 0.3, duration: 0.5 }}
           className="lg:col-span-2"
         >
-          <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
+          <Card className="card-glass transition-all duration-300 hover:shadow-lg hover:scale-[1.01] border-gradient chart-accent-line">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Динамика оценок</CardTitle>
               <CardDescription>Средний балл по проведённым аудитам за последние 30 дней</CardDescription>
@@ -459,7 +496,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
-          <Card className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
+          <Card className="h-full card-glass transition-all duration-300 hover:shadow-lg hover:scale-[1.01] border-gradient chart-accent-line">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Статус аудитов</CardTitle>
               <CardDescription>Распределение по текущему статусу</CardDescription>
@@ -514,7 +551,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
         >
-          <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
+          <Card className="card-glass transition-all duration-300 hover:shadow-lg hover:scale-[1.01] border-gradient chart-accent-line">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Аудиты по категориям</CardTitle>
               <CardDescription>Количество назначений по типу аудита</CardDescription>
@@ -541,7 +578,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5 }}
         >
-          <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
+          <Card className="card-glass transition-all duration-300 hover:shadow-lg hover:scale-[1.01] border-gradient chart-accent-line">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Парк оборудования</CardTitle>
               <CardDescription>Распределение по категориям</CardDescription>
@@ -581,7 +618,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.5 }}
         >
-          <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
+          <Card className="card-glass transition-all duration-300 hover:shadow-lg hover:scale-[1.01] border-gradient chart-accent-line">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Эффективность аудиторов</CardTitle>
               <CardDescription>Рейтинг по среднему баллу и количеству аудитов</CardDescription>
@@ -623,7 +660,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.5 }}
         >
-          <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
+          <Card className="card-glass transition-all duration-300 hover:shadow-lg hover:scale-[1.01] border-gradient chart-accent-line">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>

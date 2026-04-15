@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import {
@@ -19,6 +19,9 @@ import {
   FileText,
   MessageSquare,
   Save,
+  Bold,
+  Italic,
+  List,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -177,6 +180,87 @@ function getScaleColorInactive(value: number, max: number): string {
   return 'border-red-500/40 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30';
 }
 
+// ─── Markdown-like Renderer ──────────────────────────────────────────────────
+
+function renderFormattedNotes(text: string): React.ReactNode {
+  if (!text) return null;
+  const lines = text.split('\n');
+  const blocks: React.ReactNode[] = [];
+  let currentList: { key: number; content: string }[] = [];
+  let blockIdx = 0;
+
+  const flushList = () => {
+    if (currentList.length > 0) {
+      blocks.push(
+        <ul key={`ul-${blockIdx}`} className="list-disc list-inside space-y-0.5 mb-2">
+          {currentList.map((item) => (
+            <li key={item.key}>{renderInlineFormatting(item.content)}</li>
+          ))}
+        </ul>
+      );
+      blockIdx++;
+      currentList = [];
+    }
+  };
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    if (line.startsWith('- ')) {
+      currentList.push({ key: i, content: line.slice(2) });
+      continue;
+    }
+
+    // Flush any pending list
+    flushList();
+
+    if (line.trim() === '') {
+      blocks.push(<br key={`br-${i}`} />);
+      continue;
+    }
+
+    blocks.push(
+      <p key={`p-${i}`} className="mb-1">
+        {renderInlineFormatting(line)}
+      </p>
+    );
+  }
+
+  // Flush final list
+  flushList();
+
+  return <>{blocks}</>;
+}
+
+function renderInlineFormatting(text: string): React.ReactNode {
+  // Process bold (**text**) and italic (*text*) in a single pass
+  const parts: React.ReactNode[] = [];
+  let remaining = text;
+  let keyIdx = 0;
+
+  while (remaining.length > 0) {
+    // Bold: **text**
+    const boldMatch = remaining.match(/^(.*?)\*\*(.+?)\*\*/);
+    // Italic: *text* (but not **)
+    const italicMatch = !boldMatch ? remaining.match(/^(.*?)\*([^*]+?)\*(?!\*)/) : null;
+
+    if (boldMatch) {
+      if (boldMatch[1]) parts.push(boldMatch[1]);
+      parts.push(<strong key={`b-${keyIdx++}`}>{boldMatch[2]}</strong>);
+      remaining = remaining.slice(boldMatch[0].length);
+    } else if (italicMatch) {
+      if (italicMatch[1]) parts.push(italicMatch[1]);
+      parts.push(<em key={`i-${keyIdx++}`}>{italicMatch[2]}</em>);
+      remaining = remaining.slice(italicMatch[0].length);
+    } else {
+      parts.push(remaining);
+      break;
+    }
+  }
+
+  return <>{parts}</>;
+}
+
 // ─── Confetti Particles ───────────────────────────────────────────────────────
 
 function ConfettiParticle({ delay, x, color }: { delay: number; x: number; color: string }) {
@@ -231,6 +315,53 @@ export default function AuditResponseForm({
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
+
+  // ── Notes textarea ref ────────────────────────────────────────────────────
+
+  const notesRef = useRef<HTMLTextAreaElement>(null);
+
+  // ── Formatting toolbar handlers ────────────────────────────────────────────
+
+  const insertAtCursor = useCallback((before: string, after: string) => {
+    const textarea = notesRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+    const selected = value.slice(start, end);
+    const replacement = `${before}${selected || 'текст'}${after}`;
+
+    const newValue = value.slice(0, start) + replacement + value.slice(end);
+    setNotes(newValue);
+
+    // Restore cursor position
+    requestAnimationFrame(() => {
+      textarea.focus();
+      if (selected) {
+        textarea.setSelectionRange(start, start + replacement.length);
+      } else {
+        // Select the placeholder text
+        textarea.setSelectionRange(start + before.length, start + before.length + 5);
+      }
+    });
+  }, []);
+
+  const handleBold = useCallback(() => insertAtCursor('**', '**'), [insertAtCursor]);
+  const handleItalic = useCallback(() => insertAtCursor('*', '*'), [insertAtCursor]);
+  const handleList = useCallback(() => {
+    const textarea = notesRef.current;
+    if (!textarea) return;
+    const start = textarea.selectionStart;
+    const value = textarea.value;
+    const insert = '- Элемент списка';
+    const newValue = value.slice(0, start) + '\n' + insert + value.slice(start);
+    setNotes(newValue);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + 1 + 2, start + 1 + 2 + 13);
+    });
+  }, []);
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
@@ -775,12 +906,61 @@ export default function AuditResponseForm({
                 <MessageSquare className="w-3.5 h-3.5 text-muted-foreground" />
                 Дополнительные заметки (необязательно)
               </Label>
+              {/* Formatting toolbar */}
+              <div className="flex items-center gap-1 p-1 rounded-lg border bg-muted/30">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                  onClick={handleBold}
+                  title="Жирный (Ctrl+B)"
+                >
+                  <Bold className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                  onClick={handleItalic}
+                  title="Курсив (Ctrl+I)"
+                >
+                  <Italic className="w-3.5 h-3.5" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 w-7 p-0 text-muted-foreground hover:text-foreground"
+                  onClick={handleList}
+                  title="Список"
+                >
+                  <List className="w-3.5 h-3.5" />
+                </Button>
+                <div className="flex-1" />
+                <span className="text-[10px] text-muted-foreground px-1">
+                  Поддерживается: **жирный**, *курсив*, - список
+                </span>
+              </div>
               <Textarea
+                ref={notesRef}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Общие замечания по аудиту..."
+                placeholder="Общие замечания по аудиту... Используйте ** для жирного, * для курсива, - для списка"
                 className="min-h-[80px] resize-none"
               />
+              {/* Formatted preview */}
+              {notes.trim() && (
+                <div className="rounded-lg border bg-muted/20 p-3 mt-1">
+                  <div className="text-[10px] text-muted-foreground uppercase tracking-wide font-medium mb-1.5">
+                    Предпросмотр
+                  </div>
+                  <div className="text-sm text-foreground leading-relaxed">
+                    {renderFormattedNotes(notes)}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Actions */}

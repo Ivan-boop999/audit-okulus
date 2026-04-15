@@ -76,6 +76,7 @@ const adminNavGroups: NavGroup[] = [
   {
     label: 'Управление',
     items: [
+      { id: 'maintenance', label: 'ТО', icon: Wrench },
       { id: 'team', label: 'Команда', icon: Users },
       { id: 'action-plans', label: 'План действий', icon: ListChecks },
       { id: 'notifications', label: 'Уведомления', icon: Bell },
@@ -462,7 +463,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                     className="flex flex-col whitespace-nowrap"
                   >
                     <span className="font-bold text-lg leading-none tracking-tight">AuditPro</span>
-                    <span className="text-[10px] text-muted-foreground mt-0.5">v2.1</span>
+                    <span className="text-[10px] text-muted-foreground mt-0.5">v2.4</span>
                   </motion.div>
                 )}
               </AnimatePresence>

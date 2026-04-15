@@ -840,15 +840,17 @@ export default function TemplateBuilder() {
 
                         {/* Action buttons */}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 hover:bg-white/10"
-                            onClick={() => handleCloneTemplate(template)}
-                            title="Клонировать"
-                          >
-                            <Copy className="w-3.5 h-3.5" />
-                          </Button>
+                          <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-emerald-50 hover:text-emerald-600 dark:hover:bg-emerald-950/30 dark:hover:text-emerald-400"
+                              onClick={() => handleCloneTemplate(template)}
+                              title="Клонировать"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </Button>
+                          </motion.div>
                           <Button
                             variant="ghost"
                             size="icon"
@@ -905,7 +907,7 @@ export default function TemplateBuilder() {
                           <Tag className="w-3 h-3" />
                           {template.category}
                         </Badge>
-                        <Badge variant="outline" className={`text-[11px] gap-1 ${statusCfg.color}`}>
+                        <Badge variant="outline" className={`text-[11px] gap-1 ${statusCfg.color}${template.status === 'ACTIVE' ? ' shadow-[0_0_8px_1px_rgba(16,185,129,0.25)] dark:shadow-[0_0_8px_1px_rgba(52,211,153,0.2)]' : ''}`}>
                           <motion.span
                             className={`w-1.5 h-1.5 rounded-full ${statusCfg.dotColor}`}
                             animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
@@ -940,8 +942,8 @@ export default function TemplateBuilder() {
                                 );
                               }}
                             >
-                              <AccordionItem value={template.id} className="border-none">
-                                <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground hover:no-underline hover:text-foreground transition-colors">
+                              <AccordionItem value={template.id} className={`border-none ${expandedTemplates.includes(template.id) ? 'border-l-2 border-l-emerald-400 dark:border-l-emerald-500 rounded-l-lg -ml-1 pl-1' : ''}`}>
+                                <AccordionTrigger className="py-2 text-xs font-medium text-muted-foreground hover:no-underline hover:text-foreground transition-colors focus-ring">
                                   <span className="flex items-center gap-1.5">
                                     <motion.div
                                       animate={{ rotate: expandedTemplates.includes(template.id) ? 90 : 0 }}
@@ -953,8 +955,14 @@ export default function TemplateBuilder() {
                                   </span>
                                 </AccordionTrigger>
                               <AccordionContent>
-                                <ScrollArea className="max-h-[320px] pr-2">
-                                  <div className="space-y-2">
+                                <AnimatePresence>
+                                <ScrollArea className="max-h-[320px] pr-2 scrollbar-smooth">
+                                  <motion.div
+                                    initial={{ opacity: 0, height: 0 }}
+                                    animate={{ opacity: 1, height: 'auto' }}
+                                    exit={{ opacity: 0, height: 0 }}
+                                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                                    className="space-y-2">
                                     {(template.questions || []).map((question, idx) => {
                                       const atConfig = getAnswerTypeConfig(question.answerType);
                                       return (
@@ -1032,8 +1040,9 @@ export default function TemplateBuilder() {
                                         </motion.div>
                                       );
                                     })}
-                                  </div>
+                                  </motion.div>
                                 </ScrollArea>
+                                </AnimatePresence>
 
                                 {/* Add question button inside accordion */}
                                 <Button

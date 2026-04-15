@@ -824,7 +824,7 @@ export default function AnalyticsDashboard() {
                           tick={{ fontSize: 11, fill: 'oklch(0.55 0 0)' }}
                           axisLine={false}
                           tickLine={false}
-                          width={100}
+                          width={160}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Bar dataKey="count" name="Количество аудитов" radius={[0, 8, 8, 0]} maxBarSize={28}>

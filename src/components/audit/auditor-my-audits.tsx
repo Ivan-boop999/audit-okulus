@@ -160,9 +160,10 @@ function getCategoryBadgeStyle(category: string): string {
 }
 
 function getScoreBadge(score: number): { label: string; color: string } {
-  if (score >= 80) return { label: `${score}%`, color: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300' };
-  if (score >= 60) return { label: `${score}%`, color: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300' };
-  return { label: `${score}%`, color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300' };
+  const rounded = Math.round(score * 10) / 10;
+  if (score >= 80) return { label: `${rounded}%`, color: 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300' };
+  if (score >= 60) return { label: `${rounded}%`, color: 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300' };
+  return { label: `${rounded}%`, color: 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300' };
 }
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
