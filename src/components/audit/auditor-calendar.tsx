@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ChevronLeft, ChevronRight, Calendar, Clock, CheckCircle2,
   AlertTriangle, Play, CalendarDays, FileQuestion,
-  ClipboardList, ArrowRight,
+  ClipboardList, ArrowRight, Package, Tag, Layers, BarChart3,
 } from 'lucide-react';
 import {
   format, startOfMonth, endOfMonth, eachDayOfInterval,
@@ -56,6 +56,11 @@ interface Response {
   answers: { id: string; questionId: string; value: string }[];
 }
 
+interface EquipmentRef {
+  id: string;
+  name: string;
+}
+
 interface Assignment {
   id: string;
   templateId: string;
@@ -69,6 +74,7 @@ interface Assignment {
   template: Template;
   auditor: Auditor;
   responses?: Response[];
+  equipments?: EquipmentRef[];
 }
 
 interface AuditorCalendarProps {
@@ -87,7 +93,7 @@ const MONTH_NAMES = [
 
 const statusConfig: Record<
   string,
-  { label: string; color: string; icon: React.ElementType; dotColor: string; bgCell: string }
+  { label: string; color: string; icon: React.ElementType; dotColor: string; bgCell: string; borderColor: string }
 > = {
   SCHEDULED: {
     label: 'Запланирован',
@@ -95,6 +101,7 @@ const statusConfig: Record<
     icon: CalendarDays,
     dotColor: 'bg-blue-500',
     bgCell: 'bg-blue-50/60 dark:bg-blue-950/30',
+    borderColor: 'border-sky-400',
   },
   IN_PROGRESS: {
     label: 'В процессе',
@@ -102,6 +109,7 @@ const statusConfig: Record<
     icon: Play,
     dotColor: 'bg-amber-500',
     bgCell: 'bg-amber-50/60 dark:bg-amber-950/30',
+    borderColor: 'border-amber-400',
   },
   COMPLETED: {
     label: 'Завершён',
@@ -109,6 +117,7 @@ const statusConfig: Record<
     icon: CheckCircle2,
     dotColor: 'bg-emerald-500',
     bgCell: 'bg-emerald-50/60 dark:bg-emerald-950/30',
+    borderColor: 'border-emerald-400',
   },
   OVERDUE: {
     label: 'Просрочен',
@@ -116,6 +125,7 @@ const statusConfig: Record<
     icon: AlertTriangle,
     dotColor: 'bg-red-500',
     bgCell: 'bg-red-50/60 dark:bg-red-950/30',
+    borderColor: 'border-red-400',
   },
   CANCELLED: {
     label: 'Отменён',
@@ -123,6 +133,7 @@ const statusConfig: Record<
     icon: Clock,
     dotColor: 'bg-slate-400',
     bgCell: 'bg-slate-50/40 dark:bg-slate-950/20',
+    borderColor: 'border-slate-400',
   },
 };
 
@@ -181,6 +192,47 @@ function getQuestionTypeLabel(type: string): string {
     SIGNATURE: 'Подпись',
   };
   return map[type] || type;
+}
+
+/**
+ * Returns a gradient background class for a calendar day cell
+ * based on the statuses of audits on that day.
+ */
+function getDayCellGradient(audits: Assignment[]): string {
+  if (audits.length === 0) return '';
+
+  const statuses = new Set(audits.map((a) => a.status));
+  const hasOverdue = statuses.has('OVERDUE');
+  const hasCompleted = statuses.has('COMPLETED');
+  const hasScheduled = statuses.has('SCHEDULED');
+  const hasInProgress = statuses.has('IN_PROGRESS');
+
+  // Single status → pure tint
+  if (statuses.size === 1) {
+    if (hasOverdue) return 'bg-gradient-to-br from-red-50/80 to-red-50/40 dark:from-red-950/30 dark:to-red-950/15';
+    if (hasCompleted) return 'bg-gradient-to-br from-emerald-50/80 to-emerald-50/40 dark:from-emerald-950/30 dark:to-emerald-950/15';
+    if (hasInProgress) return 'bg-gradient-to-br from-amber-50/80 to-amber-50/40 dark:from-amber-950/30 dark:to-amber-950/15';
+    if (hasScheduled) return 'bg-gradient-to-br from-sky-50/80 to-sky-50/40 dark:from-sky-950/30 dark:to-sky-950/15';
+    return '';
+  }
+
+  // Mixed statuses → amber tint, with priority for overdue
+  if (hasOverdue) return 'bg-gradient-to-br from-red-50/60 to-amber-50/50 dark:from-red-950/25 dark:to-amber-950/20';
+  if (hasCompleted && hasScheduled) return 'bg-gradient-to-br from-emerald-50/60 to-sky-50/40 dark:from-emerald-950/25 dark:to-sky-950/15';
+  return 'bg-gradient-to-br from-amber-50/70 to-amber-50/40 dark:from-amber-950/30 dark:to-amber-950/15';
+}
+
+/**
+ * Returns a category badge color based on the template category string.
+ */
+function getCategoryBadgeStyle(category: string): string {
+  const cat = (category || '').toLowerCase();
+  if (cat.includes('безопасность') || cat.includes('safety')) return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-950/50 dark:text-red-300 dark:border-red-800';
+  if (cat.includes('качество') || cat.includes('quality')) return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/50 dark:text-blue-300 dark:border-blue-800';
+  if (cat.includes('окружающая') || cat.includes('эколог') || cat.includes('environment')) return 'bg-emerald-100 text-emerald-700 border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800';
+  if (cat.includes('техническое') || cat.includes('техник') || cat.includes('maintenance')) return 'bg-amber-100 text-amber-700 border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800';
+  if (cat.includes('санитар') || cat.includes('гигиен') || cat.includes('hygiene')) return 'bg-violet-100 text-violet-700 border-violet-200 dark:bg-violet-950/50 dark:text-violet-300 dark:border-violet-800';
+  return 'bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-800/50 dark:text-slate-300 dark:border-slate-700';
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -269,6 +321,33 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
       .sort((a, b) => new Date(a.scheduledDate).getTime() - new Date(b.scheduledDate).getTime())
       .slice(0, 10);
   }, [assignments]);
+
+  // Month-level statistics for the mini stats bar
+  const monthStats = useMemo(() => {
+    const monthStart = startOfMonth(currentMonth);
+    const monthEnd = addDays(endOfMonth(currentMonth), 1);
+    const monthAudits = assignments.filter((a) => {
+      if (!a.scheduledDate) return false;
+      try {
+        const date = parseISO(a.scheduledDate);
+        return (
+          (isAfter(date, startOfDay(monthStart)) || isSameDay(date, monthStart)) &&
+          isBefore(date, monthEnd)
+        );
+      } catch {
+        return false;
+      }
+    });
+    return {
+      total: monthAudits.length,
+      completed: monthAudits.filter((a) => a.status === 'COMPLETED').length,
+      overdue: monthAudits.filter((a) => a.status === 'OVERDUE').length,
+      inProgress: monthAudits.filter((a) => a.status === 'IN_PROGRESS').length,
+    };
+  }, [assignments, currentMonth]);
+
+  // Check if there are any audits for the current month at all
+  const hasMonthAudits = monthStats.total > 0;
 
   // ─── Navigation ─────────────────────────────────────────────────────────
 
@@ -387,7 +466,47 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
             </div>
           </CardHeader>
 
-          <CardContent className="pt-0 pb-4">
+          {/* Mini Stats Bar */}
+          {!loading && hasMonthAudits && (
+            <motion.div
+              initial={{ opacity: 0, y: -4 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+              className="px-6 pb-3"
+            >
+              <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1">
+                <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
+                  <Layers className="w-3.5 h-3.5 text-primary" />
+                  <span className="font-medium">Всего:</span>
+                  <span className="font-bold text-foreground">{monthStats.total}</span>
+                </div>
+                <Separator orientation="vertical" className="h-4 hidden sm:block" />
+                <div className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <span className="text-muted-foreground">Завершено:</span>
+                  <span className="font-bold text-emerald-600 dark:text-emerald-400">{monthStats.completed}</span>
+                </div>
+                <Separator orientation="vertical" className="h-4 hidden sm:block" />
+                <div className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+                  <AlertTriangle className="w-3.5 h-3.5 text-red-500" />
+                  <span className="text-muted-foreground">Просрочено:</span>
+                  <span className="font-bold text-red-600 dark:text-red-400">{monthStats.overdue}</span>
+                </div>
+                {monthStats.inProgress > 0 && (
+                  <>
+                    <Separator orientation="vertical" className="h-4 hidden sm:block" />
+                    <div className="flex items-center gap-1.5 text-xs whitespace-nowrap">
+                      <Play className="w-3.5 h-3.5 text-amber-500" />
+                      <span className="text-muted-foreground">В процессе:</span>
+                      <span className="font-bold text-amber-600 dark:text-amber-400">{monthStats.inProgress}</span>
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          )}
+
+          <CardContent className={loading || hasMonthAudits ? 'pt-0 pb-4' : 'pt-0 pb-4'}>
             {/* Weekday Headers */}
             <div className="grid grid-cols-7 mb-1">
               {WEEK_DAYS.map((day) => (
@@ -419,16 +538,8 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                   const isSelected = selectedDate && isSameDay(day, selectedDate);
                   const hasAudits = dayAudits.length > 0;
 
-                  // Determine cell background based on audit statuses
-                  let cellBg = '';
-                  if (hasAudits) {
-                    const highestPriority = dayAudits.some((a) => a.status === 'OVERDUE')
-                      ? 'OVERDUE'
-                      : dayAudits.some((a) => a.status === 'IN_PROGRESS')
-                        ? 'IN_PROGRESS'
-                        : dayAudits[0].status;
-                    cellBg = statusConfig[highestPriority]?.bgCell || '';
-                  }
+                  // Determine gradient background for day cell
+                  const cellGradient = getDayCellGradient(dayAudits);
 
                   return (
                     <motion.button
@@ -440,17 +551,30 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                         relative flex flex-col items-center justify-start p-1 sm:p-2 min-h-[44px] sm:min-h-[64px]
                         transition-colors duration-150 text-sm
                         ${inCurrentMonth ? 'bg-card text-foreground' : 'bg-muted/30 text-muted-foreground/40'}
-                        ${hasAudits && !isSelected ? `hover:bg-muted/80 ${cellBg}` : ''}
-                        ${isSelected ? 'bg-emerald-50 dark:bg-emerald-950/60 ring-2 ring-emerald-500 ring-inset' : ''}
-                        ${today && !isSelected ? 'ring-2 ring-emerald-400 ring-inset' : ''}
-                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-inset
+                        ${hasAudits && !isSelected && inCurrentMonth ? `hover:bg-muted/80 ${cellGradient}` : ''}
+                        ${isSelected && inCurrentMonth ? 'bg-primary/10 ring-2 ring-primary ring-inset shadow-sm' : ''}
+                        ${today && !isSelected && inCurrentMonth ? 'ring-2 ring-primary ring-inset shadow-[inset_0_0_0_1px_hsl(var(--primary))]' : ''}
+                        ${today && isSelected && inCurrentMonth ? 'ring-2 ring-primary ring-inset shadow-[inset_0_0_0_2px_hsl(var(--primary))]' : ''}
+                        focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset
                       `}
                     >
+                      {/* Audit count badge */}
+                      {hasAudits && dayAudits.length > 1 && (
+                        <motion.span
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 25 }}
+                          className="absolute top-0.5 right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center leading-none shadow-sm"
+                        >
+                          {dayAudits.length}
+                        </motion.span>
+                      )}
+
                       {/* Day number */}
                       <span
                         className={`
                           text-xs sm:text-sm font-medium leading-none mb-0.5 sm:mb-1
-                          ${today ? 'text-emerald-700 dark:text-emerald-400 font-bold' : ''}
+                          ${today && inCurrentMonth ? 'text-primary font-bold' : ''}
                           ${!inCurrentMonth ? 'opacity-40' : ''}
                         `}
                       >
@@ -458,8 +582,8 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                       </span>
 
                       {/* Today indicator dot */}
-                      {today && !hasAudits && (
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 mt-auto" />
+                      {today && !hasAudits && inCurrentMonth && (
+                        <span className="w-1.5 h-1.5 rounded-full bg-primary mt-auto" />
                       )}
 
                       {/* Audit dots */}
@@ -509,6 +633,45 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
               ))}
             </div>
           </CardContent>
+
+          {/* Month Empty State */}
+          {!loading && !hasMonthAudits && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5 }}
+              className="pb-6 pt-2"
+            >
+              <div className="flex flex-col items-center justify-center py-6">
+                <motion.div
+                  animate={{
+                    y: [0, -8, 0],
+                  }}
+                  transition={{
+                    duration: 3,
+                    repeat: Infinity,
+                    ease: 'easeInOut',
+                  }}
+                  className="relative"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+                    <Calendar className="w-8 h-8 text-primary/60" />
+                  </div>
+                  <motion.div
+                    animate={{ opacity: [0.3, 0.6, 0.3], scale: [1, 1.1, 1] }}
+                    transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+                    className="absolute -inset-2 rounded-3xl bg-primary/5 blur-sm -z-10"
+                  />
+                </motion.div>
+                <h3 className="text-sm font-semibold text-muted-foreground mt-4">
+                  Нет запланированных аудитов
+                </h3>
+                <p className="text-xs text-muted-foreground/70 mt-1 text-center max-w-[240px]">
+                  На этот месяц ещё нет назначенных проверок. Новые аудиты появятся здесь автоматически.
+                </p>
+              </div>
+            </motion.div>
+          )}
         </Card>
       </motion.div>
 
@@ -541,10 +704,28 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
               </CardHeader>
               <CardContent>
                 {selectedDateAssignments.length === 0 ? (
-                  <div className="text-center py-6">
-                    <Calendar className="w-8 h-8 mx-auto text-muted-foreground/50 mb-2" />
-                    <p className="text-sm text-muted-foreground">Нет аудитов на эту дату</p>
-                  </div>
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.4 }}
+                    className="flex flex-col items-center justify-center py-6"
+                  >
+                    <motion.div
+                      animate={{ y: [0, -6, 0] }}
+                      transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                      className="relative"
+                    >
+                      <div className="w-14 h-14 rounded-2xl bg-muted/80 flex items-center justify-center">
+                        <Calendar className="w-7 h-7 text-muted-foreground/50" />
+                      </div>
+                      <motion.div
+                        animate={{ opacity: [0.2, 0.5, 0.2] }}
+                        transition={{ duration: 2.5, repeat: Infinity, ease: 'easeInOut' }}
+                        className="absolute -inset-3 rounded-3xl bg-muted/30 blur-md -z-10"
+                      />
+                    </motion.div>
+                    <p className="text-sm text-muted-foreground mt-3">Нет аудитов на эту дату</p>
+                  </motion.div>
                 ) : (
                   <motion.div
                     variants={containerVariants}
@@ -572,7 +753,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                                 <div className="font-semibold text-sm truncate group-hover:text-emerald-700 dark:group-hover:text-emerald-400 transition-colors">
                                   {audit.template?.title || 'Шаблон'}
                                 </div>
-                                <div className="flex items-center gap-2 mt-1">
+                                <div className="flex items-center gap-2 mt-1 flex-wrap">
                                   <Badge
                                     variant="outline"
                                     className={`text-[10px] gap-1 py-0 ${cfg.color}`}
@@ -580,6 +761,15 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                                     <span className={`w-1.5 h-1.5 rounded-full ${cfg.dotColor}`} />
                                     {cfg.label}
                                   </Badge>
+                                  {audit.template?.category && (
+                                    <Badge
+                                      variant="outline"
+                                      className={`text-[10px] gap-1 py-0 ${getCategoryBadgeStyle(audit.template.category)}`}
+                                    >
+                                      <Tag className="w-2.5 h-2.5" />
+                                      {audit.template.category}
+                                    </Badge>
+                                  )}
                                   {audit.dueDate && (
                                     <span className="text-xs text-muted-foreground flex items-center gap-1">
                                       <Clock className="w-3 h-3" />
@@ -717,7 +907,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
 
       {/* ─── Audit Detail Dialog ─────────────────────────────────────────── */}
       <Dialog open={detailOpen} onOpenChange={setDetailOpen}>
-        <DialogContent className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[560px] max-h-[85vh] overflow-y-auto p-0">
           {selectedAudit && (() => {
             const cfg = statusConfig[selectedAudit.status] || statusConfig.SCHEDULED;
             const StatusIcon = cfg.icon;
@@ -729,17 +919,28 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
 
             return (
               <>
-                <DialogHeader>
-                  <DialogTitle className="flex items-center gap-2 text-lg">
-                    <ClipboardList className="w-5 h-5 text-emerald-600" />
-                    {selectedAudit.template?.title || 'Аудит'}
-                  </DialogTitle>
-                  <DialogDescription>
-                    Детали назначенного аудита
-                  </DialogDescription>
-                </DialogHeader>
+                {/* Colored top border bar */}
+                <div className={`h-1.5 rounded-t-lg ${
+                  selectedAudit.status === 'OVERDUE' ? 'bg-gradient-to-r from-red-400 to-red-500' :
+                  selectedAudit.status === 'COMPLETED' ? 'bg-gradient-to-r from-emerald-400 to-emerald-500' :
+                  selectedAudit.status === 'IN_PROGRESS' ? 'bg-gradient-to-r from-amber-400 to-amber-500' :
+                  selectedAudit.status === 'CANCELLED' ? 'bg-gradient-to-r from-slate-300 to-slate-400' :
+                  'bg-gradient-to-r from-sky-400 to-sky-500'
+                }`} />
 
-                <div className="space-y-5 py-2">
+                <div className="px-6 pt-4 pb-2">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2 text-lg">
+                      <ClipboardList className="w-5 h-5 text-emerald-600" />
+                      {selectedAudit.template?.title || 'Аудит'}
+                    </DialogTitle>
+                    <DialogDescription>
+                      Детали назначенного аудита
+                    </DialogDescription>
+                  </DialogHeader>
+                </div>
+
+                <div className="space-y-5 px-6 pb-2">
                   {/* Status */}
                   <div className="flex items-center gap-3">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center border ${cfg.color}`}>
@@ -760,24 +961,45 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
 
                   <Separator />
 
-                  {/* Template info */}
+                  {/* Template info with category badge */}
                   <div className="space-y-3">
                     <h4 className="text-sm font-semibold flex items-center gap-2">
                       <FileQuestion className="w-4 h-4 text-emerald-600" />
                       Шаблон аудита
                     </h4>
                     <div className="bg-muted/50 rounded-xl p-3 space-y-2">
-                      <div className="flex items-start justify-between">
-                        <div>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
                           <p className="font-medium text-sm">{selectedAudit.template?.title}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            Категория: {selectedAudit.template?.category || '—'}
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            {selectedAudit.template?.category && (
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] gap-1 py-0 ${getCategoryBadgeStyle(selectedAudit.template.category)}`}
+                              >
+                                <Tag className="w-2.5 h-2.5" />
+                                {selectedAudit.template.category}
+                              </Badge>
+                            )}
+                            <Badge variant="secondary" className="text-[10px]">
+                              {questions.length} вопр.
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Equipment list */}
+                      {selectedAudit.equipments && selectedAudit.equipments.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-border/50">
+                          <p className="text-xs text-muted-foreground mb-1.5 flex items-center gap-1">
+                            <Package className="w-3 h-3" />
+                            Оборудование:
+                          </p>
+                          <p className="text-xs text-foreground/80 leading-relaxed">
+                            {selectedAudit.equipments.map((e) => e.name).join(', ')}
                           </p>
                         </div>
-                        <Badge variant="secondary" className="text-[10px]">
-                          {questions.length} вопр.
-                        </Badge>
-                      </div>
+                      )}
                     </div>
                   </div>
 
@@ -848,7 +1070,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                   )}
                 </div>
 
-                <DialogFooter className="gap-2 sm:gap-0">
+                <DialogFooter className="gap-2 sm:gap-0 px-6 pb-6">
                   <Button
                     variant="outline"
                     onClick={() => setDetailOpen(false)}
@@ -857,22 +1079,34 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                     Закрыть
                   </Button>
                   {(selectedAudit.status === 'SCHEDULED' || selectedAudit.status === 'IN_PROGRESS') && (
-                    <Button
-                      onClick={handleStartAudit}
-                      disabled={startingAudit}
-                      className="flex-1 sm:flex-none gap-2 bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
+                    <motion.div
+                      className="relative flex-1 sm:flex-none"
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      {startingAudit ? (
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                          className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
-                        />
-                      ) : (
-                        <Play className="w-4 h-4 fill-current" />
-                      )}
-                      {selectedAudit.status === 'IN_PROGRESS' ? 'Продолжить' : 'Начать аудит'}
-                    </Button>
+                      {/* Pulsing glow effect behind the button */}
+                      <motion.div
+                        className="absolute inset-0 rounded-lg bg-emerald-400/30 blur-md -z-10"
+                        animate={{ opacity: [0.3, 0.6, 0.3] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                      />
+                      <Button
+                        onClick={handleStartAudit}
+                        disabled={startingAudit}
+                        className="w-full gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20 border-0"
+                      >
+                        {startingAudit ? (
+                          <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                            className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
+                          />
+                        ) : (
+                          <Play className="w-4 h-4 fill-current" />
+                        )}
+                        {selectedAudit.status === 'IN_PROGRESS' ? 'Продолжить' : 'Начать аудит'}
+                      </Button>
+                    </motion.div>
                   )}
                   {selectedAudit.status === 'COMPLETED' && (
                     <div className="flex items-center gap-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium px-3">

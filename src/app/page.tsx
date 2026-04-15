@@ -17,6 +17,7 @@ import ActionPlans from '@/components/audit/action-plans';
 import UserProfilePanel from '@/components/audit/user-profile';
 import AuditReportDetail from '@/components/audit/audit-report';
 import TeamMembers from '@/components/audit/team-members';
+import EquipmentDetail from '@/components/audit/equipment-detail';
 
 const emptySubscribe = () => () => {};
 function useMounted() {
@@ -28,6 +29,7 @@ export default function Home() {
   const [activeView, setActiveView] = useState('dashboard');
   const [activeAuditId, setActiveAuditId] = useState<string | null>(null);
   const [activeReportId, setActiveReportId] = useState<string | null>(null);
+  const [activeEquipmentId, setActiveEquipmentId] = useState<string | null>(null);
   const mounted = useMounted();
 
   // Redirect to dashboard on login
@@ -60,6 +62,16 @@ export default function Home() {
     setActiveView('history');
   };
 
+  const handleViewEquipment = (id: string) => {
+    setActiveEquipmentId(id);
+    setActiveView('equipment-detail');
+  };
+
+  const handleBackFromEquipment = () => {
+    setActiveEquipmentId(null);
+    setActiveView('equipment');
+  };
+
   // Prevent hydration mismatch
   if (!mounted) {
     return (
@@ -78,6 +90,16 @@ export default function Home() {
 
   // Render active view content
   const renderContent = () => {
+    // Equipment detail view
+    if (activeView === 'equipment-detail' && activeEquipmentId) {
+      return (
+        <EquipmentDetail
+          equipmentId={activeEquipmentId}
+          onBack={handleBackFromEquipment}
+        />
+      );
+    }
+
     // Audit report detail view
     if (activeView === 'report' && activeReportId) {
       return (
@@ -116,7 +138,7 @@ export default function Home() {
         case 'dashboard':
           return <AdminDashboard />;
         case 'equipment':
-          return <EquipmentManager />;
+          return <EquipmentManager onViewDetail={handleViewEquipment} />;
         case 'templates':
           return <TemplateBuilder creatorId={user.id} />;
         case 'scheduling':

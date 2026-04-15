@@ -7,7 +7,7 @@ import {
   LayoutDashboard, Wrench, FileText, CalendarDays, BarChart3,
   Bell, User, LogOut, Moon, Sun, Menu, X, ChevronLeft,
   Factory, Search, History, UserCircle, ListChecks, Wifi, WifiOff, Users,
-  BookOpen, Settings, ChevronDown, Copy,
+  BookOpen, Settings, ChevronDown, Copy, CheckCircle2, AlertCircle,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -820,6 +820,16 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                 </span>
                 <Separator orientation="vertical" className="h-3" />
                 <span className="tabular-nums">v2.1</span>
+                <Separator orientation="vertical" className="h-3" />
+                {/* Quick Stats */}
+                <span className={`flex items-center gap-1.5 transition-colors ${isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+                  {isOnline ? (
+                    <CheckCircle2 className="w-3 h-3" />
+                  ) : (
+                    <AlertCircle className="w-3 h-3" />
+                  )}
+                  <span>● 0 ошибок</span>
+                </span>
               </div>
             </div>
           </footer>

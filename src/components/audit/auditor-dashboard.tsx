@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar, CheckCircle2, Clock, TrendingUp, Bell, Award, BarChart3, Target,
-  ArrowRight, Play, User, ClipboardList, Zap, Timer,
+  ArrowRight, Play, User, ClipboardList, Zap, Timer, Sparkles, Flame, Shield,
 } from 'lucide-react';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription,
@@ -105,6 +105,63 @@ function formatRelativeTime(dateStr: string): string {
     return months === 1 ? '1 мес. назад' : `${months} мес. назад`;
   }
   return format(date, 'dd MMM yyyy', { locale: ru });
+}
+
+// ─── Urgency & Motivation Helpers ───────────────────────────────────────────
+
+function getUrgencyIndicator(scheduledDate: Date, dueDate: Date | null, status: string): { color: string } {
+  if (status === 'OVERDUE' || (dueDate && isBefore(dueDate, new Date()) && status !== 'COMPLETED')) {
+    return { color: 'bg-red-500' };
+  }
+  if (isToday(scheduledDate)) {
+    return { color: 'bg-emerald-500' };
+  }
+  const daysUntil = differenceInDays(scheduledDate, new Date());
+  if (daysUntil >= 0 && daysUntil <= 3) {
+    return { color: 'bg-amber-500' };
+  }
+  return { color: 'bg-sky-400' };
+}
+
+function getMotivationalData(completionRate: number, avgScore: number) {
+  if (completionRate >= 90 && avgScore >= 85) {
+    return {
+      icon: Flame,
+      message: 'Превосходно! Вы в отличной форме!',
+      description: 'Ваши результаты впечатляют. Продолжайте в том же духе!',
+      gradient: 'from-emerald-500 to-teal-500',
+      bgGradient: 'from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20',
+      badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-300',
+    };
+  }
+  if (completionRate >= 70) {
+    return {
+      icon: TrendingUp,
+      message: 'Хороший прогресс!',
+      description: 'Вы на верном пути. Немного усилий — и вы достигнете отличных результатов.',
+      gradient: 'from-amber-500 to-orange-500',
+      bgGradient: 'from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20',
+      badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/50 dark:text-amber-300',
+    };
+  }
+  if (completionRate >= 40) {
+    return {
+      icon: Target,
+      message: 'Есть над чем работать',
+      description: 'Сфокусируйтесь на завершении текущих аудитов для улучшения показателей.',
+      gradient: 'from-sky-500 to-cyan-500',
+      bgGradient: 'from-sky-50 to-cyan-50 dark:from-sky-950/30 dark:to-cyan-950/20',
+      badgeColor: 'bg-sky-100 text-sky-700 dark:bg-sky-900/50 dark:text-sky-300',
+    };
+  }
+  return {
+    icon: Zap,
+    message: 'Время действовать!',
+    description: 'Начните с ближайших аудитов, чтобы набрать темп и улучшить результаты.',
+    gradient: 'from-violet-500 to-purple-500',
+    bgGradient: 'from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20',
+    badgeColor: 'bg-violet-100 text-violet-700 dark:bg-violet-900/50 dark:text-violet-300',
+  };
 }
 
 // ─── Animated Counter ───────────────────────────────────────────────────────
@@ -361,8 +418,9 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
       value: stats.upcomingCount,
       icon: ClipboardList,
       color: 'text-sky-600 dark:text-sky-400',
-      bgColor: 'bg-sky-50 dark:bg-sky-950/60',
-      borderColor: 'border-sky-200/60 dark:border-sky-800/40',
+      bgColor: 'bg-gradient-to-br from-sky-50 to-cyan-50 dark:from-sky-950/30 dark:to-cyan-950/20',
+      borderColor: 'border-sky-100 dark:border-sky-900/50',
+      iconBg: 'bg-sky-100 dark:bg-sky-900/50',
       description: 'запланировано и в работе',
     },
     {
@@ -370,8 +428,9 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
       value: stats.completedCount,
       icon: CheckCircle2,
       color: 'text-emerald-600 dark:text-emerald-400',
-      bgColor: 'bg-emerald-50 dark:bg-emerald-950/60',
-      borderColor: 'border-emerald-200/60 dark:border-emerald-800/40',
+      bgColor: 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20',
+      borderColor: 'border-emerald-100 dark:border-emerald-900/50',
+      iconBg: 'bg-emerald-100 dark:bg-emerald-900/50',
       description: 'аудитов выполнено',
     },
     {
@@ -380,8 +439,9 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
       suffix: '%',
       icon: Award,
       color: 'text-amber-600 dark:text-amber-400',
-      bgColor: 'bg-amber-50 dark:bg-amber-950/60',
-      borderColor: 'border-amber-200/60 dark:border-amber-800/40',
+      bgColor: 'bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20',
+      borderColor: 'border-amber-100 dark:border-amber-900/50',
+      iconBg: 'bg-amber-100 dark:bg-amber-900/50',
       description: 'средняя оценка',
     },
     {
@@ -389,8 +449,9 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
       value: stats.unreadNotifications,
       icon: Bell,
       color: 'text-rose-600 dark:text-rose-400',
-      bgColor: 'bg-rose-50 dark:bg-rose-950/60',
-      borderColor: 'border-rose-200/60 dark:border-rose-800/40',
+      bgColor: 'bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/20',
+      borderColor: 'border-rose-100 dark:border-rose-900/50',
+      iconBg: 'bg-rose-100 dark:bg-rose-900/50',
       description: 'непрочитанных',
       pulse: stats.unreadNotifications > 0,
     },
@@ -449,13 +510,47 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
         </div>
       </motion.div>
 
+      {/* ═══════════════ WELCOME BANNER ═══════════════ */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500/5 via-teal-500/10 to-transparent border border-emerald-500/10 p-6"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-emerald-500/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/3" />
+        <div className="absolute bottom-0 left-1/2 w-48 h-48 bg-gradient-to-tr from-teal-500/5 to-transparent rounded-full translate-y-1/2" />
+        <div className="relative flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+            <Sparkles className="w-6 h-6 text-white" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">
+              {getGreeting()}, {auditorName.split(' ')[0]}!
+            </h2>
+            <p className="text-muted-foreground mt-0.5">
+              {stats.upcomingCount > 0
+                ? `У вас ${stats.upcomingCount} ${stats.upcomingCount === 1 ? 'активный аудит' : stats.upcomingCount < 5 ? 'активных аудита' : 'активных аудитов'}`
+                : 'Все запланированные аудиты выполнены'}
+            </p>
+          </div>
+          <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
+            <div className="text-right">
+              <div className="font-semibold text-foreground">
+                {format(currentTime, 'EEEE, d MMMM', { locale: ru })}
+              </div>
+              <div className="text-xs">{stats.thisWeekAudits} аудит(ов) на этой неделе</div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
+
       {/* ═══════════════ KPI CARDS ═══════════════ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiCards.map((kpi, i) => {
           const Icon = kpi.icon;
           return (
             <motion.div key={kpi.title} variants={itemVariants}>
-              <Card className={`overflow-hidden card-hover-lift border ${kpi.borderColor} group relative`}>
+              <Card className={`overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border ${kpi.borderColor} group relative`}>
                 {/* Decorative gradient accent */}
                 <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${
                   i === 0 ? 'from-sky-400 to-cyan-400' :
@@ -464,9 +559,9 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
                   'from-rose-400 to-pink-400'
                 }`} />
 
-                <CardContent className="p-5">
+                <CardContent className={`p-5 ${kpi.bgColor}`}>
                   <div className="flex items-start justify-between">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${kpi.bgColor} transition-transform group-hover:scale-110`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${kpi.iconBg} shadow-sm transition-transform group-hover:scale-110`}>
                       <Icon className={`w-5 h-5 ${kpi.color}`} />
                     </div>
                     {kpi.pulse && (
@@ -511,14 +606,21 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
               <CardDescription>Статус выполнения аудитов</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col items-center pt-2 pb-6">
-              <CircularProgressRing percentage={stats.completionRate} size={150} strokeWidth={11}>
+              {/* Animated gradient decoration behind progress ring */}
+              <div className="relative">
+                <div className="absolute inset-0 -m-6 rounded-full bg-gradient-to-br from-emerald-200/30 to-teal-200/20 dark:from-emerald-500/10 dark:to-teal-500/10 animate-pulse blur-xl" />
+                <div className="absolute inset-0 -m-3 rounded-full bg-gradient-to-tr from-teal-200/20 to-emerald-200/10 dark:from-teal-500/5 dark:to-emerald-500/5 animate-pulse blur-md" style={{ animationDelay: '1s' }} />
+                <div className="relative">
+                  <CircularProgressRing percentage={stats.completionRate} size={150} strokeWidth={11}>
                 <div className="text-center">
                   <span className="text-3xl font-bold text-gradient">
                     {stats.completionRate}
                   </span>
                   <span className="text-lg text-muted-foreground">%</span>
                 </div>
-              </CircularProgressRing>
+                </CircularProgressRing>
+              </div>
+              </div>
 
               <p className="text-sm text-muted-foreground mt-4 text-center">
                 <span className="font-semibold text-foreground">{stats.completedCount}</span>
@@ -596,6 +698,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
                       const isOverdue = dueDate && isBefore(dueDate, new Date()) && assignment.status !== 'COMPLETED';
                       const isTodayAudit = isToday(scheduledDate);
                       const config = statusConfig[assignment.status] || statusConfig.SCHEDULED;
+                      const urgency = getUrgencyIndicator(scheduledDate, dueDate, assignment.status);
 
                       return (
                         <motion.div
@@ -605,9 +708,11 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
                           transition={{ delay: 0.6 + index * 0.06, duration: 0.3 }}
                         >
                           <div className={`
-                            group flex items-center gap-3 p-3 rounded-xl transition-all duration-200
+                            group relative flex items-center gap-3 p-3 pl-5 rounded-xl transition-all duration-200
                             hover:bg-muted/40 ${isTodayAudit ? 'ring-1 ring-primary/20 bg-primary/5' : ''}
                           `}>
+                            {/* Left-side urgency color indicator */}
+                            <div className={`absolute left-0 top-2 bottom-2 w-1 rounded-r-full ${urgency.color}`} />
                             {/* Timeline dot */}
                             <div className="flex flex-col items-center gap-1 flex-shrink-0">
                               <div className={`
@@ -691,6 +796,53 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
           </Card>
         </motion.div>
       </div>
+
+      {/* ═══════════════ GOAL SECTION ═══════════════ */}
+      {(() => {
+        const motivation = getMotivationalData(stats.completionRate, stats.avgScore);
+        const MotivationIcon = motivation.icon;
+        return (
+          <motion.div variants={itemVariants}>
+            <div className={`relative overflow-hidden rounded-xl bg-gradient-to-r ${motivation.bgGradient} border border-border/50 p-5`}>
+              <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-transparent to-transparent rounded-full -translate-y-1/3 translate-x-1/4 opacity-50" />
+              <div className="relative flex items-center gap-4">
+                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${motivation.gradient} flex items-center justify-center shadow-lg flex-shrink-0`}>
+                  <MotivationIcon className="w-6 h-6 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${motivation.badgeColor}`}>
+                      Цель
+                    </span>
+                    <h3 className="text-base font-bold tracking-tight">{motivation.message}</h3>
+                  </div>
+                  <p className="text-sm text-muted-foreground">{motivation.description}</p>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
+                    <div className="flex items-center gap-1.5">
+                      <Target className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        Выполнено <span className="font-semibold text-foreground">{stats.completionRate}%</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Award className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        Средний балл <span className="font-semibold text-foreground">{stats.avgScore}%</span>
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <Shield className="w-3.5 h-3.5 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">
+                        Завершено <span className="font-semibold text-foreground">{stats.completedCount}</span> из {stats.totalAssignments}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        );
+      })()}
 
       {/* ═══════════════ BOTTOM ROW: Recent Activity + Quick Stats ═══════════════ */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">

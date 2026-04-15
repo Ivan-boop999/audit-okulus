@@ -152,7 +152,11 @@ const rowVariants = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function EquipmentManager() {
+interface EquipmentManagerProps {
+  onViewDetail?: (equipmentId: string) => void;
+}
+
+export default function EquipmentManager({ onViewDetail }: EquipmentManagerProps) {
   // Data state
   const [equipment, setEquipment] = useState<Equipment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -535,7 +539,7 @@ export default function EquipmentManager() {
                   exit="exit"
                   layout
                 >
-                  <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 border hover:border-emerald-200 dark:hover:border-emerald-800 h-full flex flex-col">
+                  <Card className="group overflow-hidden hover:shadow-lg transition-all duration-300 border hover:border-emerald-200 dark:hover:border-emerald-800 h-full flex flex-col cursor-pointer" onClick={() => onViewDetail?.(item.id)}>
                     {/* Category color strip */}
                     <div className={`h-1 ${
                       item.status === 'ACTIVE' ? 'bg-emerald-500' :
@@ -561,7 +565,15 @@ export default function EquipmentManager() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
-                            onClick={() => openEdit(item)}
+                            onClick={(e) => { e.stopPropagation(); onViewDetail?.(item.id); }}
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
+                            onClick={(e) => { e.stopPropagation(); openEdit(item); }}
                           >
                             <Pencil className="w-3.5 h-3.5" />
                           </Button>
@@ -569,7 +581,7 @@ export default function EquipmentManager() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                            onClick={() => openDelete(item)}
+                            onClick={(e) => { e.stopPropagation(); openDelete(item); }}
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </Button>
@@ -663,7 +675,8 @@ export default function EquipmentManager() {
                         animate="visible"
                         exit="exit"
                         layout
-                        className="group border-b transition-colors hover:bg-muted/50 cursor-default"
+                        className={`group border-b transition-colors hover:bg-muted/50 ${onViewDetail ? 'cursor-pointer' : 'cursor-default'}`}
+                        onClick={() => onViewDetail?.(item.id)}
                       >
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -706,7 +719,15 @@ export default function EquipmentManager() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8"
-                              onClick={() => openEdit(item)}
+                              onClick={(e) => { e.stopPropagation(); onViewDetail?.(item.id); }}
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8"
+                              onClick={(e) => { e.stopPropagation(); openEdit(item); }}
                             >
                               <Pencil className="w-3.5 h-3.5" />
                             </Button>
@@ -714,7 +735,7 @@ export default function EquipmentManager() {
                               variant="ghost"
                               size="icon"
                               className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                              onClick={() => openDelete(item)}
+                              onClick={(e) => { e.stopPropagation(); openDelete(item); }}
                             >
                               <Trash2 className="w-3.5 h-3.5" />
                             </Button>
