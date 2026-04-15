@@ -16,6 +16,89 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 
+// ─── Sparkline Helper ──────────────────────────────────────────────────────
+
+function generateSparklineData(value: number, type: 'score' | 'count' | 'attention'): number[] {
+  const points: number[] = [];
+  for (let i = 0; i < 6; i++) {
+    let base: number;
+    if (type === 'score') {
+      base = value - 10 + Math.random() * 15;
+      base = Math.max(60, Math.min(100, base));
+    } else if (type === 'attention') {
+      base = value - 3 + Math.random() * 8;
+      base = Math.max(0, Math.round(base));
+    } else {
+      base = value - Math.floor(value * 0.15) + Math.random() * value * 0.25;
+      base = Math.max(0, Math.round(base));
+    }
+    points.push(base);
+  }
+  points.push(value);
+  return points;
+}
+
+function KPISparkline({ data, color, sparkId }: { data: number[]; color: string; sparkId: string }) {
+  const chartData = data.map((v) => ({ v }));
+  return (
+    <motion.div
+      className="h-10 w-full -mx-1 mt-1"
+      initial={{ opacity: 0, y: 4 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.3, duration: 0.5, ease: 'easeOut' }}
+    >
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={chartData} margin={{ top: 2, right: 2, bottom: 2, left: 2 }}>
+          <defs>
+            <linearGradient id={`sparkGrad-${sparkId}`} x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor={color} stopOpacity={0.15} />
+              <stop offset="100%" stopColor={color} stopOpacity={0} />
+            </linearGradient>
+          </defs>
+          <Line
+            type="monotone"
+            dataKey="v"
+            stroke={color}
+            strokeWidth={2}
+            dot={false}
+            activeDot={false}
+            animationDuration={1200}
+            animationEasing="ease-out"
+          />
+          <Line
+            type="monotone"
+            dataKey="v"
+            stroke={color}
+            strokeWidth={0}
+            fill={`url(#sparkGrad-${sparkId})`}
+            dot={false}
+            activeDot={false}
+            animationDuration={1200}
+            animationEasing="ease-out"
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </motion.div>
+  );
+}
+
+function MiniProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
+  const pct = Math.min((value / max) * 100, 100);
+  return (
+    <div className="mt-2">
+      <div className="h-1 w-full rounded-full bg-black/5 dark:bg-white/10 overflow-hidden">
+        <motion.div
+          className="h-full rounded-full"
+          style={{ background: `linear-gradient(90deg, ${color}, ${color}bb)` }}
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ delay: 0.4, duration: 0.8, ease: 'easeOut' }}
+        />
+      </div>
+    </div>
+  );
+}
+
 interface Analytics {
   overview: {
     totalEquipment: number;
@@ -81,71 +164,85 @@ export default function AdminDashboard() {
       suffix: '%',
       icon: Target,
       color: 'text-emerald-600 dark:text-emerald-400',
+      sparkColor: '#059669',
       bgColor: 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20',
       borderColor: 'border-emerald-100 dark:border-emerald-900/50',
       iconBg: 'bg-emerald-100 dark:bg-emerald-900/50',
       trend: '+2.3%',
       trendUp: true,
+      sparkType: 'score' as const,
     },
     {
       title: 'Завершено аудитов',
       value: overview.completedAssignments,
       icon: CheckCircle2,
       color: 'text-blue-600 dark:text-blue-400',
+      sparkColor: '#2563eb',
       bgColor: 'bg-gradient-to-br from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20',
       borderColor: 'border-blue-100 dark:border-blue-900/50',
       iconBg: 'bg-blue-100 dark:bg-blue-900/50',
       trend: '+12%',
       trendUp: true,
+      sparkType: 'count' as const,
     },
     {
       title: 'Требует внимания',
       value: overview.overdueAssignments + overview.inProgressAssignments,
       icon: AlertTriangle,
       color: 'text-amber-600 dark:text-amber-400',
+      sparkColor: '#d97706',
       bgColor: 'bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20',
       borderColor: 'border-amber-100 dark:border-amber-900/50',
       iconBg: 'bg-amber-100 dark:bg-amber-900/50',
       trend: '-5%',
       trendUp: false,
+      sparkType: 'attention' as const,
     },
     {
       title: 'Всего назначений',
       value: overview.totalAssignments,
       icon: CalendarDays,
       color: 'text-violet-600 dark:text-violet-400',
+      sparkColor: '#7c3aed',
       bgColor: 'bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20',
       borderColor: 'border-violet-100 dark:border-violet-900/50',
       iconBg: 'bg-violet-100 dark:bg-violet-900/50',
       trend: '+8%',
       trendUp: true,
+      sparkType: 'count' as const,
     },
     {
       title: 'Оборудование',
       value: overview.totalEquipment,
       icon: Wrench,
       color: 'text-teal-600 dark:text-teal-400',
+      sparkColor: '#0d9488',
       bgColor: 'bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/20',
       borderColor: 'border-teal-100 dark:border-teal-900/50',
       iconBg: 'bg-teal-100 dark:bg-teal-900/50',
+      progressBar: { max: 10 } as const,
     },
     {
       title: 'Шаблоны аудитов',
       value: overview.totalTemplates,
       icon: FileText,
       color: 'text-rose-600 dark:text-rose-400',
+      sparkColor: '#e11d48',
       bgColor: 'bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/20',
       borderColor: 'border-rose-100 dark:border-rose-900/50',
       iconBg: 'bg-rose-100 dark:bg-rose-900/50',
+      progressBar: { max: 5 } as const,
     },
     {
       title: 'Аудиторы',
       value: overview.totalAuditors,
       icon: Users,
       color: 'text-pink-600 dark:text-pink-400',
+      sparkColor: '#ec4899',
       bgColor: 'bg-gradient-to-br from-pink-50 to-fuchsia-50 dark:from-pink-950/30 dark:to-fuchsia-950/20',
       borderColor: 'border-pink-100 dark:border-pink-900/50',
       iconBg: 'bg-pink-100 dark:bg-pink-900/50',
+      progressBar: { max: 5 } as const,
     },
     {
       title: 'Процент выполнения',
@@ -153,11 +250,13 @@ export default function AdminDashboard() {
       suffix: '%',
       icon: TrendingUp,
       color: 'text-emerald-600 dark:text-emerald-400',
+      sparkColor: '#059669',
       bgColor: 'bg-gradient-to-br from-lime-50 to-green-50 dark:from-lime-950/30 dark:to-green-950/20',
       borderColor: 'border-lime-100 dark:border-lime-900/50',
       iconBg: 'bg-lime-100 dark:bg-lime-900/50',
       trend: '+3.1%',
       trendUp: true,
+      progressBar: { max: 100 } as const,
     },
   ];
 
@@ -220,6 +319,20 @@ export default function AdminDashboard() {
                       {kpi.suffix && <span className="text-base font-normal text-muted-foreground">{kpi.suffix}</span>}
                     </div>
                     <div className="text-sm text-muted-foreground mt-0.5">{kpi.title}</div>
+                    {'sparkType' in kpi && (
+                      <KPISparkline
+                        data={generateSparklineData(kpi.value as number, kpi.sparkType)}
+                        color={kpi.sparkColor}
+                        sparkId={kpi.title.replace(/\s+/g, '-')}
+                      />
+                    )}
+                    {'progressBar' in kpi && kpi.progressBar && (
+                      <MiniProgressBar
+                        value={kpi.value as number}
+                        max={kpi.progressBar.max}
+                        color={kpi.sparkColor}
+                      />
+                    )}
                   </div>
                 </CardContent>
               </Card>

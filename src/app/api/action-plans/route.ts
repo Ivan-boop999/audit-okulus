@@ -9,6 +9,7 @@ export async function GET(request: Request) {
     const userId = searchParams.get('userId');
     const status = searchParams.get('status');
     const priority = searchParams.get('priority');
+    const sourceId = searchParams.get('sourceId');
     const sortBy = searchParams.get('sortBy') || 'createdAt';
     const sortDir = searchParams.get('sortDir') || 'desc';
 
@@ -16,6 +17,7 @@ export async function GET(request: Request) {
     if (userId) where.assigneeId = userId;
     if (status) where.status = status;
     if (priority) where.priority = priority;
+    if (sourceId) where.sourceId = sourceId;
 
     const orderBy: Record<string, string> = {};
     orderBy[sortBy] = sortDir;
@@ -25,6 +27,20 @@ export async function GET(request: Request) {
       orderBy,
       include: {
         assignee: { select: { id: true, name: true, email: true, department: true } },
+        auditResponse: {
+          select: {
+            id: true,
+            score: true,
+            status: true,
+            assignment: {
+              select: {
+                id: true,
+                template: { select: { id: true, title: true, category: true } },
+                auditor: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -39,7 +55,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const data = await request.json();
-    const { title, description, priority, assigneeId, dueDate, sourceType, sourceId, score } = data;
+    const { title, description, priority, assigneeId, dueDate, sourceType, sourceId, score, auditResponseId } = data;
 
     if (!title || typeof title !== 'string') {
       return NextResponse.json({ error: 'Title is required' }, { status: 400 });
@@ -55,9 +71,24 @@ export async function POST(request: Request) {
         sourceType: sourceType ?? 'AUDIT',
         sourceId: sourceId ?? null,
         score: score ?? null,
+        auditResponseId: auditResponseId ?? null,
       },
       include: {
         assignee: { select: { id: true, name: true, email: true } },
+        auditResponse: {
+          select: {
+            id: true,
+            score: true,
+            status: true,
+            assignment: {
+              select: {
+                id: true,
+                template: { select: { id: true, title: true, category: true } },
+                auditor: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
       },
     });
 
@@ -87,12 +118,27 @@ export async function PUT(request: Request) {
     if (data.sourceType !== undefined) updateData.sourceType = data.sourceType;
     if (data.sourceId !== undefined) updateData.sourceId = data.sourceId ?? null;
     if (data.score !== undefined) updateData.score = data.score ?? null;
+    if (data.auditResponseId !== undefined) updateData.auditResponseId = data.auditResponseId ?? null;
 
     const actionPlan = await db.actionPlan.update({
       where: { id },
       data: updateData,
       include: {
         assignee: { select: { id: true, name: true, email: true } },
+        auditResponse: {
+          select: {
+            id: true,
+            score: true,
+            status: true,
+            assignment: {
+              select: {
+                id: true,
+                template: { select: { id: true, title: true, category: true } },
+                auditor: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
       },
     });
 

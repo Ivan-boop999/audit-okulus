@@ -227,6 +227,7 @@ export default function AuditResponseForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
+  const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
@@ -722,27 +723,62 @@ export default function AuditResponseForm({
                 </AlertDialogContent>
               </AlertDialog>
 
-              <Button
-                onClick={handleSubmit}
-                disabled={submitting}
-                className="gap-2 flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white"
-              >
-                {submitting ? (
-                  <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                      className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white"
-                    />
-                    Отправка...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-4 h-4" />
-                    Отправить ответы
-                  </>
-                )}
-              </Button>
+              <AlertDialog open={confirmSubmitOpen} onOpenChange={setConfirmSubmitOpen}>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    disabled={submitting}
+                    className="gap-2 flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white"
+                  >
+                    {submitting ? (
+                      <>
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                          className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white"
+                        />
+                        Отправка...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-4 h-4" />
+                        Завершить
+                      </>
+                    )}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Подтвердить отправку?</AlertDialogTitle>
+                    <AlertDialogDescription asChild>
+                      <div className="space-y-3">
+                        <p>
+                          Вы ответили на <span className="font-bold text-foreground">{answeredCount}</span> из{' '}
+                          <span className="font-bold text-foreground">{questions.length}</span> вопросов.
+                        </p>
+                        {questions.length - answeredCount > 0 && (
+                          <div className="rounded-lg bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 p-3">
+                            <p className="text-sm text-amber-700 dark:text-amber-400">
+                              ⚠️ {questions.length - answeredCount} вопросов без ответа
+                            </p>
+                          </div>
+                        )}
+                        <p className="text-muted-foreground">
+                          После отправки результаты будут сохранены и доступны для просмотра.
+                        </p>
+                      </div>
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Вернуться к аудиту</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleSubmit}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                    >
+                      Отправить
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </CardContent>
         </Card>
@@ -763,9 +799,14 @@ export default function AuditResponseForm({
             <span className="text-xs font-medium text-muted-foreground">
               Вопрос {currentStep + 1} из {questions.length}
             </span>
-            <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
-              {answeredCount} отвечено
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                {answeredCount} отвечено
+              </span>
+              <span className="text-xs font-bold text-foreground tabular-nums">
+                {Math.round(progressPercent)}%
+              </span>
+            </div>
           </div>
           <Progress
             value={progressPercent}

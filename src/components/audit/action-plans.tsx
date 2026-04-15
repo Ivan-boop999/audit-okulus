@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   AlertTriangle, CheckCircle2, Clock, ArrowRight, Flame, TrendingUp,
   Target, ListTodo, Filter, ChevronDown, Plus, CircleDot, CircleCheck,
-  CircleAlert, Shield, Zap,
+  CircleAlert, Shield, Zap, Trash2,
 } from 'lucide-react';
 import {
   Card, CardContent, CardHeader, CardTitle, CardDescription,
@@ -33,8 +33,36 @@ interface ActionPlansProps {
 type Priority = 'critical' | 'high' | 'medium' | 'low';
 type ActionStatus = 'new' | 'in_progress' | 'done' | 'overdue';
 
+interface ActionPlanRecord {
+  id: string;
+  auditResponseId?: string | null;
+  title: string;
+  description?: string | null;
+  priority: string;
+  status: string;
+  assigneeId?: string | null;
+  dueDate?: string | null;
+  sourceType: string;
+  sourceId?: string | null;
+  score?: number | null;
+  createdAt: string;
+  updatedAt: string;
+  assignee?: { id: string; name: string; email?: string; department?: string } | null;
+  auditResponse?: {
+    id: string;
+    score?: number | null;
+    status: string;
+    assignment?: {
+      id: string;
+      template?: { id: string; title: string; category: string } | null;
+      auditor?: { id: string; name: string } | null;
+    } | null;
+  } | null;
+}
+
 interface ActionItem {
   id: string;
+  dbId: string;
   priority: Priority;
   title: string;
   description: string;
@@ -69,23 +97,6 @@ interface AuditResponse {
       id: string;
       name: string;
     };
-  };
-  answers?: Array<{ id: string; questionId: string; answer?: string | null; comment?: string | null }>;
-}
-
-interface AssignmentData {
-  id: string;
-  templateId: string;
-  auditorId: string;
-  status: string;
-  template?: {
-    id: string;
-    title: string;
-    category: string;
-  };
-  auditor?: {
-    id: string;
-    name: string;
   };
 }
 
@@ -203,10 +214,6 @@ function formatDateShort(dateStr: string): string {
 function isOverdue(dueDate: string, status: ActionStatus): boolean {
   if (status === 'done') return false;
   return new Date(dueDate) < new Date();
-}
-
-function generateActionId(responseId: string): string {
-  return `action-${responseId}`;
 }
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
@@ -365,13 +372,46 @@ function StatusDot({ status }: { status: ActionStatus }) {
   );
 }
 
+// ─── Description Generator ────────────────────────────────────────────────────
+
+function generateDescription(
+  score: number,
+  priority: Priority,
+  templateTitle: string,
+  category: string,
+): string {
+  const gap = (100 - score).toFixed(1);
+
+  const templates: Record<Priority, string[]> = {
+    critical: [
+      `Обнаружено критическое несоответствие в категории «${category}». Результат аудита «${templateTitle}» составил ${score}% — недопустимо низкий уровень. Требуется немедленное внедрение корректирующих мер и повторная проверка.`,
+      `Серьёзное отклонение от стандартов в «${templateTitle}» (${category}). Оценка ${score}% указывает на системные проблемы. Необходимо провести расследование причинно-следственных связей и разработать план мероприятий.`,
+      `Критический уровень соответствия (${score}%) по аудиту «${templateTitle}». Разрыв до целевого показателя: ${gap}%. Рекомендуется экстренное совещание с руководством и назначение ответственных.`,
+    ],
+    high: [
+      `Значительное отклонение от целевых показателей в «${templateTitle}». Результат ${score}% требует разработки и реализации плана корректирующих действий в течение установленного срока.`,
+      `Аудит «${templateTitle}» выявил существенные несоответствия в категории «${category}». Текущая оценка ${score}% — необходимо устранить ${gap}% отклонений от стандарта.`,
+    ],
+    medium: [
+      `Умеренное отклонение от нормы по результатам аудита «${templateTitle}». Оценка ${score}% указывает на наличие зон, требующих внимания и постепенного улучшения.`,
+      `Аудит «${templateTitle}» (${category}) показал результат ${score}%. Рекомендуется проанализировать слабые места и запланировать улучшения для достижения целевого показателя 70%.`,
+    ],
+    low: [
+      `Незначительное отклонение от целевого порога по аудиту «${templateTitle}». Оценка ${score}% — рекомендуется принять профилактические меры для предотвращения ухудшения.`,
+    ],
+  };
+
+  const options = templates[priority];
+  return options[Math.floor(Math.random() * options.length)];
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProps) {
   // Data
-  const [responses, setResponses] = useState<AuditResponse[]>([]);
-  const [assignments, setAssignments] = useState<AssignmentData[]>([]);
+  const [dbPlans, setDbPlans] = useState<ActionPlanRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const initialLoadDone = useRef(false);
 
   // Filters
   const [filterPriority, setFilterPriority] = useState<string>('all');
@@ -383,88 +423,137 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
   // View
   const [activeTab, setActiveTab] = useState('all');
 
-  // ─── Fetch Data ──────────────────────────────────────────────────────────
+  // ─── Fetch action plans from API ──────────────────────────────────────────
 
-  const fetchData = useCallback(async () => {
+  const fetchActionPlans = useCallback(async () => {
     try {
-      setLoading(true);
-      const [responsesRes, assignmentsRes] = await Promise.all([
-        fetch('/api/responses'),
-        fetch('/api/assignments?status=COMPLETED'),
-      ]);
-
-      if (responsesRes.ok) {
-        const rData = await responsesRes.json();
-        setResponses(rData.responses ?? []);
-      }
-      if (assignmentsRes.ok) {
-        const aData = await assignmentsRes.json();
-        setAssignments(Array.isArray(aData) ? aData : aData.assignments ?? []);
+      const res = await fetch('/api/action-plans');
+      if (res.ok) {
+        const data = await res.json();
+        setDbPlans(Array.isArray(data) ? data : []);
       }
     } catch {
-      toast.error('Не удалось загрузить данные для корректирующих действий');
-    } finally {
-      setLoading(false);
+      toast.error('Не удалось загрузить корректирующие действия');
     }
   }, []);
 
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+  // ─── Auto-generate action plans for completed audits without them ────────
 
-  // ─── localStorage sync ──────────────────────────────────────────────────
-
-  function getStoredActions(): Record<string, ActionStatus> {
+  const autoGeneratePlans = useCallback(async () => {
     try {
-      const raw = localStorage.getItem('auditpro-actions');
-      return raw ? JSON.parse(raw) : {};
-    } catch {
-      return {};
-    }
-  }
+      // Fetch all completed audit responses
+      const responsesRes = await fetch('/api/responses');
+      if (!responsesRes.ok) return;
+      const rData = await responsesRes.json();
+      const responses: AuditResponse[] = rData.responses ?? [];
 
-  function setStoredActions(actions: Record<string, ActionStatus>) {
-    localStorage.setItem('auditpro-actions', JSON.stringify(actions));
-  }
+      // Fetch existing action plans to find which responses already have them
+      const plansRes = await fetch('/api/action-plans');
+      if (!plansRes.ok) return;
+      const existingPlans: ActionPlanRecord[] = await plansRes.json();
+      const coveredResponseIds = new Set(
+        existingPlans
+          .filter((p) => p.auditResponseId)
+          .map((p) => p.auditResponseId),
+      );
 
-  // ─── Generate Action Items ─────────────────────────────────────────────
+      // Find completed responses with score < 70 that don't have action plans
+      const needsPlan = responses.filter(
+        (r) => r.status === 'COMPLETED' && r.score != null && r.score < 70 && !coveredResponseIds.has(r.id),
+      );
 
-  const actionItems = useMemo<ActionItem[]>(() => {
-    const storedStatuses = getStoredActions();
-    const now = new Date();
+      if (needsPlan.length === 0) return;
 
-    return responses
-      .filter((r) => r.status === 'COMPLETED' && r.score != null && r.score < 70)
-      .map((r): ActionItem => {
+      // Generate action plans for each
+      for (const r of needsPlan) {
         const priority = getPriority(r.score);
         const cfg = PRIORITY_CONFIG[priority];
         const templateTitle = r.assignment?.template?.title ?? 'Неизвестный шаблон';
         const category = r.assignment?.template?.category ?? '—';
-        const auditorName = r.assignment?.auditor?.name ?? 'Не назначен';
-        const auditorId = r.assignment?.auditor?.id ?? '';
-
-        // Load status from localStorage, fallback to 'new', detect overdue
-        const stored = storedStatuses[generateActionId(r.id)] ?? 'new' as ActionStatus;
+        const auditorId = r.assignment?.auditor?.id ?? null;
+        const now = new Date();
         const dueDate = addDays(now, cfg.daysToDue);
-        const status = stored === 'new' && isOverdue(dueDate, 'new') ? 'overdue' as ActionStatus : stored;
 
-        return {
-          id: generateActionId(r.id),
-          priority,
-          title: `Корректировка: ${templateTitle}`,
-          description: generateDescription(r.score, priority, templateTitle, category),
-          relatedAudit: r.id,
-          relatedTemplate: templateTitle,
-          relatedCategory: category,
-          auditScore: r.score,
-          dueDate,
-          createdAt: r.completedAt ?? now.toISOString(),
-          status,
-          assignee: auditorName,
-          assigneeId: auditorId,
-        };
-      });
-  }, [responses]);
+        await fetch('/api/action-plans', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: `Корректировка: ${templateTitle}`,
+            description: generateDescription(r.score, priority, templateTitle, category),
+            priority: priority.toUpperCase(),
+            assigneeId: auditorId,
+            dueDate,
+            sourceType: 'AUDIT',
+            sourceId: r.id,
+            score: r.score,
+            auditResponseId: r.id,
+          }),
+        });
+      }
+
+      if (needsPlan.length > 0) {
+        toast.success(`Создано ${needsPlan.length} корректирующих действий`);
+        // Re-fetch to get the newly created plans
+        await fetchActionPlans();
+      }
+    } catch {
+      // Silently fail - action plans will be generated on next load
+    }
+  }, [fetchActionPlans]);
+
+  // ─── Initial load ────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    async function init() {
+      setLoading(true);
+      await fetchActionPlans();
+      if (!initialLoadDone.current) {
+        initialLoadDone.current = true;
+        await autoGeneratePlans();
+      }
+      setLoading(false);
+    }
+    init();
+  }, [fetchActionPlans, autoGeneratePlans]);
+
+  // ─── Convert DB records to ActionItems ───────────────────────────────────
+
+  const actionItems = useMemo<ActionItem[]>(() => {
+    const now = new Date();
+
+    return dbPlans.map((plan): ActionItem => {
+      const priority = (plan.priority.toLowerCase() || 'medium') as Priority;
+      const cfg = PRIORITY_CONFIG[priority];
+
+      const templateTitle = plan.auditResponse?.assignment?.template?.title
+        ?? plan.title.replace('Корректировка: ', '')
+        ?? 'Неизвестный шаблон';
+      const category = plan.auditResponse?.assignment?.template?.category ?? '—';
+      const auditorName = plan.assignee?.name ?? plan.auditResponse?.assignment?.auditor?.name ?? 'Не назначен';
+      const auditorId = plan.assignee?.id ?? plan.auditResponse?.assignment?.auditor?.id ?? '';
+
+      const rawDueDate = plan.dueDate ?? addDays(new Date(plan.createdAt), cfg.daysToDue);
+      const rawStatus = plan.status.toLowerCase() as ActionStatus;
+      const status = rawStatus === 'new' && isOverdue(rawDueDate, 'new') ? 'overdue' as ActionStatus : rawStatus;
+
+      return {
+        id: plan.sourceId ?? plan.id,
+        dbId: plan.id,
+        priority,
+        title: plan.title,
+        description: plan.description ?? '',
+        relatedAudit: plan.sourceId ?? plan.auditResponseId ?? '',
+        relatedTemplate: templateTitle,
+        relatedCategory: category,
+        auditScore: plan.score ?? 0,
+        dueDate: rawDueDate,
+        createdAt: plan.createdAt,
+        status,
+        assignee: auditorName,
+        assigneeId: auditorId,
+      };
+    });
+  }, [dbPlans]);
 
   // ─── Statistics ────────────────────────────────────────────────────────
 
@@ -541,24 +630,56 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
 
   const hasFilters = filterPriority !== 'all' || filterStatus !== 'all' || filterAssignee !== 'all' || activeTab !== 'all';
 
-  // ─── Status change handler ─────────────────────────────────────────────
+  // ─── Status change handler (API call) ──────────────────────────────────
 
-  function handleStatusChange(actionId: string, newStatus: ActionStatus) {
-    const stored = getStoredActions();
-    stored[actionId] = newStatus;
-    setStoredActions(stored);
+  const handleStatusChange = useCallback(async (dbId: string, newStatus: ActionStatus) => {
+    try {
+      const statusMap: Record<ActionStatus, string> = {
+        new: 'NEW',
+        in_progress: 'IN_PROGRESS',
+        done: 'DONE',
+        overdue: 'NEW', // overdue is virtual - stored as NEW
+      };
+      const res = await fetch('/api/action-plans', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: dbId, status: statusMap[newStatus] }),
+      });
+      if (res.ok) {
+        // Update local state
+        setDbPlans((prev) =>
+          prev.map((p) => (p.id === dbId ? { ...p, status: statusMap[newStatus] } : p)),
+        );
+        const statusLabels: Record<ActionStatus, string> = {
+          new: 'Новое',
+          in_progress: 'В работе',
+          done: 'Выполнено',
+          overdue: 'Просрочено',
+        };
+        toast.success(`Статус обновлён: ${statusLabels[newStatus]}`);
+      } else {
+        toast.error('Не удалось обновить статус');
+      }
+    } catch {
+      toast.error('Ошибка при обновлении статуса');
+    }
+  }, []);
 
-    // Force re-render by updating responses slightly
-    setResponses((prev) => [...prev]);
+  // ─── Delete handler (API call) ────────────────────────────────────────
 
-    const statusLabels: Record<ActionStatus, string> = {
-      new: 'Новое',
-      in_progress: 'В работе',
-      done: 'Выполнено',
-      overdue: 'Просрочено',
-    };
-    toast.success(`Статус обновлён: ${statusLabels[newStatus]}`);
-  }
+  const handleDelete = useCallback(async (dbId: string) => {
+    try {
+      const res = await fetch(`/api/action-plans?id=${dbId}`, { method: 'DELETE' });
+      if (res.ok) {
+        setDbPlans((prev) => prev.filter((p) => p.id !== dbId));
+        toast.success('Корректирующее действие удалено');
+      } else {
+        toast.error('Не удалось удалить действие');
+      }
+    } catch {
+      toast.error('Ошибка при удалении');
+    }
+  }, []);
 
   function clearFilters() {
     setFilterPriority('all');
@@ -1085,7 +1206,7 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
 
                         return (
                           <motion.div
-                            key={action.id}
+                            key={action.dbId}
                             variants={itemVariants}
                             exit="exit"
                             layout
@@ -1199,7 +1320,7 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
                                               size="sm"
                                               variant="outline"
                                               className="h-7 text-[11px] gap-1 px-2.5 text-blue-600 border-blue-200 hover:bg-blue-50 hover:text-blue-700 dark:border-blue-800 dark:hover:bg-blue-950/50"
-                                              onClick={() => handleStatusChange(action.id, 'in_progress')}
+                                              onClick={() => handleStatusChange(action.dbId, 'in_progress')}
                                             >
                                               <CircleDot className="w-3 h-3" />
                                               В работу
@@ -1209,7 +1330,7 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
                                             size="sm"
                                             variant="outline"
                                             className="h-7 text-[11px] gap-1 px-2.5 text-emerald-600 border-emerald-200 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-800 dark:hover:bg-emerald-950/50"
-                                            onClick={() => handleStatusChange(action.id, 'done')}
+                                            onClick={() => handleStatusChange(action.dbId, 'done')}
                                           >
                                             <CircleCheck className="w-3 h-3" />
                                             Готово
@@ -1222,11 +1343,22 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
                                           size="sm"
                                           variant="ghost"
                                           className="h-7 text-[11px] gap-1 px-2.5 text-muted-foreground"
-                                          onClick={() => handleStatusChange(action.id, 'new')}
+                                          onClick={() => handleStatusChange(action.dbId, 'new')}
                                         >
                                           Вернуть
                                         </Button>
                                       )}
+
+                                      {/* Delete */}
+                                      <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        className="h-7 text-[11px] gap-1 px-2.5 text-muted-foreground hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
+                                        onClick={() => handleDelete(action.dbId)}
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                        Удалить
+                                      </Button>
                                     </div>
                                   </div>
                                 </CardContent>
@@ -1252,37 +1384,4 @@ export default function ActionPlans({ isAdmin = false, userId }: ActionPlansProp
       </motion.div>
     </div>
   );
-}
-
-// ─── Description Generator ────────────────────────────────────────────────────
-
-function generateDescription(
-  score: number,
-  priority: Priority,
-  templateTitle: string,
-  category: string,
-): string {
-  const gap = (100 - score).toFixed(1);
-
-  const templates: Record<Priority, string[]> = {
-    critical: [
-      `Обнаружено критическое несоответствие в категории «${category}». Результат аудита «${templateTitle}» составил ${score}% — недопустимо низкий уровень. Требуется немедленное внедрение корректирующих мер и повторная проверка.`,
-      `Серьёзное отклонение от стандартов в «${templateTitle}» (${category}). Оценка ${score}% указывает на системные проблемы. Необходимо провести расследование причинно-следственных связей и разработать план мероприятий.`,
-      `Критический уровень соответствия (${score}%) по аудиту «${templateTitle}». Разрыв до целевого показателя: ${gap}%. Рекомендуется экстренное совещание с руководством и назначение ответственных.`,
-    ],
-    high: [
-      `Значительное отклонение от целевых показателей в «${templateTitle}». Результат ${score}% требует разработки и реализации плана корректирующих действий в течение установленного срока.`,
-      `Аудит «${templateTitle}» выявил существенные несоответствия в категории «${category}». Текущая оценка ${score}% — необходимо устранить ${gap}% отклонений от стандарта.`,
-    ],
-    medium: [
-      `Умеренное отклонение от нормы по результатам аудита «${templateTitle}». Оценка ${score}% указывает на наличие зон, требующих внимания и постепенного улучшения.`,
-      `Аудит «${templateTitle}» (${category}) показал результат ${score}%. Рекомендуется проанализировать слабые места и запланировать улучшения для достижения целевого показателя 70%.`,
-    ],
-    low: [
-      `Незначительное отклонение от целевого порога по аудиту «${templateTitle}». Оценка ${score}% — рекомендуется принять профилактические меры для предотвращения ухудшения.`,
-    ],
-  };
-
-  const options = templates[priority];
-  return options[Math.floor(Math.random() * options.length)];
 }

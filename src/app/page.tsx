@@ -18,6 +18,7 @@ import UserProfilePanel from '@/components/audit/user-profile';
 import AuditReportDetail from '@/components/audit/audit-report';
 import TeamMembers from '@/components/audit/team-members';
 import EquipmentDetail from '@/components/audit/equipment-detail';
+import NotificationCenter from '@/components/audit/notification-center';
 
 const emptySubscribe = () => () => {};
 function useMounted() {
@@ -130,6 +131,11 @@ export default function Home() {
     // Action Plans (shared between admin and auditor)
     if (activeView === 'action-plans') {
       return <ActionPlans isAdmin={isAdmin} userId={user.id} />;
+    }
+
+    // Notifications (shared between admin and auditor)
+    if (activeView === 'notifications') {
+      return <NotificationCenter isAdmin={isAdmin} />;
     }
 
     // Admin views

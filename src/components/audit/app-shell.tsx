@@ -69,6 +69,7 @@ const adminNavGroups: NavGroup[] = [
     items: [
       { id: 'team', label: 'Команда', icon: Users },
       { id: 'action-plans', label: 'План действий', icon: ListChecks },
+      { id: 'notifications', label: 'Уведомления', icon: Bell },
     ],
   },
   {
@@ -94,6 +95,7 @@ const auditorNavGroups: NavGroup[] = [
     items: [
       { id: 'action-plans', label: 'План действий', icon: ListChecks },
       { id: 'history', label: 'История', icon: History },
+      { id: 'notifications', label: 'Уведомления', icon: Bell },
     ],
   },
 ];

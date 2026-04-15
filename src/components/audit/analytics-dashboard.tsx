@@ -424,24 +424,26 @@ export default function AnalyticsDashboard() {
 
       {/* Tabbed Content */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-        <TabsList className="bg-muted/60 backdrop-blur-sm p-1">
-          <TabsTrigger value="overview" className="gap-1.5">
-            <LayoutDashboard className="w-4 h-4" />
-            <span className="hidden sm:inline">Обзор</span>
-          </TabsTrigger>
-          <TabsTrigger value="auditors" className="gap-1.5">
-            <UserCheck className="w-4 h-4" />
-            <span className="hidden sm:inline">Аудиторы</span>
-          </TabsTrigger>
-          <TabsTrigger value="categories" className="gap-1.5">
-            <Shield className="w-4 h-4" />
-            <span className="hidden sm:inline">Категории</span>
-          </TabsTrigger>
-          <TabsTrigger value="data" className="gap-1.5">
-            <TableIcon className="w-4 h-4" />
-            <span className="hidden sm:inline">Данные</span>
-          </TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-1 px-1">
+          <TabsList className="bg-muted/60 backdrop-blur-sm p-1 w-max min-w-full sm:w-auto">
+            <TabsTrigger value="overview" className="gap-1.5">
+              <LayoutDashboard className="w-4 h-4" />
+              <span className="hidden sm:inline">Обзор</span>
+            </TabsTrigger>
+            <TabsTrigger value="auditors" className="gap-1.5">
+              <UserCheck className="w-4 h-4" />
+              <span className="hidden sm:inline">Аудиторы</span>
+            </TabsTrigger>
+            <TabsTrigger value="categories" className="gap-1.5">
+              <Shield className="w-4 h-4" />
+              <span className="hidden sm:inline">Категории</span>
+            </TabsTrigger>
+            <TabsTrigger value="data" className="gap-1.5">
+              <TableIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Данные</span>
+            </TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* ═══════════════════════ OVERVIEW TAB ═══════════════════════════════ */}
         <TabsContent value="overview" className="space-y-4">
@@ -462,9 +464,9 @@ export default function AnalyticsDashboard() {
                   </CardTitle>
                   <CardDescription>Группировка оценок по диапазонам</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                <CardContent className="overflow-hidden">
+                  <div className="h-[280px] min-h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                       <BarChart data={scoreDistribution} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                         <defs>
                           {scoreDistribution.map((entry, i) => (
@@ -519,9 +521,9 @@ export default function AnalyticsDashboard() {
                   </CardTitle>
                   <CardDescription>Средний балл по результатам аудитов</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                <CardContent className="overflow-hidden">
+                  <div className="h-[280px] min-h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                       <AreaChart data={data.scoresOverTime} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                         <defs>
                           <linearGradient id="trendGradient" x1="0" y1="0" x2="0" y2="1">
@@ -584,9 +586,9 @@ export default function AnalyticsDashboard() {
                   </CardTitle>
                   <CardDescription>Количество завершённых аудитов по дням</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[280px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                <CardContent className="overflow-hidden">
+                  <div className="h-[280px] min-h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                       <ComposedChart data={completionTrend} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                         <defs>
                           <linearGradient id="completionGrad" x1="0" y1="0" x2="0" y2="1">
@@ -654,9 +656,9 @@ export default function AnalyticsDashboard() {
                   </CardTitle>
                   <CardDescription>Текущее распределение</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[200px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                <CardContent className="overflow-hidden">
+                  <div className="h-[200px] min-h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                       <PieChart>
                         <Pie
                           data={[
@@ -772,9 +774,9 @@ export default function AnalyticsDashboard() {
                   </CardTitle>
                   <CardDescription>По категориям оборудования</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[300px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                <CardContent className="overflow-hidden">
+                  <div className="h-[300px] min-h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                       <BarChart
                         data={data.equipmentCategories}
                         layout="vertical"
@@ -840,10 +842,10 @@ export default function AnalyticsDashboard() {
                   </CardTitle>
                   <CardDescription>Радарная диаграмма по ключевым метрикам</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="overflow-hidden">
                   {radarData.length > 0 ? (
-                    <div className="h-[350px]">
-                      <ResponsiveContainer width="100%" height="100%">
+                    <div className="h-[350px] min-h-[200px]">
+                      <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                         <RadarChart cx="50%" cy="50%" outerRadius="70%" data={radarData}>
                           <PolarGrid stroke="oklch(0.88 0 0)" />
                           <PolarAngleAxis
@@ -878,7 +880,7 @@ export default function AnalyticsDashboard() {
                       </ResponsiveContainer>
                     </div>
                   ) : (
-                    <div className="h-[350px] flex items-center justify-center text-muted-foreground text-sm">
+                    <div className="h-[350px] min-h-[200px] flex items-center justify-center text-muted-foreground text-sm">
                       Недостаточно данных для отображения радара
                     </div>
                   )}
@@ -900,9 +902,9 @@ export default function AnalyticsDashboard() {
                   </CardTitle>
                   <CardDescription>Средний результат каждого аудитора</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[350px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                <CardContent className="overflow-hidden">
+                  <div className="h-[350px] min-h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                       <BarChart
                         data={[...data.auditorPerformance].sort((a, b) => b.avgScore - a.avgScore)}
                         layout="vertical"
@@ -972,6 +974,7 @@ export default function AnalyticsDashboard() {
                 <CardDescription>Детальные показатели каждого аудитора</CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="overflow-x-auto -mx-1 px-1">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1020,6 +1023,7 @@ export default function AnalyticsDashboard() {
                       })}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -1042,9 +1046,9 @@ export default function AnalyticsDashboard() {
                   </CardTitle>
                   <CardDescription>Количество назначений по типу</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[320px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                <CardContent className="overflow-hidden">
+                  <div className="h-[320px] min-h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                       <BarChart data={data.categoryData} margin={{ top: 5, right: 10, left: -10, bottom: 5 }}>
                         <defs>
                           <linearGradient id="catGrad" x1="0" y1="0" x2="0" y2="1">
@@ -1088,9 +1092,9 @@ export default function AnalyticsDashboard() {
                   </CardTitle>
                   <CardDescription>Распределение по категориям</CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[320px]">
-                    <ResponsiveContainer width="100%" height="100%">
+                <CardContent className="overflow-hidden">
+                  <div className="h-[320px] min-h-[200px]">
+                    <ResponsiveContainer width="100%" height="100%" minHeight={200}>
                       <PieChart>
                         <Pie
                           data={data.equipmentCategories}
@@ -1139,6 +1143,7 @@ export default function AnalyticsDashboard() {
                 <CardDescription>Полная информация по каждой категории</CardDescription>
               </CardHeader>
               <CardContent>
+                <div className="overflow-x-auto -mx-1 px-1">
                 <Table>
                   <TableHeader>
                     <TableRow>
@@ -1171,6 +1176,7 @@ export default function AnalyticsDashboard() {
                     })}
                   </TableBody>
                 </Table>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -1201,7 +1207,8 @@ export default function AnalyticsDashboard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border overflow-hidden">
+                <div className="overflow-x-auto -mx-1 px-1">
+                <div className="rounded-lg border overflow-hidden min-w-[480px]">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/50">
@@ -1236,6 +1243,7 @@ export default function AnalyticsDashboard() {
                     </TableBody>
                   </Table>
                 </div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
@@ -1255,7 +1263,8 @@ export default function AnalyticsDashboard() {
                 <CardDescription>История оценок для экспорта и анализа</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="rounded-lg border overflow-hidden">
+                <div className="overflow-x-auto -mx-1 px-1">
+                <div className="rounded-lg border overflow-hidden min-w-[480px]">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-muted/50">
@@ -1291,6 +1300,7 @@ export default function AnalyticsDashboard() {
                       })}
                     </TableBody>
                   </Table>
+                </div>
                 </div>
               </CardContent>
             </Card>

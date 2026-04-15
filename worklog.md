@@ -580,3 +580,100 @@ Unresolved Issues / Risks:
   8. Add equipment QR codes for quick identification via mobile (actual QR codes, not decorative)
   9. Add audit checklist templates marketplace/library
   10. Improve mobile responsiveness for analytics charts
+
+---
+Task ID: 8-a
+Agent: Full-stack Developer
+Task: Action Plans database persistence + Audit Response Form enhancements
+
+Work Log:
+
+Part 1 — Action Plans Database Persistence:
+- Read prisma/schema.prisma: existing ActionPlan model had sourceId/sourceType but no auditResponseId
+- Added `auditResponseId String?` field to ActionPlan model
+- Added `auditResponse AuditResponse? @relation(fields: [auditResponseId], references: [id])` to ActionPlan
+- Added `actionPlans ActionPlan[]` to AuditResponse model
+- Added `@@map("action_plans")` to ActionPlan model
+- Ran `bun run db:push` — schema synced successfully
+
+- Read existing /api/action-plans/route.ts — already had GET/POST/PUT/DELETE but lacked auditResponseId support
+- Updated API route to include:
+  - `auditResponseId` in POST create data
+  - `auditResponseId` in PUT update data
+  - `auditResponse` relation in all include clauses (with nested assignment/template/auditor select)
+  - `sourceId` filter in GET query
+
+- Completely rewrote action-plans.tsx to use API instead of localStorage:
+  - Removed all localStorage get/set functions (getStoredActions, setStoredActions)
+  - Added ActionPlanRecord interface matching DB schema
+  - Added ActionItem interface with dbId field for API-based ID tracking
+  - New fetchActionPlans() useCallback that loads from /api/action-plans
+  - New autoGeneratePlans() useCallback that:
+    1. Fetches all completed audit responses from /api/responses
+    2. Fetches existing action plans from /api/action-plans
+    3. Cross-references to find completed responses (score < 70) without action plans
+    4. Auto-generates action plans via POST to /api/action-plans with auditResponseId, sourceId, priority, description, dueDate, assigneeId
+  - Initial load uses useRef to ensure auto-generation runs only once
+  - handleStatusChange now calls PUT /api/action-plans with status mapping (NEW, IN_PROGRESS, DONE)
+  - Added handleDelete that calls DELETE /api/action-plans
+  - Added Trash2 icon and delete button on each action item card
+  - All data transformations (priority, status, overdue detection) now happen on DB records
+  - Preserved ALL existing UI: stats cards, bar chart, filter/sort, tabs, action item cards, empty state
+
+Part 2 — Audit Response Form Enhancements:
+- Read audit-response-form.tsx (951 lines)
+- Added `confirmSubmitOpen` state for the confirmation dialog
+- Enhanced progress bar in question step:
+  - Added percentage text (Math.round(progressPercent)%) next to "answered count"
+  - Layout: flex row with gap-2 between answered count and percentage
+- Added confirmation dialog on review/summary step:
+  - Replaced direct "Отправить ответы" button with AlertDialog trigger
+  - Button text changed to "Завершить"
+  - Dialog title: "Подтвердить отправку?"
+  - Dialog description shows: "Вы ответили на X из Y вопросов"
+  - Warning box when unanswered questions exist (amber styled)
+  - Cancel button: "Вернуться к аудиту" (closes dialog, returns to review)
+  - Confirm button: "Отправить" (calls handleSubmit)
+  - AlertDialog already imported from shadcn/ui
+
+Verification:
+- ESLint: 0 errors, 0 warnings (final check)
+- Dev server: compiles successfully, no errors
+
+Stage Summary:
+- Action Plans now persist to database via /api/action-plans API (no more localStorage)
+- Auto-generation of action plans for new completed audits with score < 70%
+- Action plan status changes and deletions call API endpoints
+- Delete button added to action plan cards
+- Progress bar in audit form now shows percentage
+- Confirmation dialog added before submitting audit answers
+- All existing UI features preserved
+
+---
+Task ID: 8-c
+Agent: UI Enhancement Agent
+Task: Add sparkline mini-charts to Admin Dashboard KPI cards + enhance Analytics Dashboard mobile responsiveness
+
+Work Log:
+Modified files:
+- src/components/audit/admin-dashboard.tsx
+- src/components/audit/analytics-dashboard.tsx
+
+Changes made:
+
+Part 1 - Admin Dashboard Sparkline Mini-Charts:
+- Added generateSparklineData() helper function that creates realistic 7-point trend data based on KPI value type (score/count/attention)
+- Added KPISparkline component using recharts LineChart with: no axes/grid/tooltip, gradient area fill (opacity 0.15), 2px stroke width, framer-motion fade-in animation, 1200ms line draw animation
+- Added MiniProgressBar component using framer-motion animated width for non-numeric KPI cards with thin (4px) rounded gradient bars
+- Added sparkColor hex field to all 8 KPI cards for consistent color mapping
+- Added sparkType field to 4 numeric cards: Средний балл (score), Завершено аудитов (count), Требует внимания (attention), Всего назначений (count)
+- Added progressBar field with max reference values to 4 non-numeric cards: Оборудование (max:10), Шаблоны (max:5), Аудиторы (max:5), Процент выполнения (max:100)
+- Conditional rendering in KPI card template: sparkline for numeric, progress bar for non-numeric
+
+Part 2 - Analytics Dashboard Mobile Responsiveness:
+- Tab bar: Wrapped TabsList in overflow-x-auto container for horizontal scrolling on mobile; TabsList uses w-max min-w-full on mobile, w-auto on sm+
+- Chart containers: Added overflow-hidden to all CardContent elements containing charts; Added min-h-[200px] to chart wrapper divs; Added minHeight={200} to all ResponsiveContainer components
+- Tables: Added overflow-x-auto wrapper divs to all 4 data tables (Auditor Performance, Category Details, Recent Activity, Scores); Data tab tables have min-w-[480px] inner container for proper mobile scrolling
+- Summary cards grid: Already uses grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 (verified correct)
+
+Lint check: Passed with zero errors

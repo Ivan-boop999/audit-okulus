@@ -144,6 +144,7 @@ model AuditResponse {
   assignment      AuditAssignment  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
   auditor         User             @relation("CompletedBy", fields: [auditorId], references: [id])
   answers         QuestionAnswer[]
+  actionPlans     ActionPlan[]
 }
 
 model QuestionAnswer {
@@ -181,21 +182,24 @@ model Notification {
 // ========================
 
 model ActionPlan {
-  id          String   @id @default(cuid())
-  title       String
-  description String?
-  priority    String   @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
-  status      String   @default("NEW")    // NEW, IN_PROGRESS, DONE, CANCELLED
-  assigneeId  String?
-  dueDate     DateTime?
-  sourceType  String   @default("AUDIT") // AUDIT, MANUAL, SYSTEM
-  sourceId    String?
-  score       Float?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id              String    @id @default(cuid())
+  auditResponseId String?
+  title           String
+  description     String?
+  priority        String    @default("MEDIUM") // CRITICAL, HIGH, MEDIUM, LOW
+  status          String    @default("NEW")    // NEW, IN_PROGRESS, DONE, CANCELLED
+  assigneeId      String?
+  dueDate         DateTime?
+  sourceType      String    @default("AUDIT") // AUDIT, MANUAL, SYSTEM
+  sourceId        String?
+  score           Float?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
-  assignee    User?    @relation("ActionPlanAssignee", fields: [assigneeId], references: [id])
+  auditResponse   AuditResponse?  @relation(fields: [auditResponseId], references: [id])
+  assignee        User?           @relation("ActionPlanAssignee", fields: [assigneeId], references: [id])
 
   @@index([status])
   @@index([priority])
+  @@map("action_plans")
 }
