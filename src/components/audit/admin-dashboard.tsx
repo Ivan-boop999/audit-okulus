@@ -288,6 +288,32 @@ export default function AdminDashboard() {
         </div>
       </motion.div>
 
+      {/* Today's Overview Strip */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.4 }}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+      >
+        {[
+          { label: 'Сегодня запланировано', value: overview.scheduledAssignments, icon: CalendarDays, color: 'from-sky-500/10 to-blue-500/10 dark:from-sky-500/5 dark:to-blue-500/5', iconColor: 'text-sky-600 dark:text-sky-400', border: 'border-sky-200/60 dark:border-sky-800/40' },
+          { label: 'В процессе', value: overview.inProgressAssignments, icon: Activity, color: 'from-amber-500/10 to-orange-500/10 dark:from-amber-500/5 dark:to-orange-500/5', iconColor: 'text-amber-600 dark:text-amber-400', border: 'border-amber-200/60 dark:border-amber-800/40' },
+          { label: 'Просрочено', value: overview.overdueAssignments, icon: AlertTriangle, color: 'from-red-500/10 to-rose-500/10 dark:from-red-500/5 dark:to-rose-500/5', iconColor: 'text-red-600 dark:text-red-400', border: 'border-red-200/60 dark:border-red-800/40' },
+          { label: 'Завершено сегодня', value: overview.completedAssignments, icon: CheckCircle2, color: 'from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/5 dark:to-teal-500/5', iconColor: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200/60 dark:border-emerald-800/40' },
+        ].map((item, i) => {
+          const Icon = item.icon;
+          return (
+            <div key={i} className={`flex items-center gap-2.5 rounded-xl border px-3.5 py-2.5 bg-gradient-to-br ${item.color} ${item.border} transition-all duration-200 hover:shadow-sm`}>
+              <Icon className={`w-4.5 h-4.5 ${item.iconColor} flex-shrink-0`} />
+              <div className="min-w-0">
+                <div className="text-xs text-muted-foreground truncate">{item.label}</div>
+                <div className={`text-lg font-bold leading-tight tabular-nums ${item.iconColor}`}>{item.value}</div>
+              </div>
+            </div>
+          );
+        })}
+      </motion.div>
+
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiCards.map((kpi, i) => {
