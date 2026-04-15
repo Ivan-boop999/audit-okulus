@@ -1,0 +1,444 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import {
+  BarChart, LineChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  PieChart, Pie, Cell, Area, AreaChart, RadarChart, Radar, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Legend
+} from 'recharts';
+import {
+  CheckCircle2, Clock, AlertTriangle, Wrench, FileText, Users,
+  TrendingUp, Activity, Target, CalendarDays, ArrowUpRight, ArrowDownRight
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+
+interface Analytics {
+  overview: {
+    totalEquipment: number;
+    totalTemplates: number;
+    totalAuditors: number;
+    totalAssignments: number;
+    completedAssignments: number;
+    scheduledAssignments: number;
+    inProgressAssignments: number;
+    overdueAssignments: number;
+    avgScore: number;
+    completionRate: number;
+  };
+  scoresOverTime: { date: string; score: number }[];
+  categoryData: { name: string; count: number }[];
+  auditorPerformance: { name: string; department: string; totalAudits: number; avgScore: number }[];
+  equipmentCategories: { name: string; count: number }[];
+  recentActivity: { id: string; templateTitle: string; auditorName: string; status: string; date: string }[];
+}
+
+const COLORS = ['#059669', '#d97706', '#0ea5e9', '#8b5cf6', '#ec4899', '#ef4444', '#14b8a6', '#f59e0b'];
+
+const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType }> = {
+  COMPLETED: { label: 'Завершён', color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: CheckCircle2 },
+  SCHEDULED: { label: 'Запланирован', color: 'bg-blue-100 text-blue-700 border-blue-200', icon: CalendarDays },
+  IN_PROGRESS: { label: 'В процессе', color: 'bg-amber-100 text-amber-700 border-amber-200', icon: Clock },
+  OVERDUE: { label: 'Просрочен', color: 'bg-red-100 text-red-700 border-red-200', icon: AlertTriangle },
+};
+
+export default function AdminDashboard() {
+  const [data, setData] = useState<Analytics | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('/api/analytics')
+      .then(res => res.json())
+      .then(setData)
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading || !data) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Card key={i} className="overflow-hidden">
+            <CardContent className="p-6">
+              <div className="shimmer h-4 w-24 rounded mb-3" />
+              <div className="shimmer h-8 w-16 rounded mb-2" />
+              <div className="shimmer h-3 w-32 rounded" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  const { overview } = data;
+
+  const kpiCards = [
+    {
+      title: 'Средний балл',
+      value: overview.avgScore,
+      suffix: '%',
+      icon: Target,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
+      trend: '+2.3%',
+      trendUp: true,
+    },
+    {
+      title: 'Завершено аудитов',
+      value: overview.completedAssignments,
+      icon: CheckCircle2,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-50',
+      trend: '+12%',
+      trendUp: true,
+    },
+    {
+      title: 'Требует внимания',
+      value: overview.overdueAssignments + overview.inProgressAssignments,
+      icon: AlertTriangle,
+      color: 'text-amber-600',
+      bgColor: 'bg-amber-50',
+      trend: '-5%',
+      trendUp: false,
+    },
+    {
+      title: 'Всего назначений',
+      value: overview.totalAssignments,
+      icon: CalendarDays,
+      color: 'text-violet-600',
+      bgColor: 'bg-violet-50',
+      trend: '+8%',
+      trendUp: true,
+    },
+    {
+      title: 'Оборудование',
+      value: overview.totalEquipment,
+      icon: Wrench,
+      color: 'text-teal-600',
+      bgColor: 'bg-teal-50',
+    },
+    {
+      title: 'Шаблоны аудитов',
+      value: overview.totalTemplates,
+      icon: FileText,
+      color: 'text-indigo-600',
+      bgColor: 'bg-indigo-50',
+    },
+    {
+      title: 'Аудиторы',
+      value: overview.totalAuditors,
+      icon: Users,
+      color: 'text-pink-600',
+      bgColor: 'bg-pink-50',
+    },
+    {
+      title: 'Процент выполнения',
+      value: overview.completionRate,
+      suffix: '%',
+      icon: TrendingUp,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-50',
+      trend: '+3.1%',
+      trendUp: true,
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Панель управления</h1>
+        <p className="text-muted-foreground">Обзор состояния аудитов и ключевые показатели</p>
+      </div>
+
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {kpiCards.map((kpi, i) => {
+          const Icon = kpi.icon;
+          return (
+            <motion.div
+              key={kpi.title}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: i * 0.05, duration: 0.4 }}
+            >
+              <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300">
+                <CardContent className="p-5">
+                  <div className="flex items-start justify-between">
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${kpi.bgColor}`}>
+                      <Icon className={`w-5 h-5 ${kpi.color}`} />
+                    </div>
+                    {kpi.trend && (
+                      <div className={`flex items-center gap-0.5 text-xs font-medium ${kpi.trendUp ? 'text-emerald-600' : 'text-red-500'}`}>
+                        {kpi.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
+                        {kpi.trend}
+                      </div>
+                    )}
+                  </div>
+                  <div className="mt-3">
+                    <div className="text-2xl font-bold">
+                      {typeof kpi.value === 'number' && kpi.value > 100 ? kpi.value.toLocaleString() : kpi.value}
+                      {kpi.suffix && <span className="text-base font-normal text-muted-foreground">{kpi.suffix}</span>}
+                    </div>
+                    <div className="text-sm text-muted-foreground mt-0.5">{kpi.title}</div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          );
+        })}
+      </div>
+
+      {/* Charts Row 1 */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Score Trend */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="lg:col-span-2"
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Динамика оценок</CardTitle>
+              <CardDescription>Средний балл по проведённым аудитам за последние 30 дней</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[280px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <AreaChart data={data.scoresOverTime}>
+                    <defs>
+                      <linearGradient id="scoreGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#059669" stopOpacity={0.3} />
+                        <stop offset="95%" stopColor="#059669" stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
+                    <XAxis dataKey="date" tick={{ fontSize: 12 }} stroke="oklch(0.7 0 0)" />
+                    <YAxis domain={[0, 100]} tick={{ fontSize: 12 }} stroke="oklch(0.7 0 0)" />
+                    <Tooltip
+                      contentStyle={{
+                        background: 'oklch(1 0 0)',
+                        border: '1px solid oklch(0.92 0 0)',
+                        borderRadius: '8px',
+                        fontSize: '12px',
+                      }}
+                    />
+                    <Area
+                      type="monotone"
+                      dataKey="score"
+                      stroke="#059669"
+                      strokeWidth={2.5}
+                      fill="url(#scoreGradient)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Assignment Status Pie */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.5 }}
+        >
+          <Card className="h-full">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Статус аудитов</CardTitle>
+              <CardDescription>Распределение по текущему статусу</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[200px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={[
+                        { name: 'Завершён', value: overview.completedAssignments, fill: '#059669' },
+                        { name: 'Запланирован', value: overview.scheduledAssignments, fill: '#3b82f6' },
+                        { name: 'В процессе', value: overview.inProgressAssignments, fill: '#f59e0b' },
+                        { name: 'Просрочен', value: overview.overdueAssignments, fill: '#ef4444' },
+                      ]}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={55}
+                      outerRadius={80}
+                      paddingAngle={3}
+                      dataKey="value"
+                    >
+                    </Pie>
+                    <Tooltip contentStyle={{ fontSize: '12px', borderRadius: '8px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                {[
+                  { label: 'Завершён', value: overview.completedAssignments, color: 'bg-emerald-500' },
+                  { label: 'Запланирован', value: overview.scheduledAssignments, color: 'bg-blue-500' },
+                  { label: 'В процессе', value: overview.inProgressAssignments, color: 'bg-amber-500' },
+                  { label: 'Просрочен', value: overview.overdueAssignments, color: 'bg-red-500' },
+                ].map((item) => (
+                  <div key={item.label} className="flex items-center gap-2">
+                    <div className={`w-2.5 h-2.5 rounded-full ${item.color}`} />
+                    <span className="text-xs text-muted-foreground">{item.label}</span>
+                    <span className="text-xs font-bold ml-auto">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Charts Row 2 */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Category Distribution */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.5 }}
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Аудиты по категориям</CardTitle>
+              <CardDescription>Количество назначений по типу аудита</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={data.categoryData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.92 0 0)" />
+                    <XAxis dataKey="name" tick={{ fontSize: 11 }} stroke="oklch(0.7 0 0)" />
+                    <YAxis tick={{ fontSize: 12 }} stroke="oklch(0.7 0 0)" />
+                    <Tooltip contentStyle={{ fontSize: '12px', borderRadius: '8px' }} />
+                    <Bar dataKey="count" fill="#059669" radius={[6, 6, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Equipment Categories */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.6, duration: 0.5 }}
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Парк оборудования</CardTitle>
+              <CardDescription>Распределение по категориям</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="h-[250px]">
+                <ResponsiveContainer width="100%" height="100%">
+                  <PieChart>
+                    <Pie
+                      data={data.equipmentCategories}
+                      cx="50%"
+                      cy="50%"
+                      outerRadius={90}
+                      dataKey="count"
+                      nameKey="name"
+                      label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      labelLine={false}
+                    >
+                      {data.equipmentCategories.map((_, i) => (
+                        <Cell key={i} fill={COLORS[i % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip contentStyle={{ fontSize: '12px', borderRadius: '8px' }} />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Auditor Performance & Recent Activity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* Auditor Performance */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.5 }}
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Эффективность аудиторов</CardTitle>
+              <CardDescription>Рейтинг по среднему баллу и количеству аудитов</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {data.auditorPerformance
+                  .sort((a, b) => b.avgScore - a.avgScore)
+                  .map((auditor, i) => (
+                  <div key={auditor.name} className="flex items-center gap-3">
+                    <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+                      i === 0 ? 'bg-amber-100 text-amber-700' : i === 1 ? 'bg-slate-200 text-slate-700' : i === 2 ? 'bg-orange-100 text-orange-700' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {i + 1}
+                    </div>
+                    <Avatar className="w-9 h-9">
+                      <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">
+                        {auditor.name.split(' ').map(n => n[0]).join('')}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium truncate">{auditor.name}</div>
+                      <div className="text-xs text-muted-foreground">{auditor.department}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="text-sm font-bold">{auditor.avgScore.toFixed(1)}%</div>
+                      <div className="text-xs text-muted-foreground">{auditor.totalAudits} аудитов</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Recent Activity */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8, duration: 0.5 }}
+        >
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-semibold">Последняя активность</CardTitle>
+              <CardDescription>Недавние действия по аудитам</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {data.recentActivity.map((activity) => {
+                  const config = statusConfig[activity.status] || statusConfig.SCHEDULED;
+                  const Icon = config.icon;
+                  return (
+                    <div key={activity.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${config.color}`}>
+                        <Icon className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium truncate">{activity.templateTitle}</div>
+                        <div className="text-xs text-muted-foreground">{activity.auditorName}</div>
+                      </div>
+                      <Badge variant="outline" className={`text-[10px] ${config.color}`}>
+                        {config.label}
+                      </Badge>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    </div>
+  );
+}

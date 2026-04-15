@@ -1,0 +1,176 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ========================
+// USERS & AUTH
+// ========================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  name          String
+  password      String
+  role          String    @default("AUDITOR") // ADMIN, AUDITOR
+  avatar        String?
+  phone         String?
+  department    String?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  assignedAudits    AuditAssignment[]  @relation("AssignedAuditor")
+  completedAudits   AuditResponse[]    @relation("CompletedBy")
+  notifications     Notification[]
+  createdTemplates  AuditTemplate[]    @relation("TemplateCreator")
+}
+
+// ========================
+// EQUIPMENT
+// ========================
+
+model Equipment {
+  id          String   @id @default(cuid())
+  name        String
+  code        String   @unique
+  category    String
+  location    String
+  description String?
+  status      String   @default("ACTIVE") // ACTIVE, INACTIVE, MAINTENANCE
+  imageUrl    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  auditTemplates AuditTemplateEquipment[] 
+}
+
+// ========================
+// AUDIT TEMPLATES
+// ========================
+
+model AuditTemplate {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  category    String
+  status      String    @default("ACTIVE") // ACTIVE, DRAFT, ARCHIVED
+  frequency   String?   // DAILY, WEEKLY, MONTHLY, QUARTERLY, YEARLY, ONCE
+  creatorId   String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  creator       User                     @relation("TemplateCreator", fields: [creatorId], references: [id])
+  questions     Question[]
+  equipment     AuditTemplateEquipment[]
+  assignments   AuditAssignment[]
+}
+
+model AuditTemplateEquipment {
+  id              String        @id @default(cuid())
+  templateId      String
+  equipmentId     String
+  createdAt       DateTime      @default(now())
+
+  template        AuditTemplate  @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  equipment       Equipment      @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, equipmentId])
+}
+
+// ========================
+// QUESTIONS & ANSWER TYPES
+// ========================
+
+model Question {
+  id          String   @id @default(cuid())
+  templateId  String
+  text        String
+  answerType  String   // TEXT, NUMBER, YES_NO, SCALE_1_5, SCALE_1_10, MULTIPLE_CHOICE, PHOTO, DATE, CHECKLIST
+  options     String?  // JSON string for MULTIPLE_CHOICE options
+  required    Boolean  @default(true)
+  weight      Int      @default(1) // Weight for scoring
+  order       Int      @default(0)
+  helpText    String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  template    AuditTemplate    @relation(fields: [templateId], references: [id], onDelete: Cascade)
+  responses   QuestionAnswer[]
+}
+
+// ========================
+// AUDIT ASSIGNMENTS
+// ========================
+
+model AuditAssignment {
+  id              String    @id @default(cuid())
+  templateId      String
+  auditorId       String
+  scheduledDate   DateTime
+  dueDate         DateTime?
+  status          String    @default("SCHEDULED") // SCHEDULED, IN_PROGRESS, COMPLETED, OVERDUE, CANCELLED
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  template        AuditTemplate   @relation(fields: [templateId], references: [id])
+  auditor         User            @relation("AssignedAuditor", fields: [auditorId], references: [id])
+  responses       AuditResponse[]
+}
+
+// ========================
+// AUDIT RESPONSES
+// ========================
+
+model AuditResponse {
+  id              String    @id @default(cuid())
+  assignmentId    String
+  auditorId       String
+  startedAt       DateTime  @default(now())
+  completedAt     DateTime?
+  score           Float?
+  maxScore        Float?
+  status          String    @default("IN_PROGRESS") // IN_PROGRESS, COMPLETED
+  notes           String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  assignment      AuditAssignment  @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  auditor         User             @relation("CompletedBy", fields: [auditorId], references: [id])
+  answers         QuestionAnswer[]
+}
+
+model QuestionAnswer {
+  id              String   @id @default(cuid())
+  responseId      String
+  questionId      String
+  answer          String?  // The answer value
+  comment         String?
+  photoUrl        String?
+  createdAt       DateTime @default(now())
+
+  response        AuditResponse @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  question        Question      @relation(fields: [questionId], references: [id])
+}
+
+// ========================
+// NOTIFICATIONS
+// ========================
+
+model Notification {
+  id          String    @id @default(cuid())
+  userId      String
+  title       String
+  message     String
+  type        String    @default("INFO") // INFO, WARNING, SUCCESS, ASSIGNMENT, REMINDER, OVERDUE
+  isRead      Boolean   @default(false)
+  link        String?
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
