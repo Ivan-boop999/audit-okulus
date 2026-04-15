@@ -187,6 +187,20 @@ const STATUS_CONFIG: Record<TemplateStatus, {
   },
 };
 
+const CATEGORY_BORDER_COLORS: Record<string, string> = {
+  'Безопасность труда': 'border-t-red-400 dark:border-t-red-600',
+  'Качество продукции': 'border-t-blue-400 dark:border-t-blue-600',
+  'Техническое обслуживание': 'border-t-amber-400 dark:border-t-amber-600',
+  'Охрана окружающей среды': 'border-t-green-400 dark:border-t-green-600',
+  'Санитарные условия': 'border-t-cyan-400 dark:border-t-cyan-600',
+  'Пожарная безопасность': 'border-t-orange-400 dark:border-t-orange-600',
+  'Электробезопасность': 'border-t-yellow-400 dark:border-t-yellow-500',
+  'Логистика и склад': 'border-t-indigo-400 dark:border-t-indigo-600',
+  'Документация': 'border-t-slate-400 dark:border-t-slate-500',
+  'Обучение персонала': 'border-t-violet-400 dark:border-t-violet-600',
+  'Другое': 'border-t-gray-400 dark:border-t-gray-500',
+};
+
 const CATEGORY_COLORS: Record<string, string> = {
   'Безопасность труда': 'bg-red-50 text-red-700 border-red-200',
   'Качество продукции': 'bg-blue-50 text-blue-700 border-blue-200',
@@ -243,6 +257,18 @@ function getAnswerTypeConfig(type: AnswerType) {
 
 function getCategoryColor(category: string) {
   return CATEGORY_COLORS[category] || CATEGORY_COLORS['Другое'];
+}
+
+function getCategoryBorder(category: string) {
+  return CATEGORY_BORDER_COLORS[category] || CATEGORY_BORDER_COLORS['Другое'];
+}
+
+function formatTemplateDate(dateStr: string): string {
+  return new Date(dateStr).toLocaleDateString('ru-RU', {
+    day: '2-digit',
+    month: '2-digit',
+    year: 'numeric',
+  });
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -809,6 +835,7 @@ export default function TemplateBuilder() {
               const assignmentCount = template._count?.assignments || 0;
               const freqLabel = FREQUENCY_LABELS[template.frequency] || template.frequency;
               const freqBorder = FREQUENCY_BORDER_COLORS[template.frequency] || FREQUENCY_BORDER_COLORS.MONTHLY;
+              const catBorder = getCategoryBorder(template.category);
 
               return (
                 <motion.div
@@ -817,7 +844,7 @@ export default function TemplateBuilder() {
                   exit="exit"
                   layout
                 >
-                  <Card className={`group overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 border border-l-4 ${freqBorder}`}>
+                  <Card className={`group overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 border border-l-4 border-t-[3px] ${freqBorder} ${catBorder}`}>
                     {/* Gradient status header */}
                     <div className={`relative ${statusCfg.headerGradient} px-5 py-3`}>
                       <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent pointer-events-none" />
@@ -894,7 +921,7 @@ export default function TemplateBuilder() {
                     </CardHeader>
 
                     <CardContent className="pt-0 space-y-3">
-                      {/* Info row with assignment count */}
+                      {/* Info row with assignment count, question count badge, and last modified */}
                       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <CalendarClock className="w-3.5 h-3.5" />
@@ -904,6 +931,11 @@ export default function TemplateBuilder() {
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
                           {freqLabel}
+                        </span>
+                        <span className="text-muted-foreground/40">|</span>
+                        <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-muted/60 text-muted-foreground text-[11px] font-medium">
+                          <HelpCircle className="w-3 h-3" />
+                          {questionCount} {questionCount === 1 ? 'вопрос' : questionCount < 5 ? 'вопроса' : 'вопросов'}
                         </span>
                         {template.equipment && template.equipment.length > 0 && (
                           <>
@@ -922,17 +954,23 @@ export default function TemplateBuilder() {
                           <Tag className="w-3 h-3" />
                           {template.category}
                         </Badge>
-                        <Badge variant="outline" className={`text-[11px] gap-1 ${statusCfg.color}${template.status === 'ACTIVE' ? ' shadow-[0_0_8px_1px_rgba(16,185,129,0.25)] dark:shadow-[0_0_8px_1px_rgba(52,211,153,0.2)]' : ''}`}>
+                        <Badge variant="outline" className={`text-[11px] gap-1.5 ${statusCfg.color}${template.status === 'ACTIVE' ? ' shadow-[0_0_8px_1px_rgba(16,185,129,0.25)] dark:shadow-[0_0_8px_1px_rgba(52,211,153,0.2)]' : template.status === 'DRAFT' ? ' shadow-[0_0_6px_1px_rgba(148,163,184,0.2)]' : ''}`}>
                           <motion.span
                             className={`w-1.5 h-1.5 rounded-full ${statusCfg.dotColor}`}
-                            animate={{ scale: [1, 1.3, 1], opacity: [1, 0.6, 1] }}
-                            transition={{ duration: 2, ease: 'easeInOut', repeat: Infinity }}
+                            animate={{ scale: [1, 1.4, 1], opacity: [1, 0.5, 1] }}
+                            transition={{ duration: template.status === 'ACTIVE' ? 1.5 : 2.5, ease: 'easeInOut', repeat: Infinity }}
                           />
                           {statusCfg.label}
                         </Badge>
                         <Badge variant="outline" className={`text-[11px] gap-1 ${catColor}`}>
                           {freqLabel}
                         </Badge>
+                      </div>
+
+                      {/* Last modified indicator */}
+                      <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground/60">
+                        <Clock className="w-3 h-3" />
+                        <span>Обновлено: {formatTemplateDate(template.updatedAt)}</span>
                       </div>
 
                       {/* Expand questions toggle with enhanced accordion animation */}

@@ -28,6 +28,7 @@ import {
   AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle,
   AlertDialogFooter, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
+import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import AutoAssignDialog from './auto-assign-dialog';
 
@@ -80,7 +81,7 @@ const emptyForm: AssignmentFormData = {
   notes: '',
 };
 
-const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType; dotColor: string; borderColor: string; gradientBg: string; countColor: string }> = {
+const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType; dotColor: string; borderColor: string; gradientBg: string; countColor: string; indicatorBg: string }> = {
   SCHEDULED: {
     label: 'Запланирован',
     color: 'bg-sky-100 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-300 dark:border-sky-800',
@@ -89,6 +90,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
     borderColor: 'border-l-sky-400',
     gradientBg: 'bg-gradient-to-r from-sky-50 to-cyan-50 dark:from-sky-950/20 dark:to-cyan-950/20',
     countColor: 'text-sky-600 dark:text-sky-400',
+    indicatorBg: 'bg-sky-400',
   },
   IN_PROGRESS: {
     label: 'В процессе',
@@ -98,6 +100,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
     borderColor: 'border-l-amber-400',
     gradientBg: 'bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/20 dark:to-yellow-950/20',
     countColor: 'text-amber-600 dark:text-amber-400',
+    indicatorBg: 'bg-amber-400',
   },
   COMPLETED: {
     label: 'Завершён',
@@ -107,6 +110,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
     borderColor: 'border-l-emerald-400',
     gradientBg: 'bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20',
     countColor: 'text-emerald-600 dark:text-emerald-400',
+    indicatorBg: 'bg-emerald-400',
   },
   OVERDUE: {
     label: 'Просрочен',
@@ -116,6 +120,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
     borderColor: 'border-l-red-400',
     gradientBg: 'bg-gradient-to-r from-red-50 to-rose-50 dark:from-red-950/20 dark:to-rose-950/20',
     countColor: 'text-red-600 dark:text-red-400',
+    indicatorBg: 'bg-red-400',
   },
   CANCELLED: {
     label: 'Отменён',
@@ -125,6 +130,7 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
     borderColor: 'border-l-slate-300 dark:border-l-slate-600',
     gradientBg: 'bg-gradient-to-r from-slate-50 to-gray-50 dark:from-slate-900/20 dark:to-gray-900/20',
     countColor: 'text-slate-500 dark:text-slate-400',
+    indicatorBg: 'bg-slate-400',
   },
 };
 
@@ -493,36 +499,37 @@ export default function AuditScheduler() {
         </div>
       </motion.div>
 
-      {/* ─── Stats Summary Bar ────────────────────────────────────────── */}
+      {/* ─── Status Summary Bar ─────────────────────────────────────── */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15, duration: 0.4 }}
-        className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-none"
+        className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none"
       >
-        <div className="flex items-center gap-2 bg-muted/60 dark:bg-muted/30 rounded-xl px-4 py-2.5 border flex-shrink-0">
-          <Layers className="w-4 h-4 text-muted-foreground" />
+        <div className="flex items-center gap-2 bg-muted/60 dark:bg-muted/30 rounded-xl px-3.5 py-2 border flex-shrink-0">
+          <Layers className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-xs text-muted-foreground whitespace-nowrap">Всего</span>
-          <span className="text-sm font-bold">{totalAssignments}</span>
+          <span className="text-sm font-bold tabular-nums">{totalAssignments}</span>
         </div>
+        <Separator orientation="vertical" className="h-6 flex-shrink-0" />
         {[
-          { key: 'SCHEDULED' as const, icon: CalendarClock, color: 'text-sky-500' },
-          { key: 'IN_PROGRESS' as const, icon: PlayCircle, color: 'text-amber-500' },
-          { key: 'COMPLETED' as const, icon: CheckCircle2, color: 'text-emerald-500' },
-          { key: 'OVERDUE' as const, icon: AlertTriangle, color: 'text-red-500' },
+          { key: 'SCHEDULED' as const, label: 'Запланировано', dot: 'bg-sky-500', badgeColor: 'bg-sky-100 text-sky-700 dark:bg-sky-900/40 dark:text-sky-300' },
+          { key: 'IN_PROGRESS' as const, label: 'В процессе', dot: 'bg-amber-500', badgeColor: 'bg-amber-100 text-amber-700 dark:bg-amber-900/40 dark:text-amber-300' },
+          { key: 'COMPLETED' as const, label: 'Завершено', dot: 'bg-emerald-500', badgeColor: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300' },
+          { key: 'OVERDUE' as const, label: 'Просрочено', dot: 'bg-red-500', badgeColor: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300' },
         ].map((stat) => (
           <button
             key={stat.key}
             onClick={() => setFilterStatus(filterStatus === stat.key ? 'all' : stat.key)}
-            className={`flex items-center gap-2 rounded-xl px-4 py-2.5 border transition-all duration-200 flex-shrink-0 cursor-pointer ${
+            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 border transition-all duration-200 flex-shrink-0 cursor-pointer ${
               filterStatus === stat.key
                 ? 'bg-primary/10 border-primary/30 ring-1 ring-primary/20'
-                : 'bg-muted/60 dark:bg-muted/30 hover:bg-muted dark:hover:bg-muted/50'
+                : 'hover:bg-muted/50'
             }`}
           >
-            <stat.icon className={`w-4 h-4 ${stat.color}`} />
-            <span className="text-xs text-muted-foreground whitespace-nowrap">{statusConfig[stat.key].label}</span>
-            <span className={`text-sm font-bold ${filterStatus === stat.key ? 'text-foreground' : stat.color}`}>
+            <span className={`w-2 h-2 rounded-full ${stat.dot}`} />
+            <span className="text-xs text-muted-foreground whitespace-nowrap">{stat.label}</span>
+            <span className={`text-xs font-bold tabular-nums px-1.5 py-0.5 rounded-full ${stat.badgeColor}`}>
               {statusCounts[stat.key]}
             </span>
           </button>
@@ -692,7 +699,7 @@ export default function AuditScheduler() {
                 className="absolute -inset-2 rounded-3xl bg-emerald-400/20 blur-md -z-10"
               />
             </motion.div>
-            <h3 className="text-lg font-semibold text-foreground mb-1">Назначения не найдены</h3>
+            <h3 className="text-lg font-semibold text-foreground mb-1">Нет назначений</h3>
             <p className="text-sm text-muted-foreground text-center max-w-md">
               {hasActiveFilters || searchQuery
                 ? 'Попробуйте изменить параметры поиска или фильтры'
@@ -891,9 +898,11 @@ export default function AuditScheduler() {
                         animate="visible"
                         exit="exit"
                         layout
-                        className={`group border-b transition-all duration-200 hover:bg-muted/50 hover:shadow-sm cursor-default ${statusCfg.borderColor}`}
+                        className={`group border-b transition-colors hover:bg-muted/50 hover:shadow-sm cursor-default`}
                       >
-                        <TableCell>
+                        <TableCell className="relative pl-5">
+                          {/* 2px left-side status indicator bar */}
+                          <div className={`absolute left-0 top-1 bottom-1 w-[2px] rounded-full ${statusCfg.indicatorBg}`} />
                           <div className="flex items-center gap-3 min-w-0">
                             <div className={`w-8 h-8 rounded-lg flex items-center justify-center border flex-shrink-0 ${
                               item.status === 'COMPLETED' ? 'bg-emerald-50 text-emerald-600 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' :
@@ -1218,6 +1227,29 @@ export default function AuditScheduler() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ─── FAB (Floating Action Button) ──────────────────────────── */}
+      <motion.div
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 0.5, duration: 0.3, type: 'spring' }}
+        className="fixed bottom-6 right-6 z-50"
+      >
+        <motion.button
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          onClick={openCreate}
+          className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white shadow-xl shadow-emerald-500/30 flex items-center justify-center transition-shadow"
+          title="Назначить аудит"
+        >
+          <Plus className="w-6 h-6" />
+          <motion.span
+            className="absolute inset-0 rounded-full"
+            animate={{ boxShadow: ['0 0 0 0 rgba(16,185,129,0.4)', '0 0 0 12px rgba(16,185,129,0)'] }}
+            transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 0.5 }}
+          />
+        </motion.button>
+      </motion.div>
 
       {/* ─── Status Change Dialog ────────────────────────────────────────── */}
       <Dialog open={statusDialogOpen} onOpenChange={setStatusDialogOpen}>

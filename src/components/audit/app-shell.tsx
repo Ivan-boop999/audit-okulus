@@ -450,7 +450,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
           initial={false}
           animate={{ width: sidebarOpen ? 260 : 72 }}
           transition={{ duration: 0.3, ease: 'easeInOut' }}
-          className="hidden lg:flex flex-col border-r bg-card/95 backdrop-blur-sm shadow-sm fixed h-full z-30"
+          className="hidden lg:flex flex-col border-r bg-card/95 backdrop-blur-sm shadow-sm fixed h-full z-30 overflow-hidden"
         >
           {/* Logo */}
           <div className="h-16 flex flex-col items-stretch px-4 border-b relative">
