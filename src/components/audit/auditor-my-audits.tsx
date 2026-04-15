@@ -58,6 +58,7 @@ interface Assignment {
 interface AuditorMyAuditsProps {
   user: { id: string; name: string; email: string; role: string };
   onStartAudit?: (assignmentId: string) => void;
+  onViewReport?: (responseId: string) => void;
 }
 
 // ─── Status Config ────────────────────────────────────────────────────────────
@@ -179,7 +180,7 @@ const itemVariants = {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function AuditorMyAudits({ user, onStartAudit }: AuditorMyAuditsProps) {
+export default function AuditorMyAudits({ user, onStartAudit, onViewReport }: AuditorMyAuditsProps) {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -604,13 +605,13 @@ export default function AuditorMyAudits({ user, onStartAudit }: AuditorMyAuditsP
                                   </Button>
                                 </motion.div>
                               )}
-                              {isCompleted && (
+                              {isCompleted && response && (
                                 <Button
                                   size="sm"
                                   variant="outline"
                                   className="gap-1.5 text-xs"
                                   onClick={() => {
-                                    if (onStartAudit) onStartAudit(item.id);
+                                    if (onViewReport) onViewReport(response.id);
                                   }}
                                 >
                                   <Eye className="w-3.5 h-3.5" />

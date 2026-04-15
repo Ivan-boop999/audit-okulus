@@ -166,6 +166,22 @@ function CustomTooltip({ active, payload, label, formatter }: {
   );
 }
 
+// ─── Date Formatting ─────────────────────────────────────────────────────────
+
+function formatAnalyticsDate(dateStr: string): string {
+  try {
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return d.toLocaleDateString('ru-RU', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  } catch {
+    return dateStr;
+  }
+}
+
 // ─── Skeleton Loader ──────────────────────────────────────────────────────────
 
 function ChartSkeleton({ height = 280 }: { height?: number }) {
@@ -1225,7 +1241,7 @@ export default function AnalyticsDashboard() {
                         return (
                           <TableRow key={activity.id}>
                             <TableCell className="tabular-nums text-muted-foreground whitespace-nowrap">
-                              {activity.date}
+                              {formatAnalyticsDate(activity.date)}
                             </TableCell>
                             <TableCell className="font-medium">{activity.templateTitle}</TableCell>
                             <TableCell className="text-muted-foreground">{activity.auditorName}</TableCell>
@@ -1280,7 +1296,7 @@ export default function AnalyticsDashboard() {
                         return (
                           <TableRow key={i}>
                             <TableCell className="tabular-nums text-muted-foreground whitespace-nowrap">
-                              {entry.date}
+                              {formatAnalyticsDate(entry.date)}
                             </TableCell>
                             <TableCell className="text-right tabular-nums font-semibold">
                               {entry.score.toFixed(1)}

@@ -546,6 +546,65 @@
     page-break-inside: avoid;
     break-inside: avoid;
   }
+
+  /* ── PDF Export: Report-specific print styles ── */
+
+  /* Remove sidebar margin for print */
+  .lg\:ml-\[260px\],
+  .lg\:ml-\[72px\] {
+    margin-left: 0 !important;
+  }
+
+  /* Show report content at full width */
+  .print\:visible {
+    display: block !important;
+  }
+
+  /* Ensure background gradients print */
+  div[style*="linear-gradient"] {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Ensure score circles and badges print */
+  svg circle,
+  svg text,
+  svg motion-circle {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Table styling for print */
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+  }
+
+  th, td {
+    border: 1px solid #d1d5db !important;
+    padding: 6px 8px !important;
+    font-size: 11px !important;
+  }
+
+  /* Badge styling for print */
+  [class*="Badge"], [class*="badge"] {
+    border: 1px solid #d1d5db !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Print watermark */
+  body::after {
+    content: "AuditPro — Система управления аудитами";
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 10px;
+    color: #9ca3af;
+    padding: 8px;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -858,6 +917,173 @@ button:active, a:active {
     oklch(0.55 0.15 160 / 0.1) 20%,
     oklch(0.55 0.15 160 / 0.2) 50%,
     oklch(0.55 0.15 160 / 0.1) 80%,
+    transparent 100%
+  );
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TEXT BALANCE (better wrapping for headings)
+   ═══════════════════════════════════════════════════════════════ */
+
+.text-balance {
+  text-wrap: balance;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   THIN CUSTOM SCROLLBAR (Firefox + Webkit)
+   ═══════════════════════════════════════════════════════════════ */
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: oklch(0.75 0.01 160);
+  border-radius: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.6 0.02 160);
+}
+
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: oklch(0.75 0.01 160) transparent;
+}
+
+.dark .scrollbar-thin {
+  scrollbar-color: oklch(0.35 0.01 160) transparent;
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0.01 160);
+}
+
+.dark .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0.01 160);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRADIENT BORDER (background-clip trick)
+   ═══════════════════════════════════════════════════════════════ */
+
+.border-gradient {
+  position: relative;
+  background-clip: padding-box;
+  border: 2px solid transparent;
+}
+
+.border-gradient::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, oklch(0.52 0.17 145), oklch(0.55 0.15 160), oklch(0.45 0.12 180));
+  z-index: -1;
+  opacity: 0.7;
+  transition: opacity 0.3s ease;
+}
+
+.border-gradient:hover::before {
+  opacity: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DARK GLASSMORPHISM VARIANT
+   ═══════════════════════════════════════════════════════════════ */
+
+.glass-dark {
+  background: oklch(0.1 0 0 / 0.6);
+  backdrop-filter: blur(16px) saturate(1.5);
+  -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  border: 1px solid oklch(1 0 0 / 0.06);
+}
+
+.dark .glass-dark {
+  background: oklch(0.08 0 0 / 0.7);
+  border: 1px solid oklch(1 0 0 / 0.04);
+}
+
+.glass-dark:hover {
+  background: oklch(0.1 0 0 / 0.75);
+  border-color: oklch(1 0 0 / 0.1);
+}
+
+.dark .glass-dark:hover {
+  background: oklch(0.08 0 0 / 0.85);
+  border-color: oklch(1 0 0 / 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SKELETON SHIMMER (improved loading animation)
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.94 0.002 160) 0%,
+    oklch(0.97 0.002 160) 20%,
+    oklch(0.99 0.002 160) 40%,
+    oklch(0.97 0.002 160) 60%,
+    oklch(0.94 0.002 160) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.8s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+.dark .skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.2 0.005 160) 0%,
+    oklch(0.24 0.005 160) 20%,
+    oklch(0.28 0.005 160) 40%,
+    oklch(0.24 0.005 160) 60%,
+    oklch(0.2 0.005 160) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRADIENT NAV GROUP SEPARATOR
+   ═══════════════════════════════════════════════════════════════ */
+
+.nav-group-separator {
+  height: 1px;
+  border: none;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.37 0.13 160 / 0.12) 20%,
+    oklch(0.37 0.13 160 / 0.2) 50%,
+    oklch(0.37 0.13 160 / 0.12) 80%,
+    transparent 100%
+  );
+  margin: 0;
+}
+
+.dark .nav-group-separator {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    oklch(0.55 0.15 160 / 0.08) 20%,
+    oklch(0.55 0.15 160 / 0.14) 50%,
+    oklch(0.55 0.15 160 / 0.08) 80%,
     transparent 100%
   );
 }

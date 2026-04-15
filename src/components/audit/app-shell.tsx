@@ -26,6 +26,15 @@ import {
 import {
   Tooltip, TooltipContent, TooltipProvider, TooltipTrigger,
 } from '@/components/ui/tooltip';
+import {
+  CommandDialog,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from '@/components/ui/command';
 import { useTheme } from 'next-themes';
 import { toast } from 'sonner';
 import ScoringGuide from './scoring-guide';
@@ -151,10 +160,15 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
   const [showNotifications, setShowNotifications] = useState(false);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [searchQuery, setSearchQuery] = useState('');
   const [currentTime, setCurrentTime] = useState('');
   const [isOnline, setIsOnline] = useState(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [guideOpen, setGuideOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchData, setSearchData] = useState<{
+    equipment: { id: string; name: string; code: string; category: string }[];
+    templates: { id: string; title: string; category: string; status: string }[];
+    auditors: { id: string; name: string; department: string }[];
+  }>({ equipment: [], templates: [], auditors: [] });
 
   const isAdmin = user?.role === 'ADMIN';
   const navGroups = isAdmin ? adminNavGroups : auditorNavGroups;
@@ -181,24 +195,40 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
 
   // Notification sound
   useEffect(() => {
-    if (unreadCount > 0) {
-      try {
-        const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-        const oscillator = audioContext.createOscillator();
-        const gainNode = audioContext.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(audioContext.destination);
-        oscillator.type = 'sine';
-        oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(1320, audioContext.currentTime + 0.1);
-        oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.2);
-        gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-        oscillator.start(audioContext.currentTime);
-        oscillator.stop(audioContext.currentTime + 0.4);
-      } catch {
-        // Audio not supported
+    if (unreadCount <= 0) return;
+
+    // Check user preference for notification sounds
+    let soundEnabled = true;
+    try {
+      const stored = localStorage.getItem('auditpro-prefs');
+      if (stored) {
+        const prefs = JSON.parse(stored);
+        if (typeof prefs.notificationSounds === 'boolean') {
+          soundEnabled = prefs.notificationSounds;
+        }
       }
+    } catch {
+      // ignore
+    }
+
+    if (!soundEnabled) return;
+
+    try {
+      const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+      oscillator.frequency.exponentialRampToValueAtTime(1320, audioContext.currentTime + 0.1);
+      oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.2);
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.4);
+    } catch {
+      // Audio not supported
     }
   }, [unreadCount]);
 
@@ -268,6 +298,58 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
       window.removeEventListener('offline', handleOffline);
     };
   }, []);
+
+  // Keyboard shortcut for search (Ctrl+K / Cmd+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  // Fetch search data when dialog opens
+  useEffect(() => {
+    if (!searchOpen) return;
+    const fetchData = async () => {
+      try {
+        const [equipRes, templateRes, usersRes] = await Promise.all([
+          fetch('/api/equipment'),
+          fetch('/api/templates'),
+          fetch('/api/users'),
+        ]);
+        const equipData = equipRes.ok ? await equipRes.json() : [];
+        const templateData = templateRes.ok ? await templateRes.json() : [];
+        const usersData = usersRes.ok ? await usersRes.json() : [];
+
+        setSearchData({
+          equipment: (Array.isArray(equipData) ? equipData : []).map((e: { id: string; name: string; code: string; category: string }) => ({
+            id: e.id,
+            name: e.name,
+            code: e.code,
+            category: e.category,
+          })),
+          templates: (Array.isArray(templateData) ? templateData : []).map((t: { id: string; title: string; category: string; status: string }) => ({
+            id: t.id,
+            title: t.title,
+            category: t.category || '',
+            status: t.status,
+          })),
+          auditors: (Array.isArray(usersData) ? usersData.filter((u: { role: string }) => u.role === 'AUDITOR') : []).map((u: { id: string; name: string; department: string }) => ({
+            id: u.id,
+            name: u.name,
+            department: u.department || '',
+          })),
+        });
+      } catch {
+        // Silent fail - search will just show no results
+      }
+    };
+    fetchData();
+  }, [searchOpen]);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -355,6 +437,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
   };
 
   return (
+    <>
     <TooltipProvider>
       <div className="min-h-screen flex bg-muted/30">
         {/* ─── Desktop Sidebar ─── */}
@@ -403,9 +486,9 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                   <div className="space-y-0.5">
                     {group.items.map(item => renderNavItem(item, !sidebarOpen, false))}
                   </div>
-                  {/* Separator between groups (not after last) */}
+                  {/* Gradient separator between groups (not after last) */}
                   {gi < navGroups.length - 1 && sidebarOpen && (
-                    <Separator className="mt-3 opacity-50" />
+                    <hr className="nav-group-separator mt-3" />
                   )}
                 </div>
               ))}
@@ -501,12 +584,11 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                 onClick={() => setMobileSidebarOpen(false)}
               />
               <motion.aside
-                initial={{ x: -280 }}
-                animate={{ x: 0 }}
-                exit={{ x: -280 }}
-                transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-                className="lg:hidden fixed left-0 top-0 bottom-0 w-[280px] bg-card z-50 shadow-xl"
-              >
+                initial={{ x: -280, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={{ x: -280, opacity: 0 }}
+                transition={{ type: 'spring', damping: 28, stiffness: 220 }}
+                className="lg:hidden fixed left-0 top-0 bottom-0 w-[280px] bg-card z-50 shadow-xl">
                 <div className="h-16 flex items-center justify-between px-4 border-b">
                   <div className="flex items-center gap-3">
                     <div className="w-9 h-9 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-md shadow-primary/20">
@@ -532,7 +614,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                           {group.items.map(item => renderNavItem(item, false, true))}
                         </div>
                         {gi < navGroups.length - 1 && (
-                          <Separator className="mt-3 opacity-50" />
+                          <hr className="nav-group-separator mt-3" />
                         )}
                       </div>
                     ))}
@@ -593,19 +675,28 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                 <Menu className="w-5 h-5" />
               </Button>
 
-              {/* Search */}
-              <div className="relative hidden sm:block">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  placeholder="Поиск..."
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 pl-9 h-9 bg-muted/50 border-0 focus-visible:ring-1 focus-visible:ring-primary/20 transition-all"
-                />
-                <kbd className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none hidden sm:inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
+              {/* Search button */}
+              <Button
+                variant="outline"
+                size="sm"
+                className="hidden sm:flex items-center gap-2 h-9 w-64 justify-start text-muted-foreground bg-muted/50 border-0 hover:bg-muted/80 font-normal"
+                onClick={() => setSearchOpen(true)}
+              >
+                <Search className="w-4 h-4" />
+                <span className="text-sm">Поиск...</span>
+                <kbd className="ml-auto pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground">
                   ⌘K
                 </kbd>
-              </div>
+              </Button>
+              {/* Mobile search button */}
+              <Button
+                variant="ghost"
+                size="icon"
+                className="sm:hidden h-9 w-9 text-muted-foreground"
+                onClick={() => setSearchOpen(true)}
+              >
+                <Search className="w-4 h-4" />
+              </Button>
 
               {/* Live clock + connection */}
               <div className="hidden lg:flex items-center gap-2 ml-1">
@@ -749,11 +840,17 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="h-9 px-2 gap-2">
-                    <Avatar className="w-7 h-7">
-                      <AvatarFallback className={`${isAdmin ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400' : getAvatarColor(user?.name || 'U')} text-[11px] font-bold`}>
-                        {getInitials(user?.name || 'U')}
-                      </AvatarFallback>
-                    </Avatar>
+                    <div className="relative">
+                      <Avatar className="w-7 h-7">
+                        <AvatarFallback className={`${isAdmin ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400' : getAvatarColor(user?.name || 'U')} text-[11px] font-bold`}>
+                          {getInitials(user?.name || 'U')}
+                        </AvatarFallback>
+                      </Avatar>
+                      {/* Online indicator dot */}
+                      {isOnline && (
+                        <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-emerald-500 rounded-full border-2 border-background" />
+                      )}
+                    </div>
                     <div className="hidden md:flex flex-col items-start">
                       <span className="text-[13px] font-medium leading-none">{user?.name}</span>
                       <span className="text-[11px] text-muted-foreground mt-0.5">
@@ -838,5 +935,91 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
         </div>
       </div>
     </TooltipProvider>
+
+    {/* ─── Search Command Dialog ─── */}
+    <CommandDialog open={searchOpen} onOpenChange={setSearchOpen}>
+      <CommandInput placeholder="Поиск оборудования, шаблонов, аудиторов..." />
+      <CommandList>
+        <CommandEmpty>Ничего не найдено</CommandEmpty>
+
+        {/* Equipment results */}
+        {searchData.equipment.length > 0 && (
+          <CommandGroup heading="Оборудование">
+            {searchData.equipment.map((item) => (
+              <CommandItem
+                key={`equip-${item.id}`}
+                value={`equip-${item.name}-${item.code}`}
+                onSelect={() => {
+                  setSearchOpen(false);
+                  onViewChange('equipment');
+                }}
+              >
+                <Wrench className="w-4 h-4 text-muted-foreground" />
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{item.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {item.code} · {item.category}
+                  </span>
+                </div>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+
+        <CommandSeparator />
+
+        {/* Template results */}
+        {searchData.templates.length > 0 && (
+          <CommandGroup heading="Шаблоны">
+            {searchData.templates.map((item) => (
+              <CommandItem
+                key={`tpl-${item.id}`}
+                value={`tpl-${item.title}-${item.category}`}
+                onSelect={() => {
+                  setSearchOpen(false);
+                  onViewChange('templates');
+                }}
+              >
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{item.title}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {item.category}
+                    {item.status && ` · ${item.status === 'ACTIVE' ? 'Активен' : item.status === 'DRAFT' ? 'Черновик' : item.status}`}
+                  </span>
+                </div>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+
+        <CommandSeparator />
+
+        {/* Auditor results */}
+        {searchData.auditors.length > 0 && (
+          <CommandGroup heading="Аудиторы">
+            {searchData.auditors.map((item) => (
+              <CommandItem
+                key={`aud-${item.id}`}
+                value={`aud-${item.name}-${item.department}`}
+                onSelect={() => {
+                  setSearchOpen(false);
+                  onViewChange('team');
+                }}
+              >
+                <User className="w-4 h-4 text-muted-foreground" />
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium">{item.name}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {item.department || 'Аудитор'}
+                  </span>
+                </div>
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        )}
+      </CommandList>
+    </CommandDialog>
+    </>
   );
 }

@@ -9,7 +9,7 @@ import {
 import {
   CheckCircle2, Clock, AlertTriangle, Wrench, FileText, Users,
   TrendingUp, Activity, Target, CalendarDays, ArrowUpRight, ArrowDownRight,
-  Sparkles
+  Sparkles, ClipboardList, UserPlus, Package, FileBarChart, ArrowRight
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -368,6 +368,42 @@ export default function AdminDashboard() {
         })}
       </div>
 
+      {/* Quick Actions Row */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.25, duration: 0.4 }}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+      >
+        {[
+          { label: 'Создать шаблон', icon: ClipboardList, color: 'from-emerald-500/10 to-teal-500/10 dark:from-emerald-500/5 dark:to-teal-500/5', iconColor: 'text-emerald-600 dark:text-emerald-400', border: 'border-emerald-200/60 dark:border-emerald-800/40', hoverShadow: 'hover:shadow-emerald-500/10' },
+          { label: 'Назначить аудит', icon: UserPlus, color: 'from-sky-500/10 to-blue-500/10 dark:from-sky-500/5 dark:to-blue-500/5', iconColor: 'text-sky-600 dark:text-sky-400', border: 'border-sky-200/60 dark:border-sky-800/40', hoverShadow: 'hover:shadow-sky-500/10' },
+          { label: 'Добавить оборудование', icon: Package, color: 'from-amber-500/10 to-orange-500/10 dark:from-amber-500/5 dark:to-orange-500/5', iconColor: 'text-amber-600 dark:text-amber-400', border: 'border-amber-200/60 dark:border-amber-800/40', hoverShadow: 'hover:shadow-amber-500/10' },
+          { label: 'Просмотреть отчёт', icon: FileBarChart, color: 'from-violet-500/10 to-purple-500/10 dark:from-violet-500/5 dark:to-purple-500/5', iconColor: 'text-violet-600 dark:text-violet-400', border: 'border-violet-200/60 dark:border-violet-800/40', hoverShadow: 'hover:shadow-violet-500/10' },
+        ].map((action, i) => {
+          const Icon = action.icon;
+          return (
+            <motion.button
+              key={action.label}
+              whileHover={{ y: -2, scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className={`flex items-center gap-3 rounded-xl border px-4 py-3.5 bg-gradient-to-br ${action.color} ${action.border} transition-all duration-200 hover:shadow-md ${action.hoverShadow} cursor-pointer group text-left`}
+              onClick={() => {
+                if (i === 0) { /* navigate to templates */ }
+              }}
+            >
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${action.color} ${action.border} group-hover:scale-110 transition-transform duration-200`}>
+                <Icon className={`w-4.5 h-4.5 ${action.iconColor}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="text-sm font-medium leading-tight truncate">{action.label}</div>
+              </div>
+              <ArrowRight className={`w-3.5 h-3.5 ${action.iconColor} opacity-0 -translate-x-1 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-200`} />
+            </motion.button>
+          );
+        })}
+      </motion.div>
+
       {/* Charts Row 1 */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Score Trend */}
@@ -377,7 +413,7 @@ export default function AdminDashboard() {
           transition={{ delay: 0.3, duration: 0.5 }}
           className="lg:col-span-2"
         >
-          <Card>
+          <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Динамика оценок</CardTitle>
               <CardDescription>Средний балл по проведённым аудитам за последние 30 дней</CardDescription>
@@ -423,7 +459,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.5 }}
         >
-          <Card className="h-full">
+          <Card className="h-full transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Статус аудитов</CardTitle>
               <CardDescription>Распределение по текущему статусу</CardDescription>
@@ -478,7 +514,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.5 }}
         >
-          <Card>
+          <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Аудиты по категориям</CardTitle>
               <CardDescription>Количество назначений по типу аудита</CardDescription>
@@ -505,7 +541,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6, duration: 0.5 }}
         >
-          <Card>
+          <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Парк оборудования</CardTitle>
               <CardDescription>Распределение по категориям</CardDescription>
@@ -545,7 +581,7 @@ export default function AdminDashboard() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.7, duration: 0.5 }}
         >
-          <Card>
+          <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
             <CardHeader className="pb-2">
               <CardTitle className="text-base font-semibold">Эффективность аудиторов</CardTitle>
               <CardDescription>Рейтинг по среднему баллу и количеству аудитов</CardDescription>
@@ -581,37 +617,71 @@ export default function AdminDashboard() {
           </Card>
         </motion.div>
 
-        {/* Recent Activity */}
+        {/* Recent Activity Timeline */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.8, duration: 0.5 }}
         >
-          <Card>
+          <Card className="transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 border-gradient">
             <CardHeader className="pb-2">
-              <CardTitle className="text-base font-semibold">Последняя активность</CardTitle>
-              <CardDescription>Недавние действия по аудитам</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="text-base font-semibold">Последняя активность</CardTitle>
+                  <CardDescription>Лента событий по аудитам</CardDescription>
+                </div>
+                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <Activity className="w-4 h-4 text-primary" />
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-3">
-                {data.recentActivity.map((activity) => {
-                  const config = statusConfig[activity.status] || statusConfig.SCHEDULED;
-                  const Icon = config.icon;
-                  return (
-                    <div key={activity.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${config.color}`}>
-                        <Icon className="w-4 h-4" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="text-sm font-medium truncate">{activity.templateTitle}</div>
-                        <div className="text-xs text-muted-foreground">{activity.auditorName}</div>
-                      </div>
-                      <Badge variant="outline" className={`text-[10px] ${config.color}`}>
-                        {config.label}
-                      </Badge>
-                    </div>
-                  );
-                })}
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-[15px] top-2 bottom-2 w-[2px] bg-gradient-to-b from-primary/20 via-primary/10 to-transparent rounded-full" />
+                <div className="space-y-1">
+                  {data.recentActivity.map((activity, i) => {
+                    const config = statusConfig[activity.status] || statusConfig.SCHEDULED;
+                    const Icon = config.icon;
+                    const activityDate = new Date(activity.date);
+                    const timeStr = activityDate.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    const isToday = new Date().toDateString() === activityDate.toDateString();
+                    return (
+                      <motion.div
+                        key={activity.id}
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.9 + i * 0.08, duration: 0.3 }}
+                        className="relative flex items-start gap-3 p-2.5 rounded-lg hover:bg-muted/50 transition-colors group"
+                      >
+                        {/* Timeline dot */}
+                        <div className="relative z-10 mt-0.5 flex-shrink-0">
+                          <div className={`w-[30px] h-[30px] rounded-full flex items-center justify-center border-2 border-background shadow-sm ${config.color} group-hover:scale-110 transition-transform duration-200`}>
+                            <Icon className="w-3.5 h-3.5" />
+                          </div>
+                        </div>
+                        {/* Content */}
+                        <div className="flex-1 min-w-0 pl-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium truncate">{activity.templateTitle}</span>
+                          </div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-xs text-muted-foreground">{activity.auditorName}</span>
+                            <span className="text-[10px] text-muted-foreground/50">·</span>
+                            <span className="text-[10px] text-muted-foreground/70">{timeStr}</span>
+                            {isToday && (
+                              <span className="text-[10px] text-primary font-medium bg-primary/10 px-1.5 py-0.5 rounded-full">Сегодня</span>
+                            )}
+                          </div>
+                        </div>
+                        {/* Status badge */}
+                        <Badge variant="outline" className={`text-[10px] flex-shrink-0 ${config.color}`}>
+                          {config.label}
+                        </Badge>
+                      </motion.div>
+                    );
+                  })}
+                </div>
               </div>
             </CardContent>
           </Card>

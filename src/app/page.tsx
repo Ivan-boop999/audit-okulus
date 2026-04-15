@@ -170,7 +170,7 @@ export default function Home() {
       case 'calendar':
         return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
       case 'audits':
-        return <AuditorMyAudits user={user} onStartAudit={handleStartAudit} />;
+        return <AuditorMyAudits user={user} onStartAudit={handleStartAudit} onViewReport={handleViewReport} />;
       case 'history':
         return <AuditHistory userId={user.id} isAdmin={false} onViewReport={handleViewReport} userName={user.name} />;
       default:

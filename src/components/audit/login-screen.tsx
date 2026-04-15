@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuthStore } from '@/stores/auth';
 import { toast } from 'sonner';
@@ -20,6 +20,34 @@ const demoAccounts = [
   { role: 'AUDITOR', email: 'smirnova@factory.com', password: 'auditor123', name: 'Елена Смирнова', department: 'Цех №2' },
   { role: 'AUDITOR', email: 'kozlov@factory.com', password: 'auditor123', name: 'Дмитрий Козлов', department: 'Склад' },
 ];
+
+// ─── Typing Animation Hook ──────────────────────────────────────────────────
+
+function useTypingEffect(text: string, speed: number = 80, startDelay: number = 0) {
+  const [displayText, setDisplayText] = useState('');
+  const [isComplete, setIsComplete] = useState(false);
+  useEffect(() => {
+    let timeout: ReturnType<typeof setTimeout>;
+    let currentIndex = 0;
+    const startTimeout = setTimeout(() => {
+      const type = () => {
+        if (currentIndex < text.length) {
+          setDisplayText(text.slice(0, currentIndex + 1));
+          currentIndex++;
+          timeout = setTimeout(type, speed);
+        } else {
+          setIsComplete(true);
+        }
+      };
+      type();
+    }, startDelay);
+    return () => {
+      clearTimeout(startTimeout);
+      clearTimeout(timeout);
+    };
+  }, [text, speed, startDelay]);
+  return { displayText, isComplete };
+}
 
 // ─── Floating Particle ─────────────────────────────────────────────────────────
 
@@ -66,7 +94,24 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const leftPanelRef = useRef<HTMLDivElement>(null);
   const login = useAuthStore((s) => s.login);
+
+  // Typing animation for the heading
+  const { displayText: headingLine1, isComplete: line1Done } = useTypingEffect('Управление аудитами', 70, 800);
+  const { displayText: headingLine2, isComplete: line2Done } = useTypingEffect('нового поколения', 70, line1Done ? 0 : 99999);
+
+  // Parallax mouse move handler
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!leftPanelRef.current) return;
+    const rect = leftPanelRef.current.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const moveX = (e.clientX - centerX) / rect.width;
+    const moveY = (e.clientY - centerY) / rect.height;
+    setMousePos({ x: moveX, y: moveY });
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -128,6 +173,8 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
     <div className="min-h-screen flex">
       {/* Left panel - Decorative */}
       <motion.div
+        ref={leftPanelRef}
+        onMouseMove={handleMouseMove}
         initial={{ x: -100, opacity: 0 }}
         animate={{ x: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: 'easeOut' }}
@@ -194,25 +241,29 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
 
         <div className="absolute inset-0 bg-black/20" />
 
-        {/* Decorative shapes */}
+        {/* Decorative shapes with parallax */}
         <motion.div
           className="absolute -bottom-32 -left-32 w-96 h-96 rounded-full border border-white/5"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 60, repeat: Infinity, ease: 'linear' }}
+          animate={{ rotate: 360, x: mousePos.x * -15, y: mousePos.y * -15 }}
+          transition={{ duration: 60, repeat: Infinity, ease: 'linear', x: { duration: 0.8, ease: 'easeOut' }, y: { duration: 0.8, ease: 'easeOut' } }}
         />
         <motion.div
           className="absolute -top-16 -right-16 w-64 h-64 rounded-full border border-white/5"
-          animate={{ rotate: -360 }}
-          transition={{ duration: 45, repeat: Infinity, ease: 'linear' }}
+          animate={{ rotate: -360, x: mousePos.x * 20, y: mousePos.y * 20 }}
+          transition={{ duration: 45, repeat: Infinity, ease: 'linear', x: { duration: 0.8, ease: 'easeOut' }, y: { duration: 0.8, ease: 'easeOut' } }}
         />
         <motion.div
           className="absolute top-1/3 right-1/4 w-48 h-48 rounded-full border border-white/5"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 55, repeat: Infinity, ease: 'linear' }}
+          animate={{ rotate: 360, x: mousePos.x * -10, y: mousePos.y * -10 }}
+          transition={{ duration: 55, repeat: Infinity, ease: 'linear', x: { duration: 0.8, ease: 'easeOut' }, y: { duration: 0.8, ease: 'easeOut' } }}
         />
 
-        {/* Content */}
-        <div className="relative z-10 flex flex-col justify-center px-16 text-white">
+        {/* Content with parallax */}
+        <motion.div
+          className="relative z-10 flex flex-col justify-center px-16 text-white"
+          animate={{ x: mousePos.x * -8, y: mousePos.y * -8 }}
+          transition={{ type: 'tween', duration: 0.6, ease: 'easeOut' }}
+        >
           <motion.div
             initial={{ y: 30, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
@@ -224,10 +275,13 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
               </div>
               <span className="text-3xl font-bold tracking-tight">AuditPro</span>
             </div>
-            <h1 className="text-5xl font-bold leading-tight mb-6">
-              Управление аудитами
+            <h1 className="text-5xl font-bold leading-tight mb-6 min-h-[7rem]">
+              <span>{headingLine1}<span className={`inline-block w-[3px] h-[1.1em] bg-emerald-300 ml-1 align-middle ${line1Done ? 'animate-pulse' : ''}`} /></span>
               <br />
-              <span className="text-emerald-200">нового поколения</span>
+              <span className="text-emerald-200">
+                {headingLine2}
+                {line2Done && <span className="inline-block w-[3px] h-[1.1em] bg-emerald-300/60 ml-1 align-middle animate-pulse" />}
+              </span>
             </h1>
             <p className="text-xl text-white/80 leading-relaxed max-w-md">
               Комплексная платформа для контроля качества, безопасности и эффективности производственных процессов
@@ -274,7 +328,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
               })}
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </motion.div>
 
       {/* Right panel - Login form */}

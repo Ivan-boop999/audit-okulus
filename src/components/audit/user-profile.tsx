@@ -143,6 +143,7 @@ function generateMockStats(userRole: string): UserStats {
 export default function UserProfilePanel() {
   const { user, logout } = useAuthStore();
   const [prefs, setPrefs] = useState<UserPreferences>(loadPreferences);
+  const [activeTab, setActiveTab] = useState('settings');
 
   // Sync preferences to localStorage on change
   useEffect(() => {
@@ -359,7 +360,7 @@ export default function UserProfilePanel() {
 
       {/* ─── Tabs: Settings / Info ─── */}
       <motion.div variants={itemVariants}>
-        <Tabs defaultValue="settings" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="settings" className="gap-1.5">
               <Settings className="w-4 h-4" />

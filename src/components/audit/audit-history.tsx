@@ -165,7 +165,7 @@ function getAnswerDisplay(answer: string | null | undefined, answerType: string)
 
 function formatDuration(startedAt: string, completedAt?: string | null): string {
   if (!completedAt) return '—';
-  const mins = differenceInMinutes(parseISO(completedAt), parseISO(startedAt));
+  const mins = Math.abs(differenceInMinutes(parseISO(completedAt), parseISO(startedAt)));
   if (mins < 60) return `${mins} мин`;
   const h = Math.floor(mins / 60);
   const m = mins % 60;

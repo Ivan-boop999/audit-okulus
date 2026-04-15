@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ArrowLeft, FileText, User, Calendar, Target, TrendingUp, TrendingDown,
-  Minus, Printer, Download, CheckCircle2, AlertTriangle, Award, BarChart3,
+  Minus, Printer, Download, FileDown, CheckCircle2, AlertTriangle, Award, BarChart3,
   Lightbulb, Clock,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -466,6 +466,11 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
     toast.success('Подготовка к печати...');
   }, []);
 
+  const handleDownloadPDF = useCallback(() => {
+    window.print();
+    toast.success('Для сохранения в PDF выберите «Сохранить как PDF» в диалоге печати');
+  }, []);
+
   const handleDownloadCSV = useCallback(() => {
     if (!data || scoredAnswers.length === 0) return;
 
@@ -594,6 +599,10 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
           <Button variant="outline" size="sm" className="gap-1.5" onClick={handlePrint}>
             <Printer className="w-4 h-4" />
             Печать
+          </Button>
+          <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadPDF}>
+            <FileDown className="w-4 h-4" />
+            Скачать PDF
           </Button>
           <Button variant="outline" size="sm" className="gap-1.5" onClick={handleDownloadCSV}>
             <Download className="w-4 h-4" />

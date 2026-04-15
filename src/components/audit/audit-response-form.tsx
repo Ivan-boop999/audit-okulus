@@ -18,6 +18,7 @@ import {
   Sparkles,
   FileText,
   MessageSquare,
+  Save,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -228,6 +229,8 @@ export default function AuditResponseForm({
   const [error, setError] = useState<string | null>(null);
   const [cancelOpen, setCancelOpen] = useState(false);
   const [confirmSubmitOpen, setConfirmSubmitOpen] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
+  const [restoreDialogOpen, setRestoreDialogOpen] = useState(false);
 
   // ── Derived ────────────────────────────────────────────────────────────────
 
@@ -266,6 +269,20 @@ export default function AuditResponseForm({
         }
         setAssignment(found);
         setPhase('questions');
+
+        // Check for existing draft
+        try {
+          const draftKey = `auditpro-draft-${assignmentId}`;
+          const draftStr = localStorage.getItem(draftKey);
+          if (draftStr) {
+            const draft = JSON.parse(draftStr);
+            if (draft && draft.answers && Object.keys(draft.answers).length > 0) {
+              setRestoreDialogOpen(true);
+            }
+          }
+        } catch {
+          // ignore
+        }
       } catch (err) {
         console.error('Fetch assignment error:', err);
         setError('Ошибка загрузки задания');
@@ -411,6 +428,56 @@ export default function AuditResponseForm({
     onCancel?.();
   }, [onCancel]);
 
+  // ── Draft Save / Restore ──────────────────────────────────────────────────
+
+  const draftKey = `auditpro-draft-${assignmentId}`;
+
+  const handleSaveDraft = useCallback(() => {
+    try {
+      const draft = {
+        answers,
+        comments,
+        notes,
+        checklistState,
+        currentStep,
+        savedAt: new Date().toISOString(),
+      };
+      localStorage.setItem(draftKey, JSON.stringify(draft));
+      toast.success('Черновик сохранён', {
+        description: `${answeredCount} из ${questions.length} ответов сохранено локально`,
+      });
+    } catch {
+      toast.error('Не удалось сохранить черновик');
+    }
+  }, [answers, comments, notes, checklistState, currentStep, answeredCount, questions.length]);
+
+  const handleRestoreDraft = useCallback(() => {
+    try {
+      const draftStr = localStorage.getItem(draftKey);
+      if (!draftStr) return;
+      const draft = JSON.parse(draftStr);
+      if (draft.answers) setAnswers(draft.answers);
+      if (draft.comments) setComments(draft.comments);
+      if (draft.notes) setNotes(draft.notes);
+      if (draft.checklistState) setChecklistState(draft.checklistState);
+      if (typeof draft.currentStep === 'number') setCurrentStep(draft.currentStep);
+      setDraftRestored(true);
+      setRestoreDialogOpen(false);
+      toast.success('Черновик восстановлен');
+    } catch {
+      toast.error('Не удалось восстановить черновик');
+    }
+  }, [draftKey]);
+
+  const handleDiscardDraft = useCallback(() => {
+    try {
+      localStorage.removeItem(draftKey);
+    } catch {
+      // ignore
+    }
+    setRestoreDialogOpen(false);
+  }, [draftKey]);
+
   // ── Render: Loading ────────────────────────────────────────────────────────
 
   if (phase === 'loading' && !error) {
@@ -424,6 +491,37 @@ export default function AuditResponseForm({
               className="w-10 h-10 rounded-full border-4 border-emerald-200 border-t-emerald-500"
             />
             <p className="text-muted-foreground text-sm">Загрузка задания...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  // ── Draft Restore Dialog ──────────────────────────────────────────────────
+
+  if (restoreDialogOpen) {
+    return (
+      <div className="w-full max-w-3xl mx-auto">
+        <Card className="overflow-hidden">
+          <CardContent className="p-8 flex flex-col items-center justify-center gap-4 text-center">
+            <div className="w-12 h-12 rounded-full bg-amber-50 dark:bg-amber-950/40 flex items-center justify-center">
+              <Save className="w-6 h-6 text-amber-500" />
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold">Найден черновик</h3>
+              <p className="text-sm text-muted-foreground mt-1">
+                Обнаружены ранее сохранённые ответы для этого аудита. Хотите восстановить?
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={handleRestoreDraft} className="gap-2">
+                <RotateCcw className="w-4 h-4" />
+                Восстановить
+              </Button>
+              <Button variant="outline" onClick={handleDiscardDraft} className="gap-2">
+                Начать заново
+              </Button>
+            </div>
           </CardContent>
         </Card>
       </div>
@@ -697,6 +795,15 @@ export default function AuditResponseForm({
                 Вернуться к вопросам
               </Button>
 
+              <Button
+                variant="ghost"
+                className="gap-2 text-muted-foreground"
+                onClick={handleSaveDraft}
+              >
+                <Save className="w-4 h-4" />
+                Сохранить черновик
+              </Button>
+
               <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
                 <AlertDialogTrigger asChild>
                   <Button variant="ghost" className="gap-2 text-muted-foreground" disabled={submitting}>
@@ -934,6 +1041,16 @@ export default function AuditResponseForm({
             </div>
 
             <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-1.5 text-muted-foreground"
+                onClick={handleSaveDraft}
+              >
+                <Save className="w-4 h-4" />
+                <span className="hidden sm:inline">Черновик</span>
+              </Button>
+
               <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
                 <AlertDialogTrigger asChild>
                   <Button
