@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth';
 import {
   LayoutDashboard, Wrench, FileText, CalendarDays, BarChart3,
   Bell, User, LogOut, Moon, Sun, Menu, X, ChevronLeft,
-  Factory, Search, History, UserCircle, ListChecks, Wifi, WifiOff
+  Factory, Search, History, UserCircle, ListChecks, Wifi, WifiOff, Users
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -37,6 +37,7 @@ const adminNavItems = [
   { id: 'equipment', label: 'Оборудование', icon: Wrench },
   { id: 'templates', label: 'Шаблоны аудитов', icon: FileText },
   { id: 'scheduling', label: 'Расписание', icon: CalendarDays },
+  { id: 'team', label: 'Команда', icon: Users },
   { id: 'action-plans', label: 'План действий', icon: ListChecks },
   { id: 'history', label: 'История аудитов', icon: History },
   { id: 'analytics', label: 'Аналитика', icon: BarChart3 },

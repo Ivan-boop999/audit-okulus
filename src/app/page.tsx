@@ -16,6 +16,7 @@ import AuditHistory from '@/components/audit/audit-history';
 import ActionPlans from '@/components/audit/action-plans';
 import UserProfilePanel from '@/components/audit/user-profile';
 import AuditReportDetail from '@/components/audit/audit-report';
+import TeamMembers from '@/components/audit/team-members';
 
 const emptySubscribe = () => () => {};
 function useMounted() {
@@ -122,6 +123,8 @@ export default function Home() {
           return <AuditScheduler />;
         case 'history':
           return <AuditHistory isAdmin={true} onViewReport={handleViewReport} />;
+        case 'team':
+          return <TeamMembers />;
         case 'analytics':
           return <AnalyticsDashboard />;
         default:

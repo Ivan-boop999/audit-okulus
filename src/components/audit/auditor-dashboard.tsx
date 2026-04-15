@@ -7,9 +7,13 @@ import {
   ArrowRight, Play, User, ClipboardList, Zap, Timer,
 } from 'lucide-react';
 import {
-  Card, CardContent, CardHeader, CardTitle, CardDescription, Badge, Button,
-  Progress, Avatar, AvatarFallback, Separator,
+  Card, CardContent, CardHeader, CardTitle, CardDescription,
 } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Separator } from '@/components/ui/separator';
 import {
   format, parseISO, isAfter, isToday, isBefore, startOfDay,
   differenceInDays, differenceInHours, startOfWeek, endOfWeek, isSameDay,

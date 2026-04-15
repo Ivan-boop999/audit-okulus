@@ -123,3 +123,22 @@ Unresolved Issues / Risks:
   6. Add data export/import (CSV/Excel) for templates and equipment
   7. Add audit checklist templates marketplace/library
   8. Add audit scheduling automation (auto-assign based on frequency)
+
+---
+Task ID: 5
+Agent: Full-stack Developer
+Task: Create a Team Members management page for the admin role in the AuditPro audit management app.
+
+Work Log:
+- Read project worklog and understood full project context (AuditPro audit management app, Russian UI, Next.js 16, shadcn/ui)
+- Created API route `/src/app/api/users/route.ts` with GET (list with filters: role, department, isActive, search), POST (create with bcrypt hashing, default password "audit123"), PUT (update with email uniqueness check)
+- Created TeamMembers component `/src/components/audit/team-members.tsx` with: header with Users icon and team count, 3 animated stats cards (total/active/auditors), search bar with debounced input, role and department filter dropdowns, responsive member card grid with staggered framer-motion animations, initials-based avatars with 8 color variations, status indicator dots (pulsing green for active), role badges (amber ADMIN, emerald AUDITOR), quick action dropdown on hover (edit/toggle active), Add/Edit dialog with form validation, password field (new users only), role toggle selector, active toggle switch, shimmer loading skeleton, empty state
+- Wired into app: added 'team' view to admin routing in page.tsx, added "Команда" nav item with Users icon to adminNavItems in app-shell.tsx, added Users to lucide-react import
+- ESLint: 0 errors, 0 warnings
+- Dev server compilation: successful
+
+Stage Summary:
+- New feature: Team Members management page for admin role
+- API route: /api/users with GET/POST/PUT endpoints
+- Component: TeamMembers with full CRUD, search/filter, responsive grid, animations, polished UI
+- Admin views now total 9: dashboard, equipment, templates, scheduling, team, action-plans, history, analytics, profile

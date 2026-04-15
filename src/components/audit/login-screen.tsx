@@ -99,33 +99,29 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
     }
   };
 
-  const handleDemoLogin = (account: typeof demoAccounts[0]) => {
-    setEmail(account.email);
-    setPassword(account.password);
-    setTimeout(async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: account.email, password: account.password }),
-        });
+  const handleDemoLogin = async (account: typeof demoAccounts[0]) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: account.email, password: account.password }),
+      });
 
-        const data = await res.json();
-        if (!res.ok) {
-          toast.error(data.error || 'Ошибка входа');
-          return;
-        }
-
-        login(data.user);
-        toast.success(`Добро пожаловать, ${data.user.name}!`);
-        setTimeout(onLogin, 300);
-      } catch {
-        toast.error('Ошибка подключения');
-      } finally {
-        setIsLoading(false);
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.error || 'Ошибка входа');
+        return;
       }
-    }, 100);
+
+      login(data.user);
+      toast.success(`Добро пожаловать, ${data.user.name}!`);
+      setTimeout(onLogin, 300);
+    } catch {
+      toast.error('Ошибка подключения');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
