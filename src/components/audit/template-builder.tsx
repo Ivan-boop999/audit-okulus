@@ -6,7 +6,7 @@ import {
   Plus, Search, Pencil, Trash2, FileText, HelpCircle, AlertTriangle,
   CheckCircle2, Clock, Archive, Eye, X, Filter,
   ListChecks, ClipboardList, CalendarClock,
-  Star, ArrowUpDown, Settings2,
+  Star, ArrowUpDown, Settings2, Copy, Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -340,6 +340,47 @@ export default function TemplateBuilder() {
       status: template.status,
     });
     setTemplateDialogOpen(true);
+  };
+
+  const handleCloneTemplate = async (template: Template) => {
+    try {
+      toast.loading('Клонирование шаблона...', { id: 'clone' });
+      const res = await fetch('/api/templates');
+      const allTemplates = await res.json();
+      const fullTemplate = allTemplates.find((t: Template) => t.id === template.id);
+      if (!fullTemplate) throw new Error('Template not found');
+
+      const clonedData = {
+        title: `${template.title} (Копия)`,
+        description: template.description || '',
+        category: template.category,
+        frequency: template.frequency,
+        status: 'DRAFT' as TemplateStatus,
+        creatorId: '',
+        questions: (fullTemplate.questions || []).map((q: TemplateQuestion, i: number) => ({
+          text: q.text,
+          answerType: q.answerType,
+          required: q.required,
+          weight: q.weight,
+          order: q.order ?? i,
+          helpText: q.helpText,
+          options: q.options,
+        })),
+        equipmentIds: (fullTemplate.equipment || []).map((e: { id: string }) => e.id),
+      };
+
+      const createRes = await fetch('/api/templates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(clonedData),
+      });
+
+      if (!createRes.ok) throw new Error('Clone failed');
+      toast.success('Шаблон склонирован', { id: 'clone' });
+      fetchTemplates();
+    } catch {
+      toast.error('Не удалось клонировать шаблон', { id: 'clone' });
+    }
   };
 
   const handleTemplateFormChange = (field: keyof TemplateFormData, value: string) => {
@@ -690,6 +731,15 @@ export default function TemplateBuilder() {
                             variant="ghost"
                             size="icon"
                             className="h-8 w-8"
+                            onClick={() => handleCloneTemplate(template)}
+                            title="Клонировать"
+                          >
+                            <Copy className="w-3.5 h-3.5" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8"
                             onClick={() => openEditTemplate(template)}
                             title="Редактировать"
                           >
@@ -698,7 +748,7 @@ export default function TemplateBuilder() {
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
+                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30"
                             onClick={() => openDeleteTemplate(template)}
                             title="Удалить"
                           >

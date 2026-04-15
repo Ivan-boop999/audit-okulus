@@ -8,7 +8,8 @@ import {
 } from 'recharts';
 import {
   CheckCircle2, Clock, AlertTriangle, Wrench, FileText, Users,
-  TrendingUp, Activity, Target, CalendarDays, ArrowUpRight, ArrowDownRight
+  TrendingUp, Activity, Target, CalendarDays, ArrowUpRight, ArrowDownRight,
+  Sparkles
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -79,8 +80,10 @@ export default function AdminDashboard() {
       value: overview.avgScore,
       suffix: '%',
       icon: Target,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-gradient-to-br from-emerald-50 to-teal-50 dark:from-emerald-950/30 dark:to-teal-950/20',
+      borderColor: 'border-emerald-100 dark:border-emerald-900/50',
+      iconBg: 'bg-emerald-100 dark:bg-emerald-900/50',
       trend: '+2.3%',
       trendUp: true,
     },
@@ -88,8 +91,10 @@ export default function AdminDashboard() {
       title: 'Завершено аудитов',
       value: overview.completedAssignments,
       icon: CheckCircle2,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50',
+      color: 'text-blue-600 dark:text-blue-400',
+      bgColor: 'bg-gradient-to-br from-blue-50 to-sky-50 dark:from-blue-950/30 dark:to-sky-950/20',
+      borderColor: 'border-blue-100 dark:border-blue-900/50',
+      iconBg: 'bg-blue-100 dark:bg-blue-900/50',
       trend: '+12%',
       trendUp: true,
     },
@@ -97,8 +102,10 @@ export default function AdminDashboard() {
       title: 'Требует внимания',
       value: overview.overdueAssignments + overview.inProgressAssignments,
       icon: AlertTriangle,
-      color: 'text-amber-600',
-      bgColor: 'bg-amber-50',
+      color: 'text-amber-600 dark:text-amber-400',
+      bgColor: 'bg-gradient-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20',
+      borderColor: 'border-amber-100 dark:border-amber-900/50',
+      iconBg: 'bg-amber-100 dark:bg-amber-900/50',
       trend: '-5%',
       trendUp: false,
     },
@@ -106,8 +113,10 @@ export default function AdminDashboard() {
       title: 'Всего назначений',
       value: overview.totalAssignments,
       icon: CalendarDays,
-      color: 'text-violet-600',
-      bgColor: 'bg-violet-50',
+      color: 'text-violet-600 dark:text-violet-400',
+      bgColor: 'bg-gradient-to-br from-violet-50 to-purple-50 dark:from-violet-950/30 dark:to-purple-950/20',
+      borderColor: 'border-violet-100 dark:border-violet-900/50',
+      iconBg: 'bg-violet-100 dark:bg-violet-900/50',
       trend: '+8%',
       trendUp: true,
     },
@@ -115,30 +124,38 @@ export default function AdminDashboard() {
       title: 'Оборудование',
       value: overview.totalEquipment,
       icon: Wrench,
-      color: 'text-teal-600',
-      bgColor: 'bg-teal-50',
+      color: 'text-teal-600 dark:text-teal-400',
+      bgColor: 'bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/20',
+      borderColor: 'border-teal-100 dark:border-teal-900/50',
+      iconBg: 'bg-teal-100 dark:bg-teal-900/50',
     },
     {
       title: 'Шаблоны аудитов',
       value: overview.totalTemplates,
       icon: FileText,
-      color: 'text-indigo-600',
-      bgColor: 'bg-indigo-50',
+      color: 'text-rose-600 dark:text-rose-400',
+      bgColor: 'bg-gradient-to-br from-rose-50 to-pink-50 dark:from-rose-950/30 dark:to-pink-950/20',
+      borderColor: 'border-rose-100 dark:border-rose-900/50',
+      iconBg: 'bg-rose-100 dark:bg-rose-900/50',
     },
     {
       title: 'Аудиторы',
       value: overview.totalAuditors,
       icon: Users,
-      color: 'text-pink-600',
-      bgColor: 'bg-pink-50',
+      color: 'text-pink-600 dark:text-pink-400',
+      bgColor: 'bg-gradient-to-br from-pink-50 to-fuchsia-50 dark:from-pink-950/30 dark:to-fuchsia-950/20',
+      borderColor: 'border-pink-100 dark:border-pink-900/50',
+      iconBg: 'bg-pink-100 dark:bg-pink-900/50',
     },
     {
       title: 'Процент выполнения',
       value: overview.completionRate,
       suffix: '%',
       icon: TrendingUp,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50',
+      color: 'text-emerald-600 dark:text-emerald-400',
+      bgColor: 'bg-gradient-to-br from-lime-50 to-green-50 dark:from-lime-950/30 dark:to-green-950/20',
+      borderColor: 'border-lime-100 dark:border-lime-900/50',
+      iconBg: 'bg-lime-100 dark:bg-lime-900/50',
       trend: '+3.1%',
       trendUp: true,
     },
@@ -146,11 +163,30 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Панель управления</h1>
-        <p className="text-muted-foreground">Обзор состояния аудитов и ключевые показатели</p>
-      </div>
+      {/* Welcome Banner */}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="relative overflow-hidden rounded-xl bg-gradient-to-r from-primary/5 via-primary/10 to-transparent border border-primary/10 p-6"
+      >
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-primary/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/3" />
+        <div className="relative flex items-center gap-4">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-lg shadow-primary/20 flex-shrink-0">
+            <Sparkles className="w-6 h-6 text-primary-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold tracking-tight">Панель управления</h1>
+            <p className="text-muted-foreground mt-0.5">Обзор состояния аудитов и ключевые показатели</p>
+          </div>
+          <div className="hidden sm:flex items-center gap-3 text-sm text-muted-foreground">
+            <div className="text-right">
+              <div className="font-semibold text-foreground">{new Date().toLocaleDateString('ru-RU', { weekday: 'long', day: 'numeric', month: 'long' })}</div>
+              <div className="text-xs">{overview.scheduledAssignments} аудит(ов) запланировано</div>
+            </div>
+          </div>
+        </div>
+      </motion.div>
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -163,21 +199,23 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.4 }}
             >
-              <Card className="overflow-hidden hover:shadow-md transition-shadow duration-300">
-                <CardContent className="p-5">
+              <Card className={`overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border ${kpi.borderColor}`}>
+                <CardContent className={`p-5 ${kpi.bgColor} rounded-lg`}>
                   <div className="flex items-start justify-between">
-                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${kpi.bgColor}`}>
+                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${kpi.iconBg} shadow-sm`}>
                       <Icon className={`w-5 h-5 ${kpi.color}`} />
                     </div>
                     {kpi.trend && (
-                      <div className={`flex items-center gap-0.5 text-xs font-medium ${kpi.trendUp ? 'text-emerald-600' : 'text-red-500'}`}>
+                      <div className={`flex items-center gap-0.5 text-xs font-semibold px-2 py-0.5 rounded-full ${
+                        kpi.trendUp ? 'text-emerald-700 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/50' : 'text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-900/50'
+                      }`}>
                         {kpi.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
                         {kpi.trend}
                       </div>
                     )}
                   </div>
                   <div className="mt-3">
-                    <div className="text-2xl font-bold">
+                    <div className="text-2xl font-bold tracking-tight">
                       {typeof kpi.value === 'number' && kpi.value > 100 ? kpi.value.toLocaleString() : kpi.value}
                       {kpi.suffix && <span className="text-base font-normal text-muted-foreground">{kpi.suffix}</span>}
                     </div>

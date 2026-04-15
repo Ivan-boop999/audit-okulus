@@ -490,8 +490,8 @@
   aside,
   header,
   footer,
-  .print\\:hidden,
-  button:not(.print\\:visible),
+  .print\:hidden,
+  button:not(.print\:visible),
   nav,
   [data-radix-popper-content-wrapper],
   [role="tablist"],
@@ -519,12 +519,12 @@
     transition: none !important;
   }
 
-  .print\\:hidden {
+  .print\:hidden {
     display: none !important;
   }
 
   /* Remove scroll constraints */
-  .max-h-\\[600px\\],
+  .max-h-\[600px\],
   .max-h-80,
   .max-h-96 {
     max-height: none !important;
@@ -532,17 +532,17 @@
   }
 
   /* Force page breaks */
-  .print\\:break-before {
+  .print\:break-before {
     page-break-before: always;
     break-before: always;
   }
 
-  .print\\:break-after {
+  .print\:break-after {
     page-break-after: always;
     break-after: always;
   }
 
-  .print\\:avoid-break {
+  .print\:avoid-break {
     page-break-inside: avoid;
     break-inside: avoid;
   }
@@ -621,3 +621,151 @@ button:active, a:active {
   from { opacity: 0; transform: translateY(12px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   ENHANCED SHIMMER SKELETON LOADING
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.95 0 0) 25%,
+    oklch(0.98 0 0) 50%,
+    oklch(0.95 0 0) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+.dark .shimmer {
+  background: linear-gradient(
+    90deg,
+    oklch(0.22 0 0) 25%,
+    oklch(0.28 0 0) 50%,
+    oklch(0.22 0 0) 75%
+  );
+  background-size: 200% 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRADIENT TEXT UTILITIES
+   ═══════════════════════════════════════════════════════════════ */
+
+.text-gradient {
+  background: linear-gradient(135deg, oklch(0.37 0.13 160), oklch(0.45 0.15 170));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-warm {
+  background: linear-gradient(135deg, oklch(0.65 0.2 40), oklch(0.6 0.18 30));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NOISE TEXTURE OVERLAY
+   ═══════════════════════════════════════════════════════════════ */
+
+.noise-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GLASS CARD EFFECT
+   ═══════════════════════════════════════════════════════════════ */
+
+.glass-card {
+  background: oklch(1 0 0 / 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid oklch(0.9 0.005 160 / 0.5);
+}
+
+.dark .glass-card {
+  background: oklch(0.15 0 0 / 0.7);
+  border: 1px solid oklch(0.3 0 0 / 0.5);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCROLLBAR STYLING
+   ═══════════════════════════════════════════════════════════════ */
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.8 0 0);
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.65 0 0);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: oklch(0.35 0 0);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.45 0 0);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PULSE DOT INDICATOR (for online status)
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes pulse-ring {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+
+.pulse-dot::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: inherit;
+  animation: pulse-ring 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ACTIVE NAV INDICATOR TRANSITION
+   ═══════════════════════════════════════════════════════════════ */
+
+.nav-active-indicator {
+  position: relative;
+}
+
+.nav-active-indicator::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  border-radius: 0 4px 4px 0;
+  background: oklch(0.37 0.13 160);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+

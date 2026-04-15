@@ -13,7 +13,7 @@ import {
   CheckCircle2, Clock, AlertTriangle, CalendarDays, ArrowUpRight,
   ArrowDownRight, Download, Filter, ChevronDown, Sparkles, LayoutDashboard,
   UserCheck, Shield, BarChartHorizontal, Flame, PieChartIcon,
-  TableIcon,
+  TableIcon, BookOpen,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
