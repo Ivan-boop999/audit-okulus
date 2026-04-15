@@ -130,7 +130,10 @@
   }
 }
 
-/* Custom scrollbar */
+/* ═══════════════════════════════════════════════════════════════
+   CUSTOM SCROLLBAR
+   ═══════════════════════════════════════════════════════════════ */
+
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -149,7 +152,10 @@
   background: oklch(0.7 0.01 160);
 }
 
-/* Glassmorphism utility */
+/* ═══════════════════════════════════════════════════════════════
+   GLASSMORPHISM
+   ═══════════════════════════════════════════════════════════════ */
+
 .glass {
   background: oklch(1 0 0 / 0.7);
   backdrop-filter: blur(12px);
@@ -160,11 +166,32 @@
   background: oklch(0.145 0 0 / 0.7);
 }
 
-/* Animated gradient background */
+.glass-strong {
+  background: oklch(1 0 0 / 0.85);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  border: 1px solid oklch(1 0 0 / 0.3);
+}
+
+.dark .glass-strong {
+  background: oklch(0.17 0 0 / 0.85);
+  border: 1px solid oklch(1 0 0 / 0.08);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRADIENT BACKGROUNDS
+   ═══════════════════════════════════════════════════════════════ */
+
 .gradient-bg {
   background: linear-gradient(-45deg, #0d9488, #059669, #047857, #065f46);
   background-size: 400% 400%;
   animation: gradient 15s ease infinite;
+}
+
+.gradient-bg-deep {
+  background: linear-gradient(-45deg, #065f46, #0d9488, #047857, #0f766e, #064e3b);
+  background-size: 400% 400%;
+  animation: gradient 20s ease infinite;
 }
 
 @keyframes gradient {
@@ -173,7 +200,10 @@
   100% { background-position: 0% 50%; }
 }
 
-/* Pulse glow for notification badge */
+/* ═══════════════════════════════════════════════════════════════
+   PULSE & GLOW EFFECTS
+   ═══════════════════════════════════════════════════════════════ */
+
 @keyframes pulse-glow {
   0%, 100% { box-shadow: 0 0 0 0 oklch(0.577 0.245 27.325 / 0.4); }
   50% { box-shadow: 0 0 0 8px oklch(0.577 0.245 27.325 / 0); }
@@ -183,7 +213,38 @@
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
-/* Shimmer loading effect */
+@keyframes pulse-emerald {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.52 0.17 145 / 0.4); }
+  50% { box-shadow: 0 0 0 6px oklch(0.52 0.17 145 / 0); }
+}
+
+.pulse-emerald {
+  animation: pulse-emerald 2s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float-delayed {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-12px) rotate(5deg); }
+}
+
+.animate-float-delayed {
+  animation: float-delayed 4s ease-in-out infinite;
+  animation-delay: 1s;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SHIMMER LOADING EFFECT
+   ═══════════════════════════════════════════════════════════════ */
+
 @keyframes shimmer {
   0% { background-position: -200% 0; }
   100% { background-position: 200% 0; }
@@ -195,4 +256,227 @@
   animation: shimmer 2s infinite;
 }
 
-/* Notification sound - pleasant chime */
+.dark .shimmer {
+  background: linear-gradient(90deg, transparent 0%, oklch(0.3 0.01 160) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   ANIMATED UNDERLINE / BORDER EFFECTS
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes border-glow {
+  0%, 100% { border-color: oklch(0.52 0.17 145 / 0.3); }
+  50% { border-color: oklch(0.52 0.17 145 / 0.8); }
+}
+
+.border-glow {
+  animation: border-glow 2s ease-in-out infinite;
+}
+
+@keyframes underline-slide {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
+.underline-animate::after {
+  content: '';
+  display: block;
+  height: 2px;
+  background: linear-gradient(90deg, oklch(0.52 0.17 145), oklch(0.55 0.15 160));
+  animation: underline-slide 0.6s ease-out forwards;
+  border-radius: 1px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CARD HOVER EFFECTS
+   ═══════════════════════════════════════════════════════════════ */
+
+.card-hover-lift {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px oklch(0.3 0.04 160 / 0.15), 0 4px 10px -6px oklch(0.3 0.04 160 / 0.1);
+}
+
+.card-hover-glow {
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.card-hover-glow:hover {
+  box-shadow: 0 0 20px -3px oklch(0.52 0.17 145 / 0.2);
+  border-color: oklch(0.52 0.17 145 / 0.4);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   GRADIENT TEXT
+   ═══════════════════════════════════════════════════════════════ */
+
+.text-gradient {
+  background: linear-gradient(135deg, #059669, #0d9488, #0891b2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-gradient-warm {
+  background: linear-gradient(135deg, #d97706, #ea580c, #dc2626);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   DECORATIVE PATTERNS (for login, empty states)
+   ═══════════════════════════════════════════════════════════════ */
+
+.pattern-dots {
+  background-image: radial-gradient(oklch(1 0 0 / 0.15) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.pattern-grid {
+  background-image:
+    linear-gradient(oklch(1 0 0 / 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, oklch(1 0 0 / 0.05) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   NOTIFICATION PANEL IMPROVEMENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes notif-slide-in {
+  from { opacity: 0; transform: translateY(-8px) scale(0.97); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.notif-enter {
+  animation: notif-slide-in 0.25s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PARTICLE EFFECTS (for success celebrations)
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes particle-drift {
+  0% { transform: translate(0, 0) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translate(var(--drift-x, 50px), var(--drift-y, -100px)) rotate(var(--drift-rotate, 360deg)); opacity: 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PROGRESS BAR GRADIENT
+   ═══════════════════════════════════════════════════════════════ */
+
+.progress-gradient {
+  background: linear-gradient(90deg, #059669, #0d9488, #0891b2);
+  background-size: 200% 100%;
+  animation: gradient 3s ease infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SUBTLE BACKGROUND PATTERNS
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes rotate-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.rotate-slow {
+  animation: rotate-slow 30s linear infinite;
+}
+
+.rotate-slow-reverse {
+  animation: rotate-slow 25s linear infinite reverse;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIDEBAR ACTIVE INDICATOR
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes sidebar-indicator {
+  from { height: 0; opacity: 0; }
+  to { height: 60%; opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   TYPING / COUNTER ANIMATION
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes count-up {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.count-animate {
+  animation: count-up 0.4s ease-out forwards;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STATUS DOT ANIMATIONS
+   ═══════════════════════════════════════════════════════════════ */
+
+@keyframes status-online {
+  0%, 100% { box-shadow: 0 0 0 0 oklch(0.52 0.17 145 / 0.5); }
+  50% { box-shadow: 0 0 0 4px oklch(0.52 0.17 145 / 0); }
+}
+
+.status-online {
+  animation: status-online 2s ease-in-out infinite;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MISC UTILITIES
+   ═══════════════════════════════════════════════════════════════ */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.line-clamp-1 {
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Focus ring animation */
+@keyframes focus-ring-in {
+  from { box-shadow: 0 0 0 0 oklch(0.37 0.13 160 / 0.4); }
+  to { box-shadow: 0 0 0 3px oklch(0.37 0.13 160 / 0.15); }
+}
+
+.focus-ring-animate:focus {
+  animation: focus-ring-in 0.2s ease-out forwards;
+}
+
+/* Smooth scale hover */
+.scale-hover {
+  transition: transform 0.2s ease;
+}
+
+.scale-hover:hover {
+  transform: scale(1.02);
+}
+
+.scale-hover:active {
+  transform: scale(0.98);
+}

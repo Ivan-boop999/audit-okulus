@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth';
 import {
   LayoutDashboard, Wrench, FileText, CalendarDays, BarChart3,
   Bell, User, LogOut, Moon, Sun, Menu, X, ChevronLeft,
-  Shield, Factory, Search, History
+  Factory, Search, History, UserCircle, ListChecks, Wifi, WifiOff
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -37,6 +37,7 @@ const adminNavItems = [
   { id: 'equipment', label: 'Оборудование', icon: Wrench },
   { id: 'templates', label: 'Шаблоны аудитов', icon: FileText },
   { id: 'scheduling', label: 'Расписание', icon: CalendarDays },
+  { id: 'action-plans', label: 'План действий', icon: ListChecks },
   { id: 'history', label: 'История аудитов', icon: History },
   { id: 'analytics', label: 'Аналитика', icon: BarChart3 },
 ];
@@ -45,6 +46,7 @@ const auditorNavItems = [
   { id: 'dashboard', label: 'Обзор', icon: LayoutDashboard },
   { id: 'calendar', label: 'Календарь', icon: CalendarDays },
   { id: 'audits', label: 'Мои аудиты', icon: FileText },
+  { id: 'action-plans', label: 'План действий', icon: ListChecks },
   { id: 'history', label: 'История', icon: History },
 ];
 
@@ -75,6 +77,8 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
+  const [currentTime, setCurrentTime] = useState('');
+  const [isOnline, setIsOnline] = useState(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
 
   const isAdmin = user?.role === 'ADMIN';
   const navItems = isAdmin ? adminNavItems : auditorNavItems;
@@ -167,6 +171,34 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
     logout();
     toast.info('Вы вышли из системы');
   };
+
+  // Live clock
+  useEffect(() => {
+    const updateClock = () => {
+      setCurrentTime(
+        new Date().toLocaleString('ru-RU', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+        })
+      );
+    };
+    updateClock();
+    const interval = setInterval(updateClock, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // Connection status
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
@@ -349,6 +381,14 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                 className="w-64 pl-9 h-9 bg-muted/50 border-0 focus-visible:ring-1"
               />
             </div>
+
+            {/* Live clock + connection status */}
+            <div className="hidden lg:flex items-center gap-2 ml-2">
+              <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs ${isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>
+                {isOnline ? <Wifi className="w-3 h-3" /> : <WifiOff className="w-3 h-3" />}
+                <span className="font-medium tabular-nums">{currentTime}</span>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center gap-2">
@@ -446,8 +486,17 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
 
             {/* User menu */}
             <div className="flex items-center gap-3">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => onViewChange('profile')}
+                title="Профиль"
+              >
+                <UserCircle className="w-4 h-4" />
+              </Button>
               <Avatar className="w-8 h-8">
-                <AvatarFallback className={`${isAdmin ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700'} text-xs font-bold`}>
+                <AvatarFallback className={`${isAdmin ? 'bg-amber-100 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'} text-xs font-bold`}>
                   {getInitials(user?.name || 'U')}
                 </AvatarFallback>
               </Avatar>
@@ -495,7 +544,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                 <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-amber-500' : 'bg-emerald-500'}`} />
                 {isAdmin ? 'Администратор' : user?.department || 'Аудитор'}
               </span>
-              <span>Версия 1.0</span>
+              <span>Версия 2.0</span>
             </div>
           </div>
         </footer>

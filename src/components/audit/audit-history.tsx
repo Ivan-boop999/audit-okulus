@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 interface AuditHistoryProps {
   userId?: string;
   isAdmin?: boolean;
+  onViewReport?: (responseId: string) => void;
 }
 
 interface Auditor {
@@ -171,7 +172,7 @@ function formatDuration(startedAt: string, completedAt?: string | null): string 
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function AuditHistory({ userId, isAdmin = false }: AuditHistoryProps) {
+export default function AuditHistory({ userId, isAdmin = false, onViewReport }: AuditHistoryProps) {
   // Data state
   const [assignments, setAssignments] = useState<AuditAssignment[]>([]);
   const [loading, setLoading] = useState(true);

@@ -12,6 +12,9 @@ import AnalyticsDashboard from '@/components/audit/analytics-dashboard';
 import AuditorCalendar from '@/components/audit/auditor-calendar';
 import AuditResponseForm from '@/components/audit/audit-response-form';
 import AuditHistory from '@/components/audit/audit-history';
+import ActionPlans from '@/components/audit/action-plans';
+import UserProfilePanel from '@/components/audit/user-profile';
+import AuditReportDetail from '@/components/audit/audit-report';
 
 const emptySubscribe = () => () => {};
 function useMounted() {
@@ -22,6 +25,7 @@ export default function Home() {
   const { isAuthenticated, user } = useAuthStore();
   const [activeView, setActiveView] = useState('dashboard');
   const [activeAuditId, setActiveAuditId] = useState<string | null>(null);
+  const [activeReportId, setActiveReportId] = useState<string | null>(null);
   const mounted = useMounted();
 
   // Redirect to dashboard on login
@@ -44,6 +48,16 @@ export default function Home() {
     setActiveView(user?.role === 'ADMIN' ? 'scheduling' : 'calendar');
   };
 
+  const handleViewReport = (responseId: string) => {
+    setActiveReportId(responseId);
+    setActiveView('report');
+  };
+
+  const handleBackFromReport = () => {
+    setActiveReportId(null);
+    setActiveView('history');
+  };
+
   // Prevent hydration mismatch
   if (!mounted) {
     return (
@@ -62,6 +76,16 @@ export default function Home() {
 
   // Render active view content
   const renderContent = () => {
+    // Audit report detail view
+    if (activeView === 'report' && activeReportId) {
+      return (
+        <AuditReportDetail
+          responseId={activeReportId}
+          onBack={handleBackFromReport}
+        />
+      );
+    }
+
     // Audit response form (shared between admin and auditor)
     if (activeView === 'audit-form' && activeAuditId) {
       return (
@@ -72,6 +96,16 @@ export default function Home() {
           onCancel={handleCancelAudit}
         />
       );
+    }
+
+    // Profile (shared between admin and auditor)
+    if (activeView === 'profile') {
+      return <UserProfilePanel />;
+    }
+
+    // Action Plans (shared between admin and auditor)
+    if (activeView === 'action-plans') {
+      return <ActionPlans isAdmin={isAdmin} userId={user.id} />;
     }
 
     // Admin views
@@ -86,7 +120,7 @@ export default function Home() {
         case 'scheduling':
           return <AuditScheduler />;
         case 'history':
-          return <AuditHistory isAdmin={true} />;
+          return <AuditHistory isAdmin={true} onViewReport={handleViewReport} />;
         case 'analytics':
           return <AnalyticsDashboard />;
         default:
@@ -103,7 +137,7 @@ export default function Home() {
       case 'audits':
         return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
       case 'history':
-        return <AuditHistory userId={user.id} isAdmin={false} />;
+        return <AuditHistory userId={user.id} isAdmin={false} onViewReport={handleViewReport} />;
       default:
         return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
     }
