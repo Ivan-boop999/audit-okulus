@@ -1,168 +1,60 @@
-import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-// GET /api/action-plans — list action plans with optional filters
-export async function GET(request: Request) {
+// Proxy to data-api mini-service on port 3010 (bun:sqlite for action_plans & audit_comments)
+// Returns graceful degradation (empty data) when mini-service is unavailable
+
+const DATA_API = 'http://127.0.0.1:3010';
+const TIMEOUT_MS = 2000;
+
+async function safeFetch(url: string, options?: RequestInit) {
   try {
-    const { searchParams } = new URL(request.url);
-
-    const userId = searchParams.get('userId');
-    const status = searchParams.get('status');
-    const priority = searchParams.get('priority');
-    const sourceId = searchParams.get('sourceId');
-    const sortBy = searchParams.get('sortBy') || 'createdAt';
-    const sortDir = searchParams.get('sortDir') || 'desc';
-
-    const where: Record<string, unknown> = {};
-    if (userId) where.assigneeId = userId;
-    if (status) where.status = status;
-    if (priority) where.priority = priority;
-    if (sourceId) where.sourceId = sourceId;
-
-    const orderBy: Record<string, string> = {};
-    orderBy[sortBy] = sortDir;
-
-    const actionPlans = await db.actionPlan.findMany({
-      where,
-      orderBy,
-      include: {
-        assignee: { select: { id: true, name: true, email: true, department: true } },
-        auditResponse: {
-          select: {
-            id: true,
-            score: true,
-            status: true,
-            assignment: {
-              select: {
-                id: true,
-                template: { select: { id: true, title: true, category: true } },
-                auditor: { select: { id: true, name: true } },
-              },
-            },
-          },
-        },
-      },
-    });
-
-    return NextResponse.json(actionPlans);
-  } catch (error) {
-    console.error('Action plans fetch error:', error);
-    return NextResponse.json({ error: 'Failed to fetch action plans' }, { status: 500 });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
+    const res = await fetch(url, { ...options, signal: controller.signal });
+    clearTimeout(timer);
+    return res;
+  } catch {
+    return null;
   }
 }
 
-// POST /api/action-plans — create a new action plan
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url);
+  const qs = searchParams.toString();
+
+  const res = await safeFetch(`${DATA_API}/api/action-plans${qs ? '?' + qs : ''}`);
+  if (!res || !res.ok) {
+    return NextResponse.json({ error: 'Service unavailable', plans: [] });
+  }
+  try { return NextResponse.json(await res.json()); } catch { return NextResponse.json({ plans: [] }); }
+}
+
 export async function POST(request: Request) {
   try {
-    const data = await request.json();
-    const { title, description, priority, assigneeId, dueDate, sourceType, sourceId, score, auditResponseId } = data;
-
-    if (!title || typeof title !== 'string') {
-      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
-    }
-
-    const actionPlan = await db.actionPlan.create({
-      data: {
-        title,
-        description: description ?? null,
-        priority: priority ?? 'MEDIUM',
-        assigneeId: assigneeId ?? null,
-        dueDate: dueDate ? new Date(dueDate) : null,
-        sourceType: sourceType ?? 'AUDIT',
-        sourceId: sourceId ?? null,
-        score: score ?? null,
-        auditResponseId: auditResponseId ?? null,
-      },
-      include: {
-        assignee: { select: { id: true, name: true, email: true } },
-        auditResponse: {
-          select: {
-            id: true,
-            score: true,
-            status: true,
-            assignment: {
-              select: {
-                id: true,
-                template: { select: { id: true, title: true, category: true } },
-                auditor: { select: { id: true, name: true } },
-              },
-            },
-          },
-        },
-      },
+    const body = await request.json();
+    const res = await safeFetch(`${DATA_API}/api/action-plans`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     });
-
-    return NextResponse.json(actionPlan, { status: 201 });
-  } catch (error) {
-    console.error('Action plan create error:', error);
-    return NextResponse.json({ error: 'Failed to create action plan' }, { status: 500 });
-  }
+    if (!res || !res.ok) return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
+    return NextResponse.json(await res.json(), { status: res.status });
+  } catch { return NextResponse.json({ error: 'Bad request' }, { status: 400 }); }
 }
 
-// PUT /api/action-plans — update an existing action plan
 export async function PUT(request: Request) {
   try {
-    const { id, ...data } = await request.json();
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
-    }
-
-    const updateData: Record<string, unknown> = {};
-    if (data.title !== undefined) updateData.title = data.title;
-    if (data.description !== undefined) updateData.description = data.description ?? null;
-    if (data.priority !== undefined) updateData.priority = data.priority;
-    if (data.status !== undefined) updateData.status = data.status;
-    if (data.assigneeId !== undefined) updateData.assigneeId = data.assigneeId ?? null;
-    if (data.dueDate !== undefined) updateData.dueDate = data.dueDate ? new Date(data.dueDate) : null;
-    if (data.sourceType !== undefined) updateData.sourceType = data.sourceType;
-    if (data.sourceId !== undefined) updateData.sourceId = data.sourceId ?? null;
-    if (data.score !== undefined) updateData.score = data.score ?? null;
-    if (data.auditResponseId !== undefined) updateData.auditResponseId = data.auditResponseId ?? null;
-
-    const actionPlan = await db.actionPlan.update({
-      where: { id },
-      data: updateData,
-      include: {
-        assignee: { select: { id: true, name: true, email: true } },
-        auditResponse: {
-          select: {
-            id: true,
-            score: true,
-            status: true,
-            assignment: {
-              select: {
-                id: true,
-                template: { select: { id: true, title: true, category: true } },
-                auditor: { select: { id: true, name: true } },
-              },
-            },
-          },
-        },
-      },
+    const body = await request.json();
+    const res = await safeFetch(`${DATA_API}/api/action-plans`, {
+      method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
     });
-
-    return NextResponse.json(actionPlan);
-  } catch (error) {
-    console.error('Action plan update error:', error);
-    return NextResponse.json({ error: 'Failed to update action plan' }, { status: 500 });
-  }
+    if (!res || !res.ok) return NextResponse.json({ error: 'Service unavailable' }, { status: 503 });
+    return NextResponse.json(await res.json(), { status: res.status });
+  } catch { return NextResponse.json({ error: 'Bad request' }, { status: 400 }); }
 }
 
-// DELETE /api/action-plans?id=xxx — delete an action plan
 export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ error: 'ID is required' }, { status: 400 });
-    }
-
-    await db.actionPlan.delete({ where: { id } });
-    return NextResponse.json({ success: true });
-  } catch (error) {
-    console.error('Action plan delete error:', error);
-    return NextResponse.json({ error: 'Failed to delete action plan' }, { status: 500 });
-  }
+  const { searchParams } = new URL(request.url);
+  const qs = searchParams.toString();
+  const res = await safeFetch(`${DATA_API}/api/action-plans${qs ? '?' + qs : ''}`, { method: 'DELETE' });
+  if (!res || !res.ok) return NextResponse.json({ deleted: 0 });
+  try { return NextResponse.json(await res.json()); } catch { return NextResponse.json({ deleted: 0 }); }
 }
