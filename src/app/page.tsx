@@ -11,6 +11,7 @@ import AuditScheduler from '@/components/audit/audit-scheduler';
 import AnalyticsDashboard from '@/components/audit/analytics-dashboard';
 import AuditorCalendar from '@/components/audit/auditor-calendar';
 import AuditResponseForm from '@/components/audit/audit-response-form';
+import AuditHistory from '@/components/audit/audit-history';
 
 const emptySubscribe = () => () => {};
 function useMounted() {
@@ -84,6 +85,8 @@ export default function Home() {
           return <TemplateBuilder creatorId={user.id} />;
         case 'scheduling':
           return <AuditScheduler />;
+        case 'history':
+          return <AuditHistory isAdmin={true} />;
         case 'analytics':
           return <AnalyticsDashboard />;
         default:
@@ -99,6 +102,8 @@ export default function Home() {
         return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
       case 'audits':
         return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
+      case 'history':
+        return <AuditHistory userId={user.id} isAdmin={false} />;
       default:
         return <AuditorCalendar userId={user.id} onStartAudit={handleStartAudit} />;
     }

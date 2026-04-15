@@ -6,7 +6,7 @@ import { useAuthStore } from '@/stores/auth';
 import {
   LayoutDashboard, Wrench, FileText, CalendarDays, BarChart3,
   Bell, User, LogOut, Moon, Sun, Menu, X, ChevronLeft,
-  Shield, Factory, Search
+  Shield, Factory, Search, History
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -37,6 +37,7 @@ const adminNavItems = [
   { id: 'equipment', label: 'Оборудование', icon: Wrench },
   { id: 'templates', label: 'Шаблоны аудитов', icon: FileText },
   { id: 'scheduling', label: 'Расписание', icon: CalendarDays },
+  { id: 'history', label: 'История аудитов', icon: History },
   { id: 'analytics', label: 'Аналитика', icon: BarChart3 },
 ];
 
@@ -44,6 +45,7 @@ const auditorNavItems = [
   { id: 'dashboard', label: 'Обзор', icon: LayoutDashboard },
   { id: 'calendar', label: 'Календарь', icon: CalendarDays },
   { id: 'audits', label: 'Мои аудиты', icon: FileText },
+  { id: 'history', label: 'История', icon: History },
 ];
 
 const notifTypes: Record<string, string> = {
@@ -477,6 +479,26 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
             </motion.div>
           </AnimatePresence>
         </main>
+
+        {/* Footer */}
+        <footer className="border-t bg-card/60 backdrop-blur-sm px-4 lg:px-6 py-3 mt-auto">
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <div className="w-5 h-5 bg-primary rounded flex items-center justify-center">
+                <Factory className="w-3 h-3 text-primary-foreground" />
+              </div>
+              <span className="font-medium text-foreground/80">AuditPro</span>
+              <span>© {new Date().getFullYear()}</span>
+            </div>
+            <div className="flex items-center gap-4">
+              <span className="flex items-center gap-1">
+                <span className={`w-1.5 h-1.5 rounded-full ${isAdmin ? 'bg-amber-500' : 'bg-emerald-500'}`} />
+                {isAdmin ? 'Администратор' : user?.department || 'Аудитор'}
+              </span>
+              <span>Версия 1.0</span>
+            </div>
+          </div>
+        </footer>
       </div>
     </div>
   );
