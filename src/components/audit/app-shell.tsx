@@ -455,7 +455,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
           {/* Logo */}
           <div className="h-16 flex flex-col items-stretch px-4 border-b relative">
             <div className="flex items-center gap-3 overflow-hidden flex-1">
-              <img src="/logo.jpg" alt="Окулус-Аудит" className="w-9 h-9 rounded-xl object-cover shadow-md shadow-primary/20" />
+              <img src="/logo.png" alt="Окулус-Аудит" className="w-9 h-9 rounded-xl object-cover shadow-md shadow-primary/20" />
               <AnimatePresence>
                 {sidebarOpen && (
                   <motion.div
@@ -595,7 +595,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                 className="lg:hidden fixed left-0 top-0 bottom-0 w-[280px] bg-card z-50 shadow-xl">
                 <div className="h-16 flex items-center justify-between px-4 border-b">
                   <div className="flex items-center gap-3">
-                    <img src="/logo.jpg" alt="Окулус-Аудит" className="w-9 h-9 rounded-xl object-cover shadow-lg shadow-primary/20" />
+                    <img src="/logo.png" alt="Окулус-Аудит" className="w-9 h-9 rounded-xl object-cover shadow-lg shadow-primary/20" />
                     <span className="font-bold text-lg tracking-tight">Окулус-Аудит</span>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(false)}>
@@ -908,7 +908,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
           <footer className="border-t bg-card/60 backdrop-blur-sm px-4 lg:px-6 py-3 mt-auto">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <img src="/logo.jpg" alt="Окулус-Аудит" className="w-5 h-5 rounded object-cover" />
+                <img src="/logo.png" alt="Окулус-Аудит" className="w-5 h-5 rounded object-cover" />
                 <span className="font-medium text-foreground/80">Окулус-Аудит</span>
                 <span>© {new Date().getFullYear()}</span>
               </div>

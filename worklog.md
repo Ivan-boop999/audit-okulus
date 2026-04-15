@@ -922,8 +922,32 @@ Current Project Status:
 - ESLint: 0 errors, 0 warnings
 - 19+ components, 8+ API routes, 10 DB models
 - Admin views: 10, Auditor views: 6
-- Logo file: /public/logo.jpg
+- Logo file: /public/logo.png (214×158px, dark navy bg, white interlocking loops)
 - Color theme: emerald/teal primary + violet accent (Oculus theme)
+
+---
+Task ID: 10
+Agent: Main Orchestrator
+Task: Replace logo with newly uploaded version
+
+Work Log:
+- User uploaded new logo image (pasted_image_1776259244264.png, 214×158px, PNG RGBA)
+- Analyzed logo via VLM: dark navy blue background, white interlocking rounded loops/rings with central small circle, minimalist modern design, no text
+- Copied new logo to /public/logo.png
+- Updated all logo references from logo.jpg to logo.png across 4 files (7 references total):
+  - src/components/audit/app-shell.tsx (3 refs: sidebar desktop, sidebar mobile, footer)
+  - src/components/audit/login-screen.tsx (2 refs: left panel, mobile)
+  - src/components/audit/audit-report.tsx (1 ref: print header)
+  - src/app/layout.tsx (1 ref: favicon)
+- Verified no remaining logo.jpg references in src/
+- ESLint: 0 errors, 0 warnings
+- Dev server: compiled successfully
+- Logo accessible via HTTP: 200 OK, image/png, 40060 bytes
+
+Stage Summary:
+- New logo (214×158px PNG) deployed to /public/logo.png
+- All 7 references across 4 files updated from logo.jpg → logo.png
+- Logo displays in: sidebar (desktop + mobile), login (left panel + mobile), footer, print header, favicon
 
 Unresolved Issues:
 - Action Plans still use localStorage only

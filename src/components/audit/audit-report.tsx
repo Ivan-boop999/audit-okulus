@@ -613,7 +613,7 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
       {/* Print Header (visible only when printing) */}
       <div className="print-header">
         <div className="print-logo">
-          <img src="/logo.jpg" alt="Окулус-Аудит" style="width:18px;height:18px;border-radius:4px;" />
+          <img src="/logo.png" alt="Окулус-Аудит" style="width:18px;height:18px;border-radius:4px;" />
         </div>
         <div>
           <div className="print-title">Окулус-Аудит — Отчёт аудита</div>
