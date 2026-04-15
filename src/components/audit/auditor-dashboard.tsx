@@ -421,10 +421,10 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
         </div>
 
         {/* KPI cards skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {Array.from({ length: 4 }).map((_, i) => (
             <Card key={i}>
-              <CardContent className="p-5">
+              <CardContent className="p-3 sm:p-5">
                 <div className="shimmer h-4 w-24 rounded mb-3" />
                 <div className="shimmer h-9 w-16 rounded mb-2" />
                 <div className="shimmer h-3 w-20 rounded" />
@@ -437,7 +437,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {Array.from({ length: 3 }).map((_, i) => (
             <Card key={i}>
-              <CardContent className="p-5">
+              <CardContent className="p-3 sm:p-5">
                 <div className="shimmer h-4 w-32 rounded mb-4" />
                 <div className="space-y-3">
                   {Array.from({ length: 4 }).map((_, j) => (
@@ -566,7 +566,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500/5 via-teal-500/10 to-transparent border border-emerald-500/10 p-6"
+        className="relative overflow-hidden rounded-xl bg-gradient-to-r from-emerald-500/5 via-teal-500/10 to-transparent border border-emerald-500/10 p-4 sm:p-6"
       >
         <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-emerald-500/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/3" />
         <div className="absolute bottom-0 left-1/2 w-48 h-48 bg-gradient-to-tr from-teal-500/5 to-transparent rounded-full translate-y-1/2" />
@@ -596,7 +596,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
       </motion.div>
 
       {/* ═══════════════ KPI CARDS ═══════════════ */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         {kpiCards.map((kpi, i) => {
           const Icon = kpi.icon;
           return (
@@ -610,7 +610,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
                   'from-rose-400 to-pink-400'
                 }`} />
 
-                <CardContent className={`p-5 ${kpi.bgColor}`}>
+                <CardContent className={`p-3 sm:p-5 ${kpi.bgColor}`}>
                   <div className="flex items-start justify-between">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${kpi.iconBg} shadow-sm transition-transform group-hover:scale-110`}>
                       <Icon className={`w-5 h-5 ${kpi.color}`} />
@@ -623,9 +623,9 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
                     )}
                   </div>
 
-                  <div className="mt-4">
+                  <div className="mt-3 sm:mt-4">
                     <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold tracking-tight">
+                      <span className="text-2xl sm:text-3xl font-bold tracking-tight">
                         {typeof kpi.value === 'number' ? (
                           <AnimatedCounter value={kpi.value} />
                         ) : kpi.value}
@@ -662,12 +662,12 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
                 <div className="absolute inset-0 -m-6 rounded-full bg-gradient-to-br from-emerald-200/30 to-teal-200/20 dark:from-emerald-500/10 dark:to-teal-500/10 animate-pulse blur-xl" />
                 <div className="absolute inset-0 -m-3 rounded-full bg-gradient-to-tr from-teal-200/20 to-emerald-200/10 dark:from-teal-500/5 dark:to-emerald-500/5 animate-pulse blur-md" style={{ animationDelay: '1s' }} />
                 <div className="relative">
-                  <CircularProgressRing percentage={stats.completionRate} size={150} strokeWidth={11}>
+                  <CircularProgressRing percentage={stats.completionRate} size={120} strokeWidth={10}>
                 <div className="text-center">
-                  <span className="text-3xl font-bold text-gradient">
+                  <span className="text-2xl sm:text-3xl font-bold text-gradient">
                     {stats.completionRate}
                   </span>
-                  <span className="text-lg text-muted-foreground">%</span>
+                  <span className="text-base sm:text-lg text-muted-foreground">%</span>
                 </div>
                 </CircularProgressRing>
               </div>
@@ -741,7 +741,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
                   <p className="text-xs text-muted-foreground/70 mt-1">Новые назначения появятся здесь</p>
                 </div>
               ) : (
-                <div className="max-h-[380px] overflow-y-auto px-4">
+                <div className="max-h-[320px] sm:max-h-[380px] overflow-y-auto px-3 sm:px-4">
                   <div className="space-y-1">
                     {upcomingAudits.map((assignment, index) => {
                       const scheduledDate = parseISO(assignment.scheduledDate);
@@ -759,7 +759,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
                           transition={{ delay: 0.6 + index * 0.06, duration: 0.3 }}
                         >
                           <div className={`
-                            group relative flex items-center gap-3 p-3 pl-5 rounded-xl transition-all duration-200
+                            group relative flex items-center gap-2 sm:gap-3 p-3 pl-5 rounded-xl transition-all duration-200
                             hover:bg-muted/40 ${isTodayAudit ? 'ring-1 ring-primary/20 bg-primary/5' : ''}
                           `}>
                             {/* Left-side urgency color indicator */}
@@ -811,13 +811,13 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
 
                             {/* Status badge + Action */}
                             <div className="flex items-center gap-2 flex-shrink-0">
-                              <Badge variant="outline" className={`text-[10px] hidden sm:inline-flex ${config.color}`}>
+                              <Badge variant="outline" className={`text-[10px] ${config.color}`}>
                                 {config.label}
                               </Badge>
                               {assignment.status === 'SCHEDULED' && onStartAudit && (
                                 <Button
                                   size="sm"
-                                  className="h-8 gap-1.5 text-xs bg-primary hover:bg-primary/90 transition-all"
+                                  className="h-10 min-w-[88px] gap-1.5 text-xs bg-primary hover:bg-primary/90 transition-all"
                                   onClick={() => onStartAudit(assignment.id)}
                                 >
                                   <Play className="w-3 h-3" />
@@ -828,7 +828,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="h-8 gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/5"
+                                  className="h-10 min-w-[88px] gap-1.5 text-xs border-primary/30 text-primary hover:bg-primary/5"
                                   onClick={() => onStartAudit(assignment.id)}
                                 >
                                   Продолжить
@@ -854,7 +854,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
         const MotivationIcon = motivation.icon;
         return (
           <motion.div variants={itemVariants}>
-            <div className={`relative overflow-hidden rounded-xl bg-gradient-to-r ${motivation.bgGradient} border border-border/50 p-5`}>
+            <div className={`relative overflow-hidden rounded-xl bg-gradient-to-r ${motivation.bgGradient} border border-border/50 p-4 sm:p-5`}>
               <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-transparent to-transparent rounded-full -translate-y-1/3 translate-x-1/4 opacity-50" />
               <div className="relative flex items-center gap-4">
                 <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${motivation.gradient} flex items-center justify-center shadow-lg flex-shrink-0`}>

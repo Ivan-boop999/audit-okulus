@@ -393,7 +393,7 @@ export default function AuditorMyAudits({ user, onStartAudit, onViewReport }: Au
               <Button
                 variant={sortBy === 'date' ? 'default' : 'ghost'}
                 size="sm"
-                className="h-10 gap-1 text-xs"
+                className="h-11 min-w-[72px] gap-1 text-xs"
                 onClick={() => toggleSort('date')}
               >
                 <ArrowUpDown className="w-3 h-3" />
@@ -402,7 +402,7 @@ export default function AuditorMyAudits({ user, onStartAudit, onViewReport }: Au
               <Button
                 variant={sortBy === 'status' ? 'default' : 'ghost'}
                 size="sm"
-                className="h-10 gap-1 text-xs"
+                className="h-11 min-w-[72px] gap-1 text-xs"
                 onClick={() => toggleSort('status')}
               >
                 <ArrowUpDown className="w-3 h-3" />
@@ -411,7 +411,7 @@ export default function AuditorMyAudits({ user, onStartAudit, onViewReport }: Au
             </div>
 
             {hasFilters && (
-              <Button variant="ghost" size="sm" className="h-10 text-xs text-muted-foreground" onClick={clearFilters}>
+              <Button variant="ghost" size="sm" className="h-11 text-xs text-muted-foreground" onClick={clearFilters}>
                 Сбросить
               </Button>
             )}
@@ -462,7 +462,7 @@ export default function AuditorMyAudits({ user, onStartAudit, onViewReport }: Au
             </motion.div>
             <h3 className="text-lg font-semibold text-foreground mb-1">Аудиты не найдены</h3>
             <p className="text-sm text-muted-foreground text-center max-w-md">
-              {hasActiveFilters
+              {hasFilters
                 ? 'Попробуйте изменить параметры поиска или фильтры'
                 : 'У вас пока нет назначенных аудитов. Новые назначения появятся здесь автоматически.'}
             </p>
@@ -586,12 +586,12 @@ export default function AuditorMyAudits({ user, onStartAudit, onViewReport }: Au
                             </div>
 
                             {/* Actions */}
-                            <div className="flex items-center gap-1 flex-shrink-0 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                            <div className="flex items-center gap-1.5 flex-shrink-0">
                               {isStartable && (
                                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                                   <Button
                                     size="sm"
-                                    className="gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20 border-0 text-xs"
+                                    className="h-11 min-w-[100px] gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20 border-0 text-xs"
                                     onClick={() => handleStartAudit(item)}
                                     disabled={startingAudit === item.id}
                                   >
@@ -600,7 +600,7 @@ export default function AuditorMyAudits({ user, onStartAudit, onViewReport }: Au
                                     ) : (
                                       <>
                                         <Play className="w-3.5 h-3.5 fill-current" />
-                                        <span className="hidden sm:inline">Начать</span>
+                                        <span>Начать</span>
                                       </>
                                     )}
                                   </Button>
@@ -610,13 +610,13 @@ export default function AuditorMyAudits({ user, onStartAudit, onViewReport }: Au
                                 <Button
                                   size="sm"
                                   variant="outline"
-                                  className="gap-1.5 text-xs"
+                                  className="h-11 min-w-[100px] gap-1.5 text-xs"
                                   onClick={() => {
                                     if (onViewReport) onViewReport(response.id);
                                   }}
                                 >
                                   <Eye className="w-3.5 h-3.5" />
-                                  <span className="hidden sm:inline">Просмотр</span>
+                                  <span>Просмотр</span>
                                 </Button>
                               )}
                             </div>

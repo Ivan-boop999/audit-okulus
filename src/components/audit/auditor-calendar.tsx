@@ -444,7 +444,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                 variant="ghost"
                 size="icon"
                 onClick={goToPrevMonth}
-                className="h-9 w-9 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                className="h-11 w-11 hover:bg-emerald-50 dark:hover:bg-emerald-950"
               >
                 <ChevronLeft className="w-5 h-5" />
               </Button>
@@ -459,7 +459,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                 variant="ghost"
                 size="icon"
                 onClick={goToNextMonth}
-                className="h-9 w-9 hover:bg-emerald-50 dark:hover:bg-emerald-950"
+                className="h-11 w-11 hover:bg-emerald-50 dark:hover:bg-emerald-950"
               >
                 <ChevronRight className="w-5 h-5" />
               </Button>
@@ -472,7 +472,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
               initial={{ opacity: 0, y: -4 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.1 }}
-              className="px-6 pb-3"
+              className="px-4 sm:px-6 pb-3"
             >
               <div className="flex items-center gap-2 sm:gap-4 overflow-x-auto pb-1">
                 <div className="flex items-center gap-1.5 text-xs text-muted-foreground whitespace-nowrap">
@@ -616,7 +616,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
             )}
 
             {/* Legend */}
-            <div className="flex flex-wrap items-center gap-3 mt-4 px-1">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-4 px-1">
               <span className="text-xs text-muted-foreground font-medium">Статусы:</span>
               {(
                 [
@@ -696,7 +696,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                     variant="ghost"
                     size="sm"
                     onClick={() => setSelectedDate(null)}
-                    className="text-xs text-muted-foreground h-7"
+                    className="text-xs text-muted-foreground h-9 min-w-[72px]"
                   >
                     Закрыть
                   </Button>
@@ -741,7 +741,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                         <motion.div key={audit.id} variants={itemVariants}>
                           <button
                             onClick={() => handleAuditClick(audit)}
-                            className="w-full text-left rounded-xl border p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:border-emerald-200 dark:hover:border-emerald-800 bg-card group"
+                            className="w-full text-left rounded-xl border p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:border-emerald-200 dark:hover:border-emerald-800 bg-card group active:scale-[0.98]"
                           >
                             <div className="flex items-center gap-3">
                               <div
@@ -853,7 +853,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                   <motion.div key={audit.id} variants={itemVariants}>
                     <button
                       onClick={() => handleAuditClick(audit)}
-                      className="w-full text-left rounded-xl border p-3 hover:shadow-md transition-all duration-200 hover:border-emerald-200 dark:hover:border-emerald-800 bg-card group"
+                      className="w-full text-left rounded-xl border p-3 sm:p-4 hover:shadow-md transition-all duration-200 hover:border-emerald-200 dark:hover:border-emerald-800 bg-card group active:scale-[0.98]"
                     >
                       <div className="flex items-center gap-3">
                         {/* Date badge */}
@@ -888,7 +888,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                         {/* Start / Arrow */}
                         <div className="flex-shrink-0">
                           {audit.status === 'SCHEDULED' ? (
-                            <div className="w-8 h-8 rounded-lg bg-emerald-600 text-white flex items-center justify-center group-hover:bg-emerald-700 transition-colors">
+                            <div className="w-11 h-11 rounded-lg bg-emerald-600 text-white flex items-center justify-center group-hover:bg-emerald-700 transition-colors">
                               <Play className="w-3.5 h-3.5 fill-current" />
                             </div>
                           ) : (
@@ -1070,11 +1070,11 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                   )}
                 </div>
 
-                <DialogFooter className="gap-2 sm:gap-0 px-6 pb-6">
+                <DialogFooter className="gap-2 sm:gap-0 px-4 sm:px-6 pb-6">
                   <Button
                     variant="outline"
                     onClick={() => setDetailOpen(false)}
-                    className="flex-1 sm:flex-none"
+                    className="flex-1 sm:flex-none h-11"
                   >
                     Закрыть
                   </Button>
@@ -1093,7 +1093,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                       <Button
                         onClick={handleStartAudit}
                         disabled={startingAudit}
-                        className="w-full gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20 border-0"
+                        className="w-full h-11 gap-2 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-700 hover:to-emerald-600 text-white shadow-lg shadow-emerald-500/20 border-0 text-sm sm:text-base"
                       >
                         {startingAudit ? (
                           <motion.div

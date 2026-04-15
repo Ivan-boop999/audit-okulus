@@ -790,7 +790,7 @@ export default function AuditResponseForm({
       <div className="w-full max-w-3xl mx-auto">
         <Card className="overflow-hidden">
           {/* Progress */}
-          <div className="px-6 pt-6 pb-2">
+          <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-medium text-muted-foreground">Обзор ответов</span>
               <span className="text-xs font-medium text-muted-foreground">{answeredCount}/{questions.length} отвечено</span>
@@ -968,7 +968,7 @@ export default function AuditResponseForm({
               <Button
                 onClick={goPrev}
                 variant="outline"
-                className="gap-2 flex-1 sm:flex-none"
+                className="gap-2 flex-1 sm:flex-none h-11"
                 disabled={submitting}
               >
                 <ChevronLeft className="w-4 h-4" />
@@ -977,7 +977,7 @@ export default function AuditResponseForm({
 
               <Button
                 variant="ghost"
-                className="gap-2 text-muted-foreground"
+                className="gap-2 text-muted-foreground h-11"
                 onClick={handleSaveDraft}
               >
                 <Save className="w-4 h-4" />
@@ -986,7 +986,7 @@ export default function AuditResponseForm({
 
               <AlertDialog open={cancelOpen} onOpenChange={setCancelOpen}>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" className="gap-2 text-muted-foreground" disabled={submitting}>
+                  <Button variant="ghost" className="gap-2 text-muted-foreground h-11" disabled={submitting}>
                     <X className="w-4 h-4" />
                     Отменить
                   </Button>
@@ -1014,7 +1014,7 @@ export default function AuditResponseForm({
                 <AlertDialogTrigger asChild>
                   <Button
                     disabled={submitting}
-                    className="gap-2 flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="gap-2 flex-1 sm:flex-none bg-emerald-600 hover:bg-emerald-700 text-white h-11"
                   >
                     {submitting ? (
                       <>
@@ -1081,7 +1081,7 @@ export default function AuditResponseForm({
     <div className="w-full max-w-3xl mx-auto">
       <Card className="overflow-hidden">
         {/* Progress bar */}
-        <div className="px-6 pt-6 pb-2">
+        <div className="px-4 sm:px-6 pt-4 sm:pt-6 pb-2">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-medium text-muted-foreground">
               Вопрос {currentStep + 1} из {questions.length}
@@ -1100,7 +1100,7 @@ export default function AuditResponseForm({
             className="h-2 [&>div]:bg-gradient-to-r [&>div]:from-emerald-500 [&>div]:to-teal-500"
           />
           {/* Step indicators */}
-          <div className="flex gap-1 mt-2 flex-wrap">
+          <div className="flex gap-1.5 sm:gap-1.5 mt-2 flex-wrap">
             {questions.map((q, idx) => {
               const isAnswered = q.answerType === 'CHECKLIST'
                 ? (checklistState[q.id]?.length ?? 0) > 0
@@ -1112,7 +1112,7 @@ export default function AuditResponseForm({
                   key={q.id}
                   onClick={() => goStep(idx)}
                   className={`
-                    w-6 h-6 rounded-full text-[10px] font-bold transition-all duration-200
+                    w-7 h-7 sm:w-6 sm:h-6 rounded-full text-[11px] sm:text-[10px] font-bold transition-all duration-200
                     ${isCurrent
                       ? 'bg-emerald-500 text-white ring-2 ring-emerald-500/30 scale-110'
                       : isAnswered
@@ -1129,7 +1129,7 @@ export default function AuditResponseForm({
           </div>
         </div>
 
-        <CardContent className="pt-4 pb-6 min-h-[420px] flex flex-col">
+        <CardContent className="pt-4 pb-6 min-h-[380px] sm:min-h-[420px] flex flex-col">
           <AnimatePresence mode="wait" custom={direction}>
             <motion.div
               key={currentQuestion.id}
@@ -1144,8 +1144,8 @@ export default function AuditResponseForm({
               {/* Question header */}
               <div className="mb-6">
                 <div className="flex items-start gap-2 mb-1">
-                  <span className="text-lg font-bold text-emerald-500 shrink-0">{currentStep + 1}.</span>
-                  <h3 className="text-lg font-semibold leading-snug">{currentQuestion.text}</h3>
+                  <span className="text-base sm:text-lg font-bold text-emerald-500 shrink-0">{currentStep + 1}.</span>
+                  <h3 className="text-base sm:text-lg font-semibold leading-snug">{currentQuestion.text}</h3>
                   {currentQuestion.required && (
                     <Badge variant="outline" className="shrink-0 text-[10px] px-1.5 py-0 border-red-300 text-red-500 mt-0.5">
                       Обяз.
@@ -1186,7 +1186,7 @@ export default function AuditResponseForm({
                   value={comments[currentQuestion.id] || ''}
                   onChange={(e) => setComment(currentQuestion.id, e.target.value)}
                   placeholder="Добавьте пояснение к вашему ответу..."
-                  className="min-h-[60px] resize-none text-sm"
+                  className="min-h-[80px] sm:min-h-[100px] resize-none text-sm"
                 />
               </div>
             </motion.div>
@@ -1194,14 +1194,14 @@ export default function AuditResponseForm({
 
           {/* Navigation */}
           <Separator className="my-4" />
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 sm:gap-3">
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={goPrev}
                 disabled={currentStep === 0}
-                className="gap-1.5"
+                className="gap-1.5 h-11 min-w-[88px] flex-1 sm:flex-none"
               >
                 <ChevronLeft className="w-4 h-4" />
                 Назад
@@ -1212,7 +1212,7 @@ export default function AuditResponseForm({
                   variant="ghost"
                   size="sm"
                   onClick={skipQuestion}
-                  className="gap-1.5 text-muted-foreground"
+                  className="gap-1.5 text-muted-foreground h-11 min-w-[100px] flex-1 sm:flex-none"
                 >
                   <SkipForward className="w-4 h-4" />
                   Пропустить
@@ -1224,7 +1224,7 @@ export default function AuditResponseForm({
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-1.5 text-muted-foreground"
+                className="gap-1.5 text-muted-foreground h-11 min-w-[44px] flex-1 sm:flex-none"
                 onClick={handleSaveDraft}
               >
                 <Save className="w-4 h-4" />
@@ -1236,7 +1236,7 @@ export default function AuditResponseForm({
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="gap-1.5 text-muted-foreground"
+                    className="gap-1.5 text-muted-foreground h-11 min-w-[44px] flex-1 sm:flex-none"
                   >
                     <X className="w-4 h-4" />
                     Отменить
@@ -1265,7 +1265,7 @@ export default function AuditResponseForm({
                 <Button
                   size="sm"
                   onClick={goNext}
-                  className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white"
+                  className="gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white h-11 min-w-[88px] flex-1 sm:flex-none"
                 >
                   Далее
                   <ChevronRight className="w-4 h-4" />
@@ -1274,7 +1274,7 @@ export default function AuditResponseForm({
                 <Button
                   size="sm"
                   onClick={goNext}
-                  className="gap-1.5 bg-teal-600 hover:bg-teal-700 text-white"
+                  className="gap-1.5 bg-teal-600 hover:bg-teal-700 text-white h-11 min-w-[88px] flex-1 sm:flex-none"
                 >
                   <Check className="w-4 h-4" />
                   Обзор
@@ -1310,7 +1310,7 @@ function AnswerInput({
           value={value}
           onChange={(e) => onAnswerChange(e.target.value)}
           placeholder="Введите ваш ответ..."
-          className="min-h-[120px] resize-none text-base"
+          className="min-h-[120px] sm:min-h-[140px] resize-none text-base"
         />
       );
 
@@ -1323,21 +1323,29 @@ function AnswerInput({
               value={value}
               onChange={(e) => onAnswerChange(e.target.value)}
               placeholder="Введите число"
-              className="text-lg h-12 pl-4 pr-4"
+              className="text-lg h-12 pl-4 pr-12 w-full"
             />
+            <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-0.5">
+              <button type="button" onClick={() => onAnswerChange(String((parseInt(value) || 0) + 1))} className="w-8 h-5 flex items-center justify-center rounded hover:bg-muted text-muted-foreground">
+                <ChevronRight className="w-3 h-3 rotate-90" />
+              </button>
+              <button type="button" onClick={() => onAnswerChange(String(Math.max(0, (parseInt(value) || 0) - 1)))} className="w-8 h-5 flex items-center justify-center rounded hover:bg-muted text-muted-foreground">
+                <ChevronRight className="w-3 h-3 -rotate-90" />
+              </button>
+            </div>
           </div>
         </div>
       );
 
     case 'YES_NO':
       return (
-        <div className="grid grid-cols-2 gap-4 max-w-md">
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 max-w-md">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             onClick={() => onAnswerChange('yes')}
             className={`
-              flex items-center justify-center gap-3 rounded-xl border-2 px-6 py-5 text-lg font-bold transition-all duration-200
+              flex items-center justify-center gap-3 rounded-xl border-2 px-4 sm:px-6 py-4 sm:py-5 text-base sm:text-lg font-bold transition-all duration-200
               ${value === 'yes'
                 ? 'bg-emerald-500 border-emerald-500 text-white shadow-lg shadow-emerald-500/30'
                 : 'border-emerald-200 dark:border-emerald-800 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
@@ -1352,7 +1360,7 @@ function AnswerInput({
             whileTap={{ scale: 0.98 }}
             onClick={() => onAnswerChange('no')}
             className={`
-              flex items-center justify-center gap-3 rounded-xl border-2 px-6 py-5 text-lg font-bold transition-all duration-200
+              flex items-center justify-center gap-3 rounded-xl border-2 px-4 sm:px-6 py-4 sm:py-5 text-base sm:text-lg font-bold transition-all duration-200
               ${value === 'no'
                 ? 'bg-red-500 border-red-500 text-white shadow-lg shadow-red-500/30'
                 : 'border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30'
@@ -1375,7 +1383,7 @@ function AnswerInput({
               whileTap={{ scale: 0.95 }}
               onClick={() => onAnswerChange(String(num))}
               className={`
-                w-12 h-12 rounded-xl border-2 text-lg font-bold transition-all duration-200
+                w-12 h-12 sm:w-12 sm:h-12 rounded-xl border-2 text-base sm:text-lg font-bold transition-all duration-200
                 ${value === String(num)
                   ? getScaleColor(num, 5)
                   : `${getScaleColorInactive(num, 5)} border`
@@ -1397,7 +1405,7 @@ function AnswerInput({
     case 'SCALE_1_10':
       return (
         <div>
-          <div className="flex gap-1.5 flex-wrap max-w-lg">
+          <div className="flex gap-1.5 sm:gap-1.5 flex-wrap max-w-lg">
             {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
               <motion.button
                 key={num}
@@ -1405,7 +1413,7 @@ function AnswerInput({
                 whileTap={{ scale: 0.95 }}
                 onClick={() => onAnswerChange(String(num))}
                 className={`
-                  w-10 h-10 rounded-lg border-2 text-sm font-bold transition-all duration-200
+                  w-9 h-9 sm:w-10 sm:h-10 rounded-lg border-2 text-sm font-bold transition-all duration-200
                   ${value === String(num)
                     ? getScaleColor(num, 10)
                     : `${getScaleColorInactive(num, 10)} border`
@@ -1484,7 +1492,7 @@ function AnswerInput({
               htmlFor={`mc-${question.id}-${idx}`}
               whileHover={{ x: 4 }}
               className={`
-                flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-all duration-200
+                flex items-center gap-3 rounded-lg border p-4 min-h-[48px] cursor-pointer transition-all duration-200
                 ${value === option
                   ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 shadow-sm'
                   : 'border-muted hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-muted/50'
@@ -1492,7 +1500,7 @@ function AnswerInput({
               `}
             >
               <RadioGroupItem value={option} id={`mc-${question.id}-${idx}`} />
-              <span className="text-sm font-medium">{option}</span>
+              <span className="text-sm font-medium leading-snug">{option}</span>
             </motion.label>
           ))}
         </RadioGroup>
@@ -1506,7 +1514,7 @@ function AnswerInput({
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
             className={`
-              flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-8 cursor-pointer transition-all duration-200
+              flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-6 sm:p-8 cursor-pointer transition-all duration-200
               ${value
                 ? 'border-emerald-400 bg-emerald-50 dark:bg-emerald-950/20'
                 : 'border-muted hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-muted/30'
@@ -1558,7 +1566,7 @@ function AnswerInput({
               type="date"
               value={value}
               onChange={(e) => onAnswerChange(e.target.value)}
-              className="pl-10 text-base h-11 w-auto"
+              className="pl-10 text-base h-12 w-full sm:w-auto"
             />
           </div>
           {value && (
@@ -1594,7 +1602,7 @@ function AnswerInput({
                 htmlFor={`cl-${question.id}-${idx}`}
                 whileHover={{ x: 4 }}
                 className={`
-                  flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-all duration-200
+                  flex items-center gap-3 rounded-lg border p-4 min-h-[48px] cursor-pointer transition-all duration-200
                   ${isChecked
                     ? 'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/20 shadow-sm'
                     : 'border-muted hover:border-emerald-300 dark:hover:border-emerald-700 hover:bg-muted/50'
@@ -1606,7 +1614,7 @@ function AnswerInput({
                   checked={isChecked}
                   onCheckedChange={() => onChecklistToggle(option)}
                 />
-                <span className={`text-sm font-medium ${isChecked ? 'text-foreground' : 'text-muted-foreground'}`}>
+                <span className={`text-sm font-medium leading-snug ${isChecked ? 'text-foreground' : 'text-muted-foreground'}`}>
                   {option}
                 </span>
                 {isChecked && (

@@ -897,15 +897,15 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
                 transition={{ duration: 0.25 }}
-                className="p-4 lg:p-6"
+                className="p-4 pb-24 lg:p-6 lg:pb-6"
               >
                 {children}
               </motion.div>
             </AnimatePresence>
           </main>
 
-          {/* Footer */}
-          <footer className="border-t bg-card/60 backdrop-blur-sm px-4 lg:px-6 py-3 mt-auto">
+          {/* Footer - hidden on mobile (bottom tab bar replaces it) */}
+          <footer className="hidden lg:block border-t bg-card/60 backdrop-blur-sm px-6 py-3 mt-auto">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
                 <img src="/logo.png" alt="Окулус-Аудит" className="w-5 h-5 rounded object-cover" />
@@ -932,6 +932,66 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
               </div>
             </div>
           </footer>
+
+          {/* ─── Mobile Bottom Tab Bar ─── */}
+          <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-card/95 backdrop-blur-lg border-t" style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)' }}>
+            <div className="flex items-center justify-around px-1 pt-1">
+              {(isAdmin ? [
+                { id: 'dashboard', label: 'Главная', icon: LayoutDashboard },
+                { id: 'scheduling', label: 'Расписание', icon: CalendarDays },
+                { id: 'templates', label: 'Шаблоны', icon: FileText },
+                { id: 'notifications', label: 'Уведомления', icon: Bell, isNotif: true },
+              ] : [
+                { id: 'dashboard', label: 'Обзор', icon: LayoutDashboard },
+                { id: 'calendar', label: 'Календарь', icon: CalendarDays },
+                { id: 'audits', label: 'Аудиты', icon: FileText },
+                { id: 'notifications', label: 'Уведомления', icon: Bell, isNotif: true },
+              ]).map((tab) => {
+                const isActive = activeView === tab.id || (tab.isNotif && activeView === 'notifications');
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => {
+                      if (tab.isNotif) {
+                        onViewChange('notifications');
+                      } else {
+                        onViewChange(tab.id);
+                      }
+                    }}
+                    className={`relative flex flex-col items-center justify-center min-w-[56px] h-[52px] rounded-xl transition-all duration-200 active:scale-95 ${
+                      isActive
+                        ? 'text-primary'
+                        : 'text-muted-foreground active:text-foreground'
+                    }`}
+                  >
+                    {isActive && (
+                      <div className="absolute -top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
+                    )}
+                    <div className="relative mt-1">
+                      <Icon className="w-[20px] h-[20px] transition-colors" />
+                      {tab.isNotif && unreadCount > 0 && (
+                        <span className="absolute -top-1 -right-2.5 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-bold rounded-full flex items-center justify-center leading-none px-1">
+                          {unreadCount > 9 ? '9+' : unreadCount}
+                        </span>
+                      )}
+                    </div>
+                    <span className={`text-[10px] leading-none font-medium mt-0.5 transition-colors ${isActive ? 'text-primary' : ''}`}>
+                      {tab.label}
+                    </span>
+                  </button>
+                );
+              })}
+              {/* More button - opens mobile sidebar */}
+              <button
+                onClick={() => setMobileSidebarOpen(true)}
+                className="relative flex flex-col items-center justify-center min-w-[56px] h-[52px] rounded-xl transition-all duration-200 text-muted-foreground active:text-foreground active:scale-95"
+              >
+                <Menu className="w-[20px] h-[20px] mt-1" />
+                <span className="text-[10px] leading-none font-medium mt-0.5">Ещё</span>
+              </button>
+            </div>
+          </nav>
         </div>
       </div>
     </TooltipProvider>
