@@ -15,10 +15,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "AuditPro — Система управления аудитами",
+  title: "Окулус-Аудит — Система управления аудитами",
   description: "Комплексная платформа для управления производственными аудитами, инспекциями и контролем качества",
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.jpg",
   },
 };
 

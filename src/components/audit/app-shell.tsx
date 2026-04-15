@@ -455,9 +455,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
           {/* Logo */}
           <div className="h-16 flex items-center px-4 border-b">
             <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-9 h-9 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center flex-shrink-0 shadow-md shadow-primary/20">
-                <Factory className="w-5 h-5 text-primary-foreground" />
-              </div>
+              <img src="/logo.jpg" alt="Окулус-Аудит" className="w-9 h-9 rounded-xl object-cover shadow-md shadow-primary/20" />
               <AnimatePresence>
                 {sidebarOpen && (
                   <motion.div
@@ -466,8 +464,8 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                     exit={{ opacity: 0, width: 0 }}
                     className="flex flex-col whitespace-nowrap"
                   >
-                    <span className="font-bold text-lg leading-none tracking-tight">AuditPro</span>
-                    <span className="text-[10px] text-muted-foreground mt-0.5">v2.4</span>
+                    <span className="font-bold text-lg leading-none tracking-tight">Окулус-Аудит</span>
+                    <span className="text-[10px] text-muted-foreground mt-0.5">v2.5</span>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -596,10 +594,8 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                 className="lg:hidden fixed left-0 top-0 bottom-0 w-[280px] bg-card z-50 shadow-xl">
                 <div className="h-16 flex items-center justify-between px-4 border-b">
                   <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 bg-gradient-to-br from-primary to-primary/80 rounded-xl flex items-center justify-center shadow-md shadow-primary/20">
-                      <Factory className="w-5 h-5 text-primary-foreground" />
-                    </div>
-                    <span className="font-bold text-lg tracking-tight">AuditPro</span>
+                    <img src="/logo.jpg" alt="Окулус-Аудит" className="w-9 h-9 rounded-xl object-cover shadow-lg shadow-primary/20" />
+                    <span className="font-bold text-lg tracking-tight">Окулус-Аудит</span>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => setMobileSidebarOpen(false)}>
                     <X className="w-5 h-5" />
@@ -911,10 +907,8 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
           <footer className="border-t bg-card/60 backdrop-blur-sm px-4 lg:px-6 py-3 mt-auto">
             <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
               <div className="flex items-center gap-2">
-                <div className="w-5 h-5 bg-gradient-to-br from-primary to-primary/80 rounded flex items-center justify-center shadow-sm">
-                  <Factory className="w-3 h-3 text-primary-foreground" />
-                </div>
-                <span className="font-medium text-foreground/80">AuditPro</span>
+                <img src="/logo.jpg" alt="Окулус-Аудит" className="w-5 h-5 rounded object-cover" />
+                <span className="font-medium text-foreground/80">Окулус-Аудит</span>
                 <span>© {new Date().getFullYear()}</span>
               </div>
               <div className="flex items-center gap-4">
@@ -923,7 +917,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                   {isAdmin ? 'Администратор' : user?.department || 'Аудитор'}
                 </span>
                 <Separator orientation="vertical" className="h-3" />
-                <span className="tabular-nums">v2.4</span>
+                <span className="tabular-nums">v2.5</span>
                 <Separator orientation="vertical" className="h-3" />
                 {/* Quick Stats */}
                 <span className={`flex items-center gap-1.5 transition-colors ${isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>

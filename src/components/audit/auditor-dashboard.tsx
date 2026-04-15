@@ -379,7 +379,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
 
     const exportPayload = {
       exportedAt: new Date().toISOString(),
-      reportTitle: `AuditPro — Прогресс: ${auditorName}`,
+      reportTitle: `Окулус-Аудит — Прогресс: ${auditorName}`,
       auditor: auditorName,
       department,
       stats,
@@ -397,7 +397,7 @@ export default function AuditorDashboard({ userId, onStartAudit }: AuditorDashbo
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `auditpro-progress-${new Date().toISOString().slice(0, 10)}.json`;
+    link.download = `oculus-audit-progress-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

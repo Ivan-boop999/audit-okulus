@@ -613,10 +613,10 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
       {/* Print Header (visible only when printing) */}
       <div className="print-header">
         <div className="print-logo">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M2 20a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8l-7 5V8l-7 5V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><rect width="20" height="8" x="2" y="14" rx="2"/></svg>
+          <img src="/logo.jpg" alt="Окулус-Аудит" style="width:18px;height:18px;border-radius:4px;" />
         </div>
         <div>
-          <div className="print-title">AuditPro — Отчёт аудита</div>
+          <div className="print-title">Окулус-Аудит — Отчёт аудита</div>
           <div className="print-subtitle">{template?.title || 'Аудит'} · {formatDate(data.completedAt)}</div>
         </div>
       </div>
@@ -1119,7 +1119,7 @@ export default function AuditReportDetail({ responseId, onBack, userId, userName
       >
         <Separator className="my-4" />
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>AuditPro — Система управления аудитами</span>
+          <span>Окулус-Аудит — Система управления аудитами</span>
           <span>Отчёт сгенерирован: {new Date().toLocaleDateString('ru-RU')}</span>
         </div>
       </motion.div>

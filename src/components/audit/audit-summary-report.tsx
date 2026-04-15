@@ -260,7 +260,7 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
 
   ${data.categoryData.length > 0 ? `<div class="section"><h2>📋 Категории</h2>${data.categoryData.map(c => `<div class="cat-row"><span class="cat-name">${c.name}</span><span class="cat-count">${c.count} ауд.</span></div>`).join('')}</div>` : ''}
 
-  <div class="footer">Сформировано: ${now.toLocaleString('ru-RU')} · AuditPro v2.4</div>
+  <div class="footer">Сформировано: ${now.toLocaleString('ru-RU')} · Окулус-Аудит v2.5</div>
 </div>
 </body>
 </html>`;

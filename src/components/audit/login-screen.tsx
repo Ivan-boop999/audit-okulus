@@ -296,10 +296,8 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
             transition={{ delay: 0.3, duration: 0.6 }}
           >
             <div className="flex items-center gap-3 mb-6">
-              <div className="w-14 h-14 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/10 shadow-lg shadow-black/20">
-                <Factory className="w-8 h-8" />
-              </div>
-              <span className="text-3xl font-bold tracking-tight">AuditPro</span>
+              <img src="/logo.jpg" alt="Окулус-Аудит" className="w-14 h-14 rounded-xl object-cover shadow-lg shadow-black/20" />
+              <span className="text-3xl font-bold tracking-tight">Окулус-Аудит</span>
             </div>
             <h1 className="text-5xl font-bold leading-tight mb-6 min-h-[7rem]">
               <span>{headingLine1}<span className={`inline-block w-[3px] h-[1.1em] bg-emerald-300 ml-1 align-middle ${line1Done ? 'animate-pulse' : ''}`} /></span>
@@ -371,10 +369,8 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
         <div className="w-full max-w-md relative z-10">
           {/* Mobile logo */}
           <div className="lg:hidden flex items-center gap-3 mb-8">
-            <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center shadow-lg shadow-primary/20">
-              <Factory className="w-7 h-7 text-primary-foreground" />
-            </div>
-            <span className="text-2xl font-bold">AuditPro</span>
+            <img src="/logo.jpg" alt="Окулус-Аудит" className="w-12 h-12 rounded-xl object-cover shadow-lg shadow-primary/20" />
+            <span className="text-2xl font-bold">Окулус-Аудит</span>
           </div>
 
           <motion.div
@@ -548,7 +544,7 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
             className="mt-8 text-center"
           >
             <p className="text-xs text-muted-foreground">
-              AuditPro v2.4 &middot; Система управления аудитами
+              Окулус-Аудит v2.5 &middot; Система управления аудитами
             </p>
           </motion.div>
         </div>

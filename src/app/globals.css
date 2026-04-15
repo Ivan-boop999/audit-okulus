@@ -595,7 +595,7 @@
 
   /* Print watermark */
   body::after {
-    content: "AuditPro — Система управления аудитами";
+    content: "Окулус-Аудит — Система управления аудитами";
     position: fixed;
     bottom: 0;
     left: 0;

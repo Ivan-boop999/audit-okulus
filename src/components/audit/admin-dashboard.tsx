@@ -147,7 +147,7 @@ export default function AdminDashboard() {
     if (!data) return;
     const exportPayload = {
       exportedAt: new Date().toISOString(),
-      reportTitle: 'AuditPro — Панель управления',
+      reportTitle: 'Окулус-Аудит — Панель управления',
       overview: data.overview,
       scoresOverTime: data.scoresOverTime,
       categoryData: data.categoryData,
@@ -159,7 +159,7 @@ export default function AdminDashboard() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `auditpro-dashboard-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `oculus-audit-dashboard-${new Date().toISOString().slice(0, 10)}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
