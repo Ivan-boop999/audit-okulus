@@ -1440,6 +1440,104 @@ button:active, a:active {
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   OCULUS THEME — LOGO COLOR ACCENTS
+   ═══════════════════════════════════════════════════════════════ */
+
+:root {
+  --oculus-blue: #1e1b4b;
+  --oculus-purple: #7c3aed;
+  --oculus-gradient: linear-gradient(135deg, #1e1b4b, #7c3aed);
+}
+
+.oculus-gradient-text {
+  background: var(--oculus-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.oculus-glow {
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.15);
+}
+
+.dark .oculus-glow {
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.25);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   KPI CARD ANIMATED CONIC GRADIENT BORDER
+   ═══════════════════════════════════════════════════════════════ */
+
+@property --kpi-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes kpi-border-spin {
+  from { --kpi-angle: 0deg; }
+  to { --kpi-angle: 360deg; }
+}
+
+.kpi-card-glow {
+  position: relative;
+  overflow: hidden;
+}
+
+.kpi-card-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: conic-gradient(from var(--kpi-angle), transparent 70%, rgba(124, 58, 237, 0.12) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  animation: kpi-border-spin 8s linear infinite;
+  pointer-events: none;
+}
+
+.dark .kpi-card-glow::before {
+  background: conic-gradient(from var(--kpi-angle), transparent 70%, rgba(124, 58, 237, 0.2) 100%);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   BUTTON HOVER SHIMMER EFFECT (OCULUS)
+   ═══════════════════════════════════════════════════════════════ */
+
+.btn-oculus-hover {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-oculus-hover::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%; width: 100%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(124, 58, 237, 0.1), transparent);
+  transition: left 0.5s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.btn-oculus-hover:hover::before {
+  left: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   CUSTOM SCROLLBAR — VIOLET HOVER ACCENT
+   ═══════════════════════════════════════════════════════════════ */
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #7c3aed40;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #7c3aed50;
+}
+
+/* ═══════════════════════════════════════════════════════════════
    LOGIN CARD BREATHING GLOW
    ═══════════════════════════════════════════════════════════════ */
 

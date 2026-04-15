@@ -112,9 +112,9 @@ const categoryColors: Record<string, string> = {
 const statusConfig: Record<string, { label: string; color: string; icon: React.ElementType; dotColor: string }> = {
   ACTIVE: {
     label: 'Активно',
-    color: 'bg-emerald-100 text-emerald-700 border-emerald-200',
+    color: 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-emerald-500/0',
     icon: CheckCircle2,
-    dotColor: 'bg-emerald-500',
+    dotColor: 'bg-white',
   },
   INACTIVE: {
     label: 'Неактивно',

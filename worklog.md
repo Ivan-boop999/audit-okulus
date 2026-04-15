@@ -861,6 +861,70 @@ Current Project Status:
 - Admin views: 10, Auditor views: 6
 - Logo file: /public/logo.jpg
 
+---
+Task ID: 12
+Agent: Main Orchestrator (Cron Review Round 4)
+Task: QA testing, styling improvements, new features
+
+Work Log:
+- Read worklog.md: v2.5, stable, rebranded to Окулус-Аудит
+- Comprehensive QA via agent-browser: 16 screenshots, 13 views tested
+  - Login screen (with logo, brand, stats, demo accounts)
+  - Admin views: Dashboard, Equipment, Templates, Scheduling, Summary, Maintenance, Team
+  - Auditor views: Dashboard/Overview, Calendar, My Audits, History
+  - All: 0 JS errors, 0 error overlays
+- ESLint: 0 errors, 0 warnings
+
+Styling Improvements (via subagent 12-a):
+1. **Oculus Color Theme** — Added CSS custom properties (--oculus-blue, --oculus-purple, --oculus-gradient) to globals.css
+2. **Oculus Gradient Text** — New `.oculus-gradient-text` utility class
+3. **Oculus Glow** — New `.oculus-glow` box-shadow class with dark mode
+4. **Login Logo Enhancement** — Added two animated rotating rings (violet-500/20, violet-400/10) behind logo image, counter-rotating
+5. **Login Subtitle** — Changed to oculus-gradient-text class (violet gradient)
+6. **Sidebar Gradient Divider** — Added violet gradient line below logo section
+7. **Footer Version Color** — Changed to violet-500/60 tint
+8. **Equipment Status Badge** — ACTIVE status now uses gradient (emerald→teal) with white text
+9. **KPI Card Glow** — Added animated conic gradient border effect using @property --kpi-angle
+10. **Calendar Today Cell** — Changed to violet ring (ring-2 ring-violet-400/50) with pulse animation
+11. **Button Hover Shimmer** — New `.btn-oculus-hover` with violet shimmer sweep on hover
+12. **Scrollbar Enhancement** — Violet accent on thumb hover
+
+New Features (via subagent 12-b):
+1. **Checklist Preview Dialog** — New component `checklist-preview.tsx`:
+   - Read-only preview of audit template questions
+   - Gradient header with template info, category badge, frequency, question count
+   - Summary bar (total questions, total weight, required count)
+   - Staggered question list with framer-motion
+   - Answer type badges in Russian (Да/Нет, Оценка 1-5, etc.)
+   - Print button, loading skeleton, error state
+2. **Template API Enhancement** — Added templateId query param to GET /api/templates
+3. **Preview Button in Template Builder** — Eye icon button on each template card
+4. **Activity Feed LIVE Indicator** — Pulsing green dot + "LIVE" text on admin dashboard
+5. **Activity Feed Refresh** — RotateCw button with spinning animation
+6. **"Новое" Badge** — Animated gradient pill on latest activity item
+
+Verification:
+- ESLint: 0 errors, 0 warnings
+- All views tested: no errors
+- Dev server: compiles successfully
+
+Stage Summary:
+- 12 styling improvements across 6 components
+- 6 new features/functionalities
+- 1 new component created (checklist-preview.tsx)
+- Color theme now matches Oculus logo (violet accents)
+- Version: v2.6
+
+---
+Current Project Status:
+- Application is stable at v2.6
+- Product name: Окулус-Аудит
+- ESLint: 0 errors, 0 warnings
+- 19+ components, 8+ API routes, 10 DB models
+- Admin views: 10, Auditor views: 6
+- Logo file: /public/logo.jpg
+- Color theme: emerald/teal primary + violet accent (Oculus theme)
+
 Unresolved Issues:
 - Action Plans still use localStorage only
 - Recommended next: /api/action-plans persistence, PDF export, i18n

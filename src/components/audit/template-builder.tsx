@@ -32,6 +32,7 @@ import {
   AlertDialogFooter, AlertDialogDescription, AlertDialogAction, AlertDialogCancel,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import ChecklistPreview from '@/components/audit/checklist-preview';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -272,6 +273,9 @@ export default function TemplateBuilder() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deletingTemplate, setDeletingTemplate] = useState<Template | null>(null);
   const [deleteSubmitting, setDeleteSubmitting] = useState(false);
+
+  // Preview dialog state
+  const [previewTemplateId, setPreviewTemplateId] = useState<string | null>(null);
 
   // Expanded templates for questions view
   const [expandedTemplates, setExpandedTemplates] = useState<string[]>([]);
@@ -840,6 +844,17 @@ export default function TemplateBuilder() {
 
                         {/* Action buttons */}
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
+                          <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-sky-50 hover:text-sky-600 dark:hover:bg-sky-950/30 dark:hover:text-sky-400"
+                              onClick={() => setPreviewTemplateId(template.id)}
+                              title="Предпросмотр"
+                            >
+                              <Eye className="w-3.5 h-3.5" />
+                            </Button>
+                          </motion.div>
                           <motion.div whileHover={{ scale: 1.15 }} whileTap={{ scale: 0.9 }}>
                             <Button
                               variant="ghost"
@@ -1516,6 +1531,13 @@ export default function TemplateBuilder() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* ─── Checklist Preview Dialog ──────────────────────────────────── */}
+      <ChecklistPreview
+        templateId={previewTemplateId || ''}
+        open={!!previewTemplateId}
+        onOpenChange={(open) => { if (!open) setPreviewTemplateId(null); }}
+      />
     </div>
   );
 }

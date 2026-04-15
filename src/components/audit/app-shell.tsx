@@ -453,8 +453,8 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
           className="hidden lg:flex flex-col border-r bg-card/95 backdrop-blur-sm shadow-sm fixed h-full z-30"
         >
           {/* Logo */}
-          <div className="h-16 flex items-center px-4 border-b">
-            <div className="flex items-center gap-3 overflow-hidden">
+          <div className="h-16 flex flex-col items-stretch px-4 border-b relative">
+            <div className="flex items-center gap-3 overflow-hidden flex-1">
               <img src="/logo.jpg" alt="Окулус-Аудит" className="w-9 h-9 rounded-xl object-cover shadow-md shadow-primary/20" />
               <AnimatePresence>
                 {sidebarOpen && (
@@ -470,6 +470,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                 )}
               </AnimatePresence>
             </div>
+            <div className="h-px bg-gradient-to-r from-transparent via-violet-500/30 to-transparent" />
           </div>
 
           {/* Navigation groups */}
@@ -917,7 +918,7 @@ export default function AppShell({ children, activeView, onViewChange }: AppShel
                   {isAdmin ? 'Администратор' : user?.department || 'Аудитор'}
                 </span>
                 <Separator orientation="vertical" className="h-3" />
-                <span className="tabular-nums">v2.5</span>
+                <span className="tabular-nums text-violet-500/60">v2.5</span>
                 <Separator orientation="vertical" className="h-3" />
                 {/* Quick Stats */}
                 <span className={`flex items-center gap-1.5 transition-colors ${isOnline ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}`}>

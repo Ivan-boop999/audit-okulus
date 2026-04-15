@@ -296,15 +296,27 @@ export default function LoginScreen({ onLogin }: LoginScreenProps) {
             transition={{ delay: 0.3, duration: 0.6 }}
           >
             <div className="flex items-center gap-3 mb-6">
-              <img src="/logo.jpg" alt="Окулус-Аудит" className="w-14 h-14 rounded-xl object-cover shadow-lg shadow-black/20" />
+              <div className="relative">
+                <motion.div
+                  className="absolute -inset-3 rounded-2xl border border-violet-500/20"
+                  animate={{ rotate: 360 }}
+                  transition={{ duration: 30, repeat: Infinity, ease: 'linear' }}
+                />
+                <motion.div
+                  className="absolute -inset-5 rounded-full border border-violet-400/10"
+                  animate={{ rotate: -360 }}
+                  transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
+                />
+                <img src="/logo.jpg" alt="Окулус-Аудит" className="relative w-14 h-14 rounded-xl object-cover shadow-lg shadow-black/20" />
+              </div>
               <span className="text-3xl font-bold tracking-tight">Окулус-Аудит</span>
             </div>
             <h1 className="text-5xl font-bold leading-tight mb-6 min-h-[7rem]">
               <span>{headingLine1}<span className={`inline-block w-[3px] h-[1.1em] bg-emerald-300 ml-1 align-middle ${line1Done ? 'animate-pulse' : ''}`} /></span>
               <br />
-              <span className="text-emerald-200">
+              <span className="oculus-gradient-text">
                 {headingLine2}
-                {line2Done && <span className="inline-block w-[3px] h-[1.1em] bg-emerald-300/60 ml-1 align-middle animate-pulse" />}
+                {line2Done && <span className="inline-block w-[3px] h-[1.1em] bg-violet-400/60 ml-1 align-middle animate-pulse" />}
               </span>
             </h1>
             <p className="text-xl text-white/80 leading-relaxed max-w-md">

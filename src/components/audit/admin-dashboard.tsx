@@ -10,6 +10,7 @@ import {
   CheckCircle2, Clock, AlertTriangle, Wrench, FileText, Users,
   TrendingUp, Activity, Target, CalendarDays, ArrowUpRight, ArrowDownRight,
   Sparkles, ClipboardList, UserPlus, Package, FileBarChart, ArrowRight, Download,
+  RotateCw, Loader2,
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -133,12 +134,26 @@ const statusConfig: Record<string, { label: string; color: string; icon: React.E
 export default function AdminDashboard() {
   const [data, setData] = useState<Analytics | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [liveKey, setLiveKey] = useState(0);
 
-  useEffect(() => {
+  const fetchAnalytics = useCallback(() => {
     fetch('/api/analytics')
       .then(res => res.json())
-      .then(setData)
+      .then((d) => { setData(d); setLiveKey(k => k + 1); })
       .finally(() => setLoading(false));
+  }, []);
+
+  useEffect(() => {
+    fetchAnalytics();
+  }, [fetchAnalytics]);
+
+  const handleRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetch('/api/analytics')
+      .then(res => res.json())
+      .then((d) => { setData(d); setLiveKey(k => k + 1); })
+      .finally(() => setRefreshing(false));
   }, []);
 
   // ── Export handler ────────────────────────────────────────────────────────
@@ -362,7 +377,7 @@ export default function AdminDashboard() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.05, duration: 0.4 }}
             >
-              <Card className={`overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border card-shine ${kpi.borderColor}`}>
+              <Card className={`overflow-hidden hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 border card-shine kpi-card-glow ${kpi.borderColor}`}>
                 <CardContent className={`p-5 ${kpi.bgColor} rounded-lg`}>
                   <div className="flex items-start justify-between">
                     <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${kpi.iconBg} shadow-sm`}>
@@ -664,11 +679,52 @@ export default function AdminDashboard() {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold">Последняя активность</CardTitle>
+                  <div className="flex items-center gap-2.5">
+                    <CardTitle className="text-base font-semibold">Последняя активность</CardTitle>
+                    {/* LIVE indicator */}
+                    <motion.div
+                      className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-900/40 border border-emerald-200 dark:border-emerald-800"
+                      initial={{ opacity: 0, scale: 0.8 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 1.2, duration: 0.4 }}
+                    >
+                      <motion.span
+                        className="w-2 h-2 rounded-full bg-emerald-500"
+                        animate={{ opacity: [1, 0.4, 1] }}
+                        transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+                      />
+                      <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-400 tracking-wider">LIVE</span>
+                    </motion.div>
+                  </div>
                   <CardDescription>Лента событий по аудитам</CardDescription>
                 </div>
-                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Activity className="w-4 h-4 text-primary" />
+                <div className="flex items-center gap-1.5">
+                  <motion.div
+                    className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    <Activity className="w-4 h-4 text-primary" />
+                  </motion.div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 hover:bg-muted"
+                    onClick={handleRefresh}
+                    disabled={refreshing}
+                    title="Обновить"
+                  >
+                    <motion.div
+                      animate={refreshing ? { rotate: 360 } : { rotate: 0 }}
+                      transition={refreshing ? { duration: 0.8, repeat: Infinity, ease: 'linear' } : { duration: 0 }}
+                    >
+                      {refreshing ? (
+                        <Loader2 className="w-4 h-4 text-muted-foreground animate-none" />
+                      ) : (
+                        <RotateCw className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </motion.div>
+                  </Button>
                 </div>
               </div>
             </CardHeader>
@@ -683,9 +739,10 @@ export default function AdminDashboard() {
                     const activityDate = new Date(activity.date);
                     const timeStr = activityDate.toLocaleString('ru-RU', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
                     const isToday = new Date().toDateString() === activityDate.toDateString();
+                    const isNew = i === 0;
                     return (
                       <motion.div
-                        key={activity.id}
+                        key={`${activity.id}-${liveKey}`}
                         initial={{ opacity: 0, x: 10 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: 0.9 + i * 0.08, duration: 0.3 }}
@@ -701,6 +758,17 @@ export default function AdminDashboard() {
                         <div className="flex-1 min-w-0 pl-1">
                           <div className="flex items-center gap-2">
                             <span className="text-sm font-medium truncate">{activity.templateTitle}</span>
+                            {/* "Новое" badge on latest item */}
+                            {isNew && (
+                              <motion.span
+                                className="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide bg-gradient-to-r from-emerald-500 to-teal-500 text-white shadow-sm"
+                                initial={{ opacity: 0, x: -8, scale: 0.7 }}
+                                animate={{ opacity: 1, x: 0, scale: 1 }}
+                                transition={{ delay: 1.0, duration: 0.5, ease: 'easeOut' }}
+                              >
+                                Новое
+                              </motion.span>
+                            )}
                           </div>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs text-muted-foreground">{activity.auditorName}</span>

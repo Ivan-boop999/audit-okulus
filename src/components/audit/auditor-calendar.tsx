@@ -553,8 +553,8 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                         ${inCurrentMonth ? 'bg-card text-foreground' : 'bg-muted/30 text-muted-foreground/40'}
                         ${hasAudits && !isSelected && inCurrentMonth ? `hover:bg-muted/80 ${cellGradient}` : ''}
                         ${isSelected && inCurrentMonth ? 'bg-primary/10 ring-2 ring-primary ring-inset shadow-sm' : ''}
-                        ${today && !isSelected && inCurrentMonth ? 'ring-2 ring-primary ring-inset shadow-[inset_0_0_0_1px_hsl(var(--primary))]' : ''}
-                        ${today && isSelected && inCurrentMonth ? 'ring-2 ring-primary ring-inset shadow-[inset_0_0_0_2px_hsl(var(--primary))]' : ''}
+                        ${today && !isSelected && inCurrentMonth ? 'ring-2 ring-violet-400/50 ring-inset animate-pulse' : ''}
+                        ${today && isSelected && inCurrentMonth ? 'ring-2 ring-violet-400/70 ring-inset' : ''}
                         focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset
                       `}
                     >
@@ -574,7 +574,7 @@ export default function AuditorCalendar({ userId, onStartAudit }: AuditorCalenda
                       <span
                         className={`
                           text-xs sm:text-sm font-medium leading-none mb-0.5 sm:mb-1
-                          ${today && inCurrentMonth ? 'text-primary font-bold' : ''}
+                          ${today && inCurrentMonth ? 'text-violet-600 dark:text-violet-400 font-bold' : ''}
                           ${!inCurrentMonth ? 'opacity-40' : ''}
                         `}
                       >

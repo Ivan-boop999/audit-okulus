@@ -1,8 +1,27 @@
 import { db } from '@/lib/db';
 import { NextResponse } from 'next/server';
 
-export async function GET() {
+export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const templateId = searchParams.get('templateId');
+
+    if (templateId) {
+      const template = await db.auditTemplate.findUnique({
+        where: { id: templateId },
+        include: {
+          questions: { orderBy: { order: 'asc' } },
+          equipment: { include: { equipment: true } },
+          creator: { select: { id: true, name: true, email: true } },
+          _count: { select: { assignments: true } },
+        },
+      });
+      if (!template) {
+        return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+      }
+      return NextResponse.json(template);
+    }
+
     const templates = await db.auditTemplate.findMany({
       orderBy: { createdAt: 'desc' },
       include: {
